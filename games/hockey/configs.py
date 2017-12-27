@@ -5,8 +5,12 @@ from __future__ import print_function
 
 import gym
 
+from envs import v0
+
 
 def test1v1():
+    env = v0.Hockey
+    num_agents_per_team = 1
     ret = locals()
     gym.envs.registration.register(
         id='Hockey-v0',

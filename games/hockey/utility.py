@@ -1,4 +1,5 @@
 import contextlib
+import math
 import os
 
 import ruamel.yaml as yaml
@@ -35,7 +36,7 @@ def random_actions(action_space):
     Returns:
       a set of random actions following the format described in action_space.
     """
-    pass
+    return action_space.sample()
 
 
 def save_config(config, logdir=None):

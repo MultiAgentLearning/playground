@@ -6,7 +6,8 @@ from collections import defaultdict
 import json
 import math
 import os
-# TODO: Do we need this? It's for the board/agent imports below.
+
+# TODO: Do this with relative imports and folder __init__ instead.
 import sys
 sys.path.insert(0, os.path.join(sys.path[0], '..'))
 
@@ -22,6 +23,7 @@ from Box2D.b2 import (edgeShape, fixtureDef, polygonShape)
 import agent
 import board
 import gym_multi_agent
+import utility
 
 FPS = 20
 
@@ -31,9 +33,9 @@ class Hockey(gym.Env):
 
     Args:
       num_agents_per_team: The integer number of players on a team.
-      gas_bins: Discrete output for the gas bins. Will be normalized to [0, 1].
-      brake_bins: Discrete output for the brake bins. Will be normalized to [0, 1].
-      steering_bins: Discrete output for the steering. Will be normalized to [-pi/4, pi/4]
+      num_gas_bins: Number of discrete outputs for the gas bins. Will be normalized to [0, 1].
+      num_brake_bins: Number of discrete outputs for the brake bins. Will be normalized to [0, 1].
+      num_steering_bins: Number of discrete outputs for the steering. Will be normalized to [-pi/4, pi/4]
         and applied relative to the current angle.
       lidar_angles: The degree angles that the lidar point with 0deg being the car front.
       max_steps: The maximum number of steps to take in a round (episode).
@@ -43,23 +45,24 @@ class Hockey(gym.Env):
         'video.frames_per_second': FPS
     }
 
-    def __init__(self, num_agents_per_team, gas_bins, brake_bins, steer_bins, lidar_angles,
+    def __init__(self, num_agents_per_team=None, num_gas_bins=10, num_brake_bins=10, num_steer_bins=10, lidar_angles=None,
                  max_steps=1000, *args, **kwargs):
-        # We require these as input because they determine the action and observation space as well.
-        assert gas_bins and brake_bins and steer_bins and lidar_angles
+        lidar_angles = lidar_angles or list(range(-45, 45, 5))
 
         # We make these as lambdas because it's easier to remake them every time the game resets than it is
         # to properly clear everything away back to the game start position.
         self._make_world = lambda: Box2D.b2World((0, 0), contactListener=board.GoalListener(self))
-        self._make_rink = lambda world: board.make_game(world)
+        self._make_board = lambda world: board.make_game(world)
         self._make_players = lambda world: agent.make_agents(
             world, num_agents_per_team=num_agents_per_team,
-            gas_bins=gas_bins, brake_bins=brake_bins, steer_bins=steer_bins
+            gas_bins=[0, num_gas_bins-1], brake_bins=[0, num_brake_bins-1], steer_bins=[0, num_steer_bins-1]
         )
 
-        self.action_space = gym_multi_agent.MultiDiscrete([gas_bins, brake_bins, steer_bins], num_agents_per_team * 2)
-        self.observation_space = self._get_observation_space(gas_bins, brake_bins, steer_bins, lidar_angles, num_agents_per_team)
         self._max_steps = max_steps
+        self.action_space = gym_multi_agent.MultiDiscrete(
+            [[0, num_gas_bins-1], [0, num_brake_bins-1], [0, num_steer_bins-1]],
+            num_agents_per_team * 2)
+        self.observation_space = self._get_observation_space(lidar_angles, num_agents_per_team)
         self.seed(kwargs.get("seed"))
 
     def _seed(self, seed=None):
@@ -67,7 +70,7 @@ class Hockey(gym.Env):
         np.random.seed(seed % (2**32 - 1))
         return [seed]
 
-    def _get_observation_space(self, gas_bins, brake_bins, steer_bins, lidar_angles, num_agents_per_team):
+    def _get_observation_space(self, lidar_angles, num_agents_per_team):
         """Per-agent lidar and personal observations. Later versions of this will add messages."""
         min_obs = []
         max_obs = []
@@ -103,21 +106,24 @@ class Hockey(gym.Env):
           dones: Array of whether each car has completed (crashed or reached exit).
           info: Empty dict.
         """
+        self._scored = False
+
         self._apply_actions(actions)
         for player in self._players:
             player.step(1.0 / FPS)
 
-        self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
-        self.timestep += 1.0 / FPS
-        self.stepcount += 1.0
+        self._world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+        self._timestep += 1.0 / FPS
+        self._stepcount += 1.0
 
         observations = self.get_observations()
-        done = (self.stepcount == self._max_steps)
-        rewards = [0.0 for _ in range(self._players)]
-        if self.env._score_on_goal is not None:
+        self._done = done = (self._stepcount == self._max_steps)
+        rewards = [0.0 for _ in self._players]
+        if self._score_on_goal is not None:
             rewards = [float(player.team != self.env._score_on_goal) for player in self._players]
             self._score[2 - self.env._score_on_goal] += 1
-            self.env._score_on_goal = None
+            self._scored = True
+            self._score_on_goal = None
 
         return observations, rewards, done, {}
 
@@ -135,22 +141,25 @@ class Hockey(gym.Env):
         """
         observations = []
         for player in self._players:
-            player.set_lidar_observations(self.world)
-            player.set_personal_observations(self.world, self._score, self._max_steps - self.stepcount)
+            player.set_lidar_observations(self._world)
+            player.set_personal_observations(self._world, self._score, self._max_steps - self._stepcount)
             observations.append(player.lidar_observations + player.personal_observations)
         return observations
 
     def _reset(self):
         self._world = self._make_world() # a Box2D.b2World object
-        self._rink  = self._make_rink(self._world)
+        self._board  = self._make_board(self._world)
         self._players = self._make_players(self._world)
         self._stepcount = 0.0
         self._timestep = 0.0
         self._score = [0, 0]
         self._score_on_goal = None
+        self._scored = False
+        self._done = False
         return self.get_observations()
 
     def _render(self, mode='human', close=False):
+        print("RENDERING !")
         if close:
             try:
                 r = requests.post(
@@ -159,24 +168,22 @@ class Hockey(gym.Env):
                 pass
             return
 
-        try:
-            r = requests.post(
-                'http://localhost:5000/write',
-                json={
-                    "close": False,
-                    "rink": self.render_rink(), 
-                    "players": self.render_players(),
-                    "timestep": "%.3f" % self.timestep,
-                    "stepcount": self.stepcount,
-                    "score": self._score,
-                }
-            )
-        except:
-            pass
-        return 
+        r = requests.post(
+            'http://localhost:5000/write',
+            json={
+                "close": False,
+                "board": self.render_board(), 
+                "players": self.render_players(),
+                "timestep": "%.3f" % self._timestep,
+                "stepcount": self._stepcount,
+                "score": self._score,
+                "scored": self._scored,
+                "done": self._done
+            }
+        )
 
-    def render_rink(self):
-        return self._rink.render()
+    def render_board(self):
+        return self._board.render()
 
     def render_players(self):
         return [player.render() for player in self._players]

@@ -1,3 +1,9 @@
+"""Utilities to make Gym more friendly to multi-agent. 
+
+This should not be in this directory. It's here right now because it's easier this way
+and the module may not exist pending what we do with this abstraction layer and question
+of Gym vs Unity.
+"""
 import numpy as np
 
 import gym

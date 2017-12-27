@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import math
 
-from . import utility
+import utility
 
 import Box2D
 from Box2D.b2 import (circleShape, fixtureDef, polygonShape,
@@ -17,7 +17,7 @@ WHEEL_W = 14
 
 def make_agents(world, num_agents_per_team,
                 gas_bins=None, brake_bins=None, steer_bins=None, lidar_angles=None):
-    size = 0.35
+    size = 0.035
     gas_bins = gas_bins or [0, 10]
     brake_bins = brake_bins or [0, 10]
     steer_bins = steer_bins or [-5, 5]
@@ -31,11 +31,12 @@ def make_agents(world, num_agents_per_team,
                 init_x *= -1
             init_y = 20 * (num_agent + 1)
             init_angle = np.pi if team == 1 else 0.
+            print("Car pos: ", init_x, init_y)
             agents.append(
                 Agent(num_agent=num_agent, world=world,
                       gas_bins=gas_bins, brake_bins=brake_bins, steer_bins=steer_bins,
                       team=team, size=size,
-                      init_angle=angle, init_x=init_x, init_y=init_y,
+                      init_angle=init_angle, init_x=init_x, init_y=init_y,
                       lidar_angles=lidar_angles)
             )
     return agents
@@ -49,7 +50,7 @@ class Agent():
       world: The Box2d world.
       gas_bins: Discrete output for the gas bins. Will be normalized to [0, 1].
       brake_bins: Discrete output for the brake bins. Will be normalized to [0, 1].
-      steering_bins: Discrete output for the steering. Will be normalized to [-pi/4, pi/4]
+      steer_bins: Discrete output for the steering. Will be normalized to [-pi/4, pi/4]
         and applied relative to the current angle.
       team: Integer team for this agent.
       size: The float size of the agent.
@@ -63,7 +64,7 @@ class Agent():
                  world,
                  gas_bins,
                  brake_bins,
-                 steering_bins,
+                 steer_bins,
                  team=None,
                  size=None,
                  init_angle=None,
@@ -73,7 +74,7 @@ class Agent():
         self._size = size
         self._gas_bins = gas_bins
         self._brake_bins = brake_bins
-        self._steering_bins = steering_bins
+        self._steer_bins = steer_bins
         self._max_power = 100000000 * self._size * self._size
         self._wheel_moment_of_inertia = 4000 * self._size * self._size
         self._friction_limit = 1000000 * self._size * self._size  # friction ~= mass ~= size^2 (calculated implicitly using density)
@@ -81,7 +82,13 @@ class Agent():
         self._team = team
         self._lidar_angles = lidar_angles
         self._init_box2d(world, init_x, init_y, init_angle)
-        self._radius = self.get_radius()
+
+        aabb = Box2D.b2.AABB(
+            lowerBound=Box2D.Box2D.b2Vec2(10000, 10000),
+            upperBound=Box2D.Box2D.b2Vec2(-10000, -10000))
+        for fixture in self.body.fixtures:
+            aabb.Combine(aabb, fixture.GetAABB(0))
+        self._radius = utility.get_distance(aabb.upperBound, aabb.center)
 
     def _init_box2d(self, world, init_x, init_y, init_angle):
         hull_poly1 = [(-60, +130), (+60, +130), (+60, +110), (-60, +110)]
@@ -107,7 +114,7 @@ class Agent():
                     categoryBits=categoryBits)
                 for poly in hull_polies
             ])
-        self.body.num_agent = self.num_agent
+        self.body.num_agent = self._num_agent
 
         self.wheels = []
         wheel_pos = [(-55, +80), (+55, +80), (-55, -82), (+55, -82)]
@@ -145,14 +152,6 @@ class Agent():
             w.joint = world.CreateJoint(rjd)
             self.wheels.append(w)
 
-    def get_radius(self):
-        aabb = Box2D.b2.AABB(
-            lowerBound=Box2D.Box2D.b2Vec2(10000, 10000),
-            upperBound=Box2D.Box2D.b2Vec2(-10000, -10000))
-        for fixture in self.body.fixtures:
-            aabb.Combine(aabb, fixture.GetAABB(0))
-        return utility.get_distance(aabb.upperBound, aabb.center)
-
     def gas(self, gas):
         """Apply gas.
 
@@ -175,7 +174,7 @@ class Agent():
 
     def steer(self, angle):
         """Apply steering. We cap this to be in [-pi/4, pi/4]."""
-        x, y = self._steering_bin-range
+        x, y = self._steer_bins[0], self._steer_bins[1]
         normalizing_p = np.pi/(2. * (y - x))
         normalizing_q = -np.pi * (y + x) / (4. * (y - x))
         radians = normalizing_p * angle + normalizing_q
@@ -186,10 +185,10 @@ class Agent():
         lidar_range = 300 # Covers the full diagonal of the rink.
         px, py = self.get_position()
         hull_angle = self.get_hull_angle()
-        radians = np.asarray([angle * np.pi / 180. + hull_angle for angle in self.lidar_angles])
+        radians = np.asarray([angle * np.pi / 180. + hull_angle for angle in self._lidar_angles])
         p1 = np.stack([
-            px + self.radius * np.cos(radians),
-            py + self.radius * np.sin(radians)
+            px + self._radius * np.cos(radians),
+            py + self._radius * np.sin(radians)
         ]).transpose()
         p2 = np.stack([
             px + lidar_range * np.cos(radians),
@@ -208,6 +207,7 @@ class Agent():
 
         self.lidar_points = [((p1[i, 0], p1[i, 1]), (p2[i, 0], p2[i, 1])) for i in range(p1.shape[0])]
         self.lidar_observations = lidar_distances + collision_categories
+        self._collision_categories = collision_categories
 
     def set_personal_observations(self, world, score, time_remaining):
         team = self._team
@@ -267,14 +267,13 @@ class Agent():
                                  True)
 
     def render(self):
-        hull = None
         wheels = []
-
         hull_path = []
         angle = self.get_hull_angle() 
-        position = self.get_position()[:2]
+        position = self.get_position()
+        position = (position[0], position[1])
 
-        for obj in self.wheels + [self.hull]:
+        for obj in self.wheels + [self.body]:
             for f in obj.fixtures:
                 trans = f.body.transform
                 if "phase" not in obj.__dict__:
@@ -315,10 +314,10 @@ class Agent():
         current_speed = np.linalg.norm(velocity)
 
         return {
-            "lidar": self.lidar_observations,
+            "lidar_points": self.lidar_points,
+            "lidar_categories": self._collision_categories,
             "wheels": wheels,
             "hull": hull,
-            "goal": self.goal.num_goal,
             "currspeed": '%.3f' % current_speed,
             "num_agent": self._num_agent,
             "team": self._team,
@@ -353,9 +352,13 @@ class Agent():
 
 class LidarCallback(Box2D.b2.rayCastCallback):
     """Box2d Lidar Class."""
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.category = None
 
     def ReportFixture(self, fixture, point, normal, fraction):
         if fixture.filterData.categoryBits == utility.SKIP:
+            self.category = len(utility.CATEGORY_BITS)
             return -1
 
         self.category = utility.CATEGORY_BITS.index(fixture.filterData.categoryBits)

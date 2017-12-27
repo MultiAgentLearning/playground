@@ -2,10 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from Box2D.b2 import (edgeShape, fixtureDef)
+from Box2D.b2 import (circleShape, edgeShape, polygonShape, fixtureDef, contactListener)
 import numpy as np
 
-from . import utility
+import utility
 
 
 def make_game(world):
@@ -13,7 +13,7 @@ def make_game(world):
     rink_width = 200
     rink_height = 85
     rink_radius = 28
-    rink_radius_num = 15
+    rink_radius_num = 3
     return Rink(world, rink_width, rink_height, rink_radius, rink_radius_num)
 
 
@@ -25,27 +25,26 @@ class Rink():
     an inscribed polygon.
     """
 
-    def __init__(self, world, rink_width=200, rink_height=85, rink_radius=28, rink_radius_num=12,
+    def __init__(self, world, rink_width=200, rink_height=85, rink_radius=28, rink_radius_num=3,
                  puck_radius=3, goal_line=11, goal_depth=3.5, goal_width=6):
         self.world = world
+        self.translation = (-rink_width/2, -rink_height/2)
         self._make_body(rink_width, rink_height, rink_radius, rink_radius_num)
         self._make_puck(puck_radius, 0, 0)
         self._make_goals(rink_width, rink_height, goal_line, goal_depth, goal_width)
 
     def _make_body(self, rink_width, rink_height, rink_radius, rink_radius_num):
-        x_translation = -rink_width/2
-        y_translation = -rink_height/2
+        x_translation, y_translation = self.translation
         curve_radians = np.pi / (4 * rink_radius_num)
+        print("CV: ", curve_radians)
 
-        fixture_vertices = [
-            (0, rink_radius),
-        ]
+        fixture_vertices = [(0, rink_radius)]
         for curve_num in range(1, rink_radius_num+1):
             radians = curve_num * curve_radians
             x, y = (0, rink_radius)
-            c = rink_radius * np.sqrt(2 * (1 - np.cos(curve_radians)))
-            y -= c * cos(curve_radians)
-            x += c * sin(curve_radians)
+            c = rink_radius * np.sqrt(2 * (1 - np.cos(radians)))
+            y -= c * np.cos(radians)
+            x += c * np.sin(radians)
             fixture_vertices.append((x, y))
 
         fixture_vertices.append(
@@ -54,9 +53,9 @@ class Rink():
         for curve_num in range(1, rink_radius_num+1):
             radians = curve_num * curve_radians
             x, y = (rink_width - rink_radius, 0)
-            c = rink_radius * np.sqrt(2 * (1 - np.cos(curve_radians)))
-            y += c * sin(curve_radians)
-            x += c * cos(curve_radians)
+            c = rink_radius * np.sqrt(2 * (1 - np.cos(radians)))
+            y += c * np.sin(radians)
+            x += c * np.cos(radians)
             fixture_vertices.append((x, y))
 
         fixture_vertices.append(
@@ -65,9 +64,9 @@ class Rink():
         for curve_num in range(1, rink_radius_num+1):
             radians = curve_num * curve_radians
             x, y = (rink_width, rink_height - rink_radius)
-            c = rink_radius * np.sqrt(2 * (1 - np.cos(curve_radians)))
-            y += c * cos(curve_radians)
-            x -= c * sin(curve_radians)
+            c = rink_radius * np.sqrt(2 * (1 - np.cos(radians)))
+            y += c * np.cos(radians)
+            x -= c * np.sin(radians)
             fixture_vertices.append((x, y))
 
         fixture_vertices.append(
@@ -76,18 +75,19 @@ class Rink():
         for curve_num in range(1, rink_radius_num+1):
             radians = curve_num * curve_radians
             x, y = (rink_radius, rink_height)
-            c = rink_radius * np.sqrt(2 * (1 - np.cos(curve_radians)))
-            y -= c * sin(curve_radians)
-            x -= c * cos(curve_radians)
+            c = rink_radius * np.sqrt(2 * (1 - np.cos(radians)))
+            y -= c * np.sin(radians)
+            x -= c * np.cos(radians)
             fixture_vertices.append((x, y))
 
-        fixture_vertices.append([
-            (0, rink_radius),
-        ])
-
+        # print(fixture_vertices)
+        fixture_vertices = [(x + x_translation, y + y_translation) for x, y in fixture_vertices]
+        # print("LEN OF FV: %d" % len(fixture_vertices))
+        fixture_vertices = fixture_vertices[::-1] # needs to be counterclockwise for shape to work
+        # print("LEN OF FV: %d" % len(fixture_vertices))
         self.body = self.world.CreateStaticBody(fixtures=[
             fixtureDef(
-                shape=edgeShape(vertices=[(x + x_translation, y + y_translation) for x, y in fixture_vertices]),
+                shape=polygonShape(vertices=fixture_vertices),
                 categoryBits=utility.WALL
             )
         ])
@@ -96,19 +96,18 @@ class Rink():
         self.puck = Puck(self.world, init_x, init_y, radius)
 
     def _make_goals(self, rink_width, rink_height, goal_line, goal_depth, goal_width):
-        x_translation = -rink_width/2
-        y_translation = -rink_height/2
+        x_translation, y_translation = self.translation
         self.goals = [
             Goal(self.world, rink_width, rink_height, goal_line, goal_depth, goal_width,
                  x_translation=x_translation, y_translation=y_translation, team=i+1)
             for i in range(2)
         ]
 
-    def _render(self):
+    def render(self):
         rink = self._render_rink()
         puck = self._render_puck()
         goals = self._render_goals()
-        return {"rink": rink, "puck": puck, "goals": goals}
+        return {"rink": rink, "puck": puck, "goals": goals, "translation": self.translation}
 
     def _render_rink(self):
         return {'vertices': utility.flatten([fixture.shape.vertices for fixture in self.body.fixtures])}
@@ -202,18 +201,23 @@ class Goal(object):
             inner_vertices.append((rink_width - goal_line + goal_depth + padding, rink_height/2 + goal_width/2 - padding))
             inner_vertices.append((rink_width - goal_line - padding, rink_height/2 + goal_width/2 - padding))
 
+        outer_vertices = [(x + x_translation, y + y_translation) for x, y in outer_vertices]
+        inner_vertices = [(x + x_translation, y + y_translation) for x, y in inner_vertices]
         categoryBits = utility.GOAL1 if self.team == 1 else utility.GOAL2
+
         self.outer = world.CreateStaticBody(fixtures=[
             fixtureDef(
-                shape=edgeShape(vertices=[(x + x_translation, y + y_translation) for x, y in outer_vertices]),
+                shape=edgeShape(vertices=outer_vertices[i:i+2]),
                 categoryBits=categoryBits
             )
+            for i in range(3)
         ])
         self.inner = world.CreateStaticBody(fixtures=[
             fixtureDef(
-                shape=edgeShape(vertices=[(x + x_translation, y + y_translation) for x, y in inner_vertices]),
+                shape=edgeShape(vertices=inner_vertices[i:i+2]),
                 categoryBits=utility.SKIP
             )
+            for i in range(3)
         ])
         self.inner.is_goal = True
         self.inner.team = self.team
