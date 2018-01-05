@@ -18,7 +18,6 @@ while not done:
     action = env.action_space.sample()
     actions.append(action)
 
-  print(actions)
   obs, reward, done, info = env.step(actions)
 
   # in the future, for other envs, might want to make observations
