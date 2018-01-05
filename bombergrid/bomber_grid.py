@@ -143,7 +143,7 @@ class Bomb:
           if element != 1: # if it is not a wall, blow it up
             explosion_map[row, col] = 1
             obs[0, row, col] = 0
-          else:
+          if element != 0:
             break
 
 class BomberGridEnv(gym.Env):
