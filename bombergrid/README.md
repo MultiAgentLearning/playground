@@ -25,4 +25,10 @@ while not done:
   obs, reward, done, info = env.step(actions)
 ```
 
-in the future, for other envs, might want to make observations an array of 4 different obs for each agent
+In the future, for other envs, might want to make observations an array of 4 different obs for each agent
+
+To run the version where Player 1 is keyboard player (up down left right space):
+
+```
+python bomber_grid.py
+```
