@@ -32,17 +32,17 @@ NUM_AGENTS = 4
 # 5 - extra firepower item (not implemented)
 INIT_MAP = [
 1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,0,0,2,2,2,2,2,2,2,0,0,1,
+1,0,0,0,2,2,2,2,0,0,0,0,1,
 1,0,1,2,1,2,1,2,1,2,1,0,1,
+1,0,2,2,2,2,2,2,2,2,2,0,1,
+1,0,1,2,1,2,1,2,1,2,1,2,1,
 1,2,2,2,2,2,2,2,2,2,2,2,1,
 1,2,1,2,1,2,1,2,1,2,1,2,1,
 1,2,2,2,2,2,2,2,2,2,2,2,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,2,2,2,2,2,2,2,2,2,2,2,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,2,2,2,2,2,2,2,2,2,2,2,1,
+1,2,1,2,1,2,1,2,1,2,1,0,1,
+1,0,2,2,2,2,2,2,2,2,2,0,1,
 1,0,1,2,1,2,1,2,1,2,1,0,1,
-1,0,0,2,2,2,2,2,2,2,0,0,1,
+1,0,0,0,0,2,2,2,2,0,0,0,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1
 ]
 
@@ -171,6 +171,7 @@ class BomberGridEnv(gym.Env):
 
     self._explosion = np.zeros((SCREEN_SIZE, SCREEN_SIZE)).astype(np.uint8)
     self._frame = np.zeros((SCREEN_SIZE, SCREEN_SIZE, 3)).astype(np.uint8)
+    #self._seed()
 
   def _place_agents_on_obs(self):
     self._obs[1] = np.zeros((SCREEN_SIZE, SCREEN_SIZE)).astype(np.uint8)
@@ -181,25 +182,34 @@ class BomberGridEnv(gym.Env):
       self._obs[1,row,col] = i+1
 
   def _clear_random_wood(self):
-    # get rid of a third of the wooden walls randomly
+    # get rid of a fourth of the wooden walls randomly
     for row in range(SCREEN_SIZE):
       for col in range(SCREEN_SIZE):
         element = self._obs[0, row, col]
         if element == 2: # if it is wood wall
-          if self.np_random.choice([0, 1, 2]) == 0:
+          if self.np_random.choice([0, 1, 2, 3]) == 0:
             self._obs[0, row, col] = 0 # clear the wooden wall
 
   def _reset(self):
-    self._clear_random_wood()
+    #self._clear_random_wood()
     return self._obs
 
   def _seed(self, seed=None):
+    gym.spaces.prng.seed(seed)
     self.np_random, seed = seeding.np_random(seed)
     return [seed]
 
   def _step(self, actions):
     self._explosion = np.zeros((SCREEN_SIZE, SCREEN_SIZE)).astype(np.uint8)
     done = True
+    # return game info (ie who is still alove) before executing this step
+    info = [0] * NUM_AGENTS
+    for i in range(NUM_AGENTS):
+      agent = self._agents[i]
+      if agent.alive:
+        info[i] = 1
+    info = np.array(info)
+    info = info / np.maximum(1.0, np.sum(info)) # normalization
     for i in range(NUM_AGENTS):
       agent = self._agents[i]
       if agent.alive:
@@ -226,7 +236,7 @@ class BomberGridEnv(gym.Env):
       agent = self._agents[i]
       if agent.alive:
         done = False
-    return self._obs, 0, done, 0
+    return self._obs, 0, done, info
 
   def _render_frame(self):
     for row in range(SCREEN_SIZE):
@@ -291,7 +301,7 @@ if __name__=="__main__":
     key_input = 0
 
   env = BomberGridEnv()
-  env.seed(0)
+  env.seed(np.random.randint(1000000))
 
   done = False
   obs = env.reset()

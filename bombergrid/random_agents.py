@@ -1,12 +1,11 @@
 '''
 all four players are random action
 '''
-
+import numpy as np
 from bomber_grid import BomberGridEnv
 
 env = BomberGridEnv()
-env.seed(0)
-
+env.seed(np.random.randint(1000000))
 done = False
 obs = env.reset()
 
@@ -19,6 +18,7 @@ while not done:
     action = env.action_space.sample()
     actions.append(action)
 
+  print(actions)
   obs, reward, done, info = env.step(actions)
 
   # in the future, for other envs, might want to make observations
