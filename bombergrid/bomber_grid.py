@@ -325,4 +325,4 @@ if __name__=="__main__":
       actions.append(action)
 
     obs, reward, done, info = env.step(actions)
-    print(key_input)
+
