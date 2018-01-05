@@ -16,8 +16,8 @@ from gym.utils import seeding
 
 # settings
 
-SCREEN_SIZE = 15 # assume square maps
-TIME_LIMIT = 1000
+SCREEN_SIZE = 13 # assume square maps
+TIME_LIMIT = 3000
 HUMAN_FACTOR = 40
 RENDER_FPS = 10
 DEFAULT_BLAST_STRENGTH = 3
@@ -31,39 +31,35 @@ NUM_AGENTS = 4
 # 4 - extra bomb item (not implemented)
 # 5 - extra firepower item (not implemented)
 INIT_MAP = [
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,0,0,0,2,2,2,2,2,2,2,0,0,0,1,
-1,0,1,2,1,2,1,2,1,2,1,2,1,0,1,
-1,0,2,2,2,2,2,2,2,2,2,2,2,0,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,
-1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
-1,0,2,2,2,2,2,2,2,2,2,2,2,0,1,
-1,0,1,2,1,2,1,2,1,2,1,2,1,0,1,
-1,0,0,0,2,2,2,2,2,2,2,0,0,0,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,2,2,2,2,2,2,2,0,0,1,
+1,0,1,2,1,2,1,2,1,2,1,0,1,
+1,2,2,2,2,2,2,2,2,2,2,2,1,
+1,2,1,2,1,2,1,2,1,2,1,2,1,
+1,2,2,2,2,2,2,2,2,2,2,2,1,
+1,2,1,2,1,2,1,2,1,2,1,2,1,
+1,2,2,2,2,2,2,2,2,2,2,2,1,
+1,2,1,2,1,2,1,2,1,2,1,2,1,
+1,2,2,2,2,2,2,2,2,2,2,2,1,
+1,0,1,2,1,2,1,2,1,2,1,0,1,
+1,0,0,2,2,2,2,2,2,2,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1
 ]
 
 INIT_POSITION = [
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,1,0,0,0,0,0,0,0,0,0,0,0,3,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,2,0,0,0,0,0,0,0,0,0,0,0,4,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,1,0,0,0,0,0,0,0,0,0,3,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,2,0,0,0,0,0,0,0,0,0,4,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0
 ]
 
 ITEM_COLOR=[[240,248,255], [128,128,128], [210,180,140], [19,20,24]] # color for each of the 5 items
@@ -104,7 +100,7 @@ class BomberAgent:
     elif action == 4: # right
       dir_col = 1
     element = obs[0, self.row+dir_row, self.col+dir_col]
-    if (element != 1 and element != 2): # not rigid wall or wood
+    if (element != 1 and element != 2 and element != 3): # not rigid wall or wood or bomb
       self.row += dir_row
       self.col += dir_col
 
@@ -157,6 +153,8 @@ class BomberGridEnv(gym.Env):
     self.action_space = spaces.Discrete(6) # do nothing, up, down, left, right, bomb
     self.observation_space = spaces.Box(low=0, high=255, shape=(2, SCREEN_SIZE, SCREEN_SIZE))
 
+    self.num_agents = NUM_AGENTS
+
     self._obs = np.zeros((2, SCREEN_SIZE, SCREEN_SIZE)).astype(np.uint8)
     self._obs[0] = np.resize(INIT_MAP, (SCREEN_SIZE, SCREEN_SIZE))
     self._obs[1] = np.resize(INIT_POSITION, (SCREEN_SIZE, SCREEN_SIZE))
@@ -182,7 +180,17 @@ class BomberGridEnv(gym.Env):
       col = self._agents[i].col
       self._obs[1,row,col] = i+1
 
+  def _clear_random_wood(self):
+    # get rid of a third of the wooden walls randomly
+    for row in range(SCREEN_SIZE):
+      for col in range(SCREEN_SIZE):
+        element = self._obs[0, row, col]
+        if element == 2: # if it is wood wall
+          if self.np_random.choice([0, 1, 2]) == 0:
+            self._obs[0, row, col] = 0 # clear the wooden wall
+
   def _reset(self):
+    self._clear_random_wood()
     return self._obs
 
   def _seed(self, seed=None):
@@ -265,29 +273,7 @@ class BomberGridEnv(gym.Env):
 
 if __name__=="__main__":
 
-  ''' all four players are random action
-  env = BomberGridEnv()
-  env.seed(0)
-
-  done = False
-  obs = env.reset()
-
-  while not done:
-
-    env.render()
-
-    actions = []
-    for i in range(NUM_AGENTS):
-      action = env.action_space.sample()
-      actions.append(action)
-
-    obs, reward, done, info = env.step(actions)
-
-    # in the future, for other envs, might want to make observations an array of 4 different obs for each agent
-  '''
-
   # keyboard: player 1 is human
-
   from pyglet.window import key
 
   key_input = 0
@@ -320,9 +306,11 @@ if __name__=="__main__":
 
     actions = []
     actions.append(key_input)
-    for i in range(1, NUM_AGENTS):
+    for i in range(1, env.num_agents):
       action = env.action_space.sample()
       actions.append(action)
 
     obs, reward, done, info = env.step(actions)
 
+  env.render()
+  print('final result:', info)
