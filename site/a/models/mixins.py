@@ -6,6 +6,11 @@ from sqlalchemy import Column, DateTime, Text
 from a.utils import sql
 
 
+def camel_case(snake_str):
+    parts = snake_str.split('_')
+    return parts[0] + ''.join([p.title() for p in parts[1:]])
+
+
 class DictSerializableMixin(object):
     include_keys = None
 
@@ -15,8 +20,20 @@ class DictSerializableMixin(object):
         include_keys = self.include_keys or self.__mapper__.c.keys()
         for key in include_keys:
             if key not in excluded_keys:
-                result[a.tools.utility.camel_case(key)] = getattr(self, key)
+                result[camel_case(key)] = getattr(self, key)
         return result
+
+
+class SlugMixin(object):
+    slug = Column(Text, index=True)
+
+    def set_slug(self, name=None):
+        name = name.replace(',', '')
+        name = '-'.join(name.lower().split(' '))
+        count = self.__class__.query.filter_by(name=name).count()
+        if count:
+            slug += '-%d' % count
+        self.slug = slug
 
 
 class TimeMixin(object):

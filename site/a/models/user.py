@@ -29,6 +29,11 @@ class User(a.db.Model, mixins.BaseModelMixin):
         self.active = True
         self.password = User.hashed_password(password)
 
+    def serialize():
+        ret = super().serialize()
+        print("user: ", ret)
+        return ret
+
     @staticmethod
     def hashed_password(password):
         bc = a.bcrypt.generate_password_hash(password)
