@@ -1,0 +1,22 @@
+{% extends 'email/base.html' %}
+
+{% block body %}
+<div>
+  <p>Hi {{user.first_name}}</p>
+  <p>Thanks for joining the Playground!</p>
+  <p>To make sure this really was you though, please click verify below.</p>
+  <p>Thanks!</p>
+  <p style="margin-top:-20px">- The Playground Team</p>
+
+  <p style="margin-top:30px; margin-bottom:30px; text-align:center">
+    <a href="{{config.PLAYGROUND_BASE_URL}}/verify/{{code}}"
+    style="border-radius:10px;padding:14px 7px 14px 7px;border:1px
+    solid;text-align:center;text-decoration:none;width:200px; margin:6px
+    auto; border-color:transparent; background-color:#ab00a6; color:white;">
+      Verify {{user.email}}
+    </a>
+  </p>
+
+  <p>P.S. If you didn't do this, please let us know by replying to this email.</p>
+</div>
+{% endblock %}

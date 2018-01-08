@@ -11,4 +11,3 @@ def index():
 def any_root_path(path):
     return render_template('index.html')
 
-

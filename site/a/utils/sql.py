@@ -15,3 +15,8 @@ def create_decorator(f):
             a.db.session.add(obj)
         return obj
     return wrap
+
+def drop_schema():
+    """Don't do this lightly! It drops everything. For cascading key issues.2"""
+    a.db.engine.execute("drop schema if exists public cascade")
+    a.db.engine.execute("create schema public")

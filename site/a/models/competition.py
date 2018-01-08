@@ -29,5 +29,5 @@ class Competition(a.db.Model, mixins.BaseModelMixin):
     agents = a.db.relationship('Agent', secondary=competition_agents, lazy='subquery',
                                backref=a.db.backref('competitions', lazy=True))
     battles = a.db.relationship('Battle', backref='competition', lazy=True)
-    game_id = a.db.Column(a.db.Integer(), a.db.ForeignKey('game.id'), nullable=False)
+    game_id = a.db.Column(a.db.Integer(), a.db.ForeignKey('game.id'), index=True)
     
