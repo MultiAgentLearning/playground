@@ -1,83 +1,47 @@
-from enum import Enum
-import random
-import sys, math
 import numpy as np
-# from skimage.transform import resize as resize
 from scipy.misc import imresize as resize
 import time
 from gym import spaces
 from gym.utils import seeding
 import gym
 
-
-RENDER_FPS = 10
-BOARD_SIZE = 13 # Square map with this size
-NUM_RIGID = 36
-NUM_PASSAGE = 12
-AGENT_VIEW_SIZE = 4 # How much of the map the agent sees not under fog of war.
-TIME_LIMIT = 3000
-HUMAN_FACTOR = 32
-DEFAULT_BLAST_STRENGTH = 3
-DEFAULT_BOMB_LIFE = 10
-AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
-ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], None, None, [241, 196, 15], [141, 137, 124]]
-
-
-class Items(Enum):
-    PASSAGE = 0
-    RIGID = 1
-    WOOD = 2
-    BOMB = 3 # prev was [19, 20, 24]
-    ITEMEXTRA = 4
-    ITEMBLAST = 5
-    FLAMES = 6
-    FOG = 7
-
-
-class GameType(Enum):
-    FFA = 1 # 1v1v1v1
-    TEAM = 2 # 2v2 where each team can share observations. 
-    TEAMDIFF = 3 # 2v2 where each team cannot share observations.
-    TEAMDIFFCOMM = 4 # 2v2 where each cannot share observations but can pass a discrete communication.
-
-
-class Direction(Enum):
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
-
-
-class InvalidDirection(Exception):
-    pass
+from . import utility
 
 
 class Pomme(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second' : RENDER_FPS
+        'video.frames_per_second' : utility.RENDER_FPS
     }
 
-    def __init__(self, game_type=GameType.FFA, board_size=BOARD_SIZE, num_rigid=NUM_RIGID,
-                 num_passage=NUM_PASSAGE, on_key_press=None, on_key_release=None):
-        self.num_agents = 4
+    def __init__(self,
+                 game_type=None,
+                 board_size=None,
+                 num_rigid=None,
+                 num_passage=None):
+        self._agents = None
         self._game_type = game_type
         self._board_size = board_size
         self._num_rigid = num_rigid
         self._num_passage = num_passage
         self._viewer = None
-        self._on_key_press = on_key_press
-        self._on_key_release = on_key_release
 
         # Actions are: [Null, Up, Down, Left, Right, Bomb]
         self.action_space = spaces.Discrete(6)
         self.observation_space = spaces.Box(low=0, high=11, shape=(2, self._board_size, self._board_size))
+
+    def set_agents(self, agents):
+        self._agents = agents
+
+    def act(self, obs):
+        return [agent.act(obs[agent_id], action_space=self.action_space) for agent_id, agent in enumerate(self._agents)]
 
     def _get_observations(self):
         """Gets the observations as an np.array of the visible squares.
 
         The agent gets to choose whether it wants to keep the fogged part in memory.
         """
+        agent_view_size = utility.AGENT_VIEW_SIZE
         observations = []
         for agent in self._agents:
             agent_obs = {}
@@ -85,8 +49,8 @@ class Pomme(gym.Env):
             board = self._board.copy()
             for r in range(self._board_size):
                 for c in range(self._board_size):
-                    if not all([row >= r - AGENT_VIEW_SIZE, row < r + AGENT_VIEW_SIZE,
-                                col >= c - AGENT_VIEW_SIZE, col < c + AGENT_VIEW_SIZE]):
+                    if not all([row >= r - agent_view_size, row < r + agent_view_size,
+                                col >= c - agent_view_size, col < c + agent_view_size]):
                         board[r, c] = 7
             agent_obs['board'] = board
             agent_obs['position'] = (row, col)
@@ -97,7 +61,7 @@ class Pomme(gym.Env):
 
     def _get_rewards(self):
         alive_agents = [num for num, agent in enumerate(self._agents) if agent.is_alive]
-        if self._game_type == GameType.FFA:
+        if self._game_type == utility.GameType.FFA:
             if len(alive_agents) == 1:
                 ret = [-1]*4
                 ret[alive_agents[0]] = 1
@@ -110,20 +74,51 @@ class Pomme(gym.Env):
         else:
             return [0]*4
 
+    def _get_done(self):
+        alive = [agent for agent in self._agents if agent.is_alive]
+        if self._game_type == utility.GameType.FFA:
+            # TODO: Change back to 1.
+            return len(alive) <= 0
+        else:
+            alive_ids = sorted([agent.agent_id for agent in alive])
+            return any([
+                len(alive_ids) <= 1,
+                alive_ids == [0, 2],
+                alive_ids == [1, 3],
+            ])
+
+    def _get_info(self):
+        alive = [agent for agent in self._agents if agent.is_alive]
+        if len(alive) == 0:
+            return {'result': utility.Result.Tie}
+        elif self._game_type == utility.GameType.FFA:
+            if len(alive) == 1:
+                return {'result': utility.Result.Win, 'winner': [alive[0].agent_id]}
+            else:
+                return {'result': utility.Result.Incomplete}
+        else:
+            alive_ids = sorted([agent.agent_id for agent in alive])
+            if any([alive_ids == [0], alive_ids == [2], alive_ids == [0, 2]]):
+                return {'result': utility.Result.Win, 'winner': [0, 2]}
+            elif any([alive_ids == [1], alive_ids == [3], alive_ids == [1, 3]]):
+                return {'result': utility.Result.Win, 'winner': [1, 3]}
+            else:
+                return {'result': utility.Result.Incomplete}
+
     def _reset(self):
-        self._board = make_board(self._board_size, self._num_rigid, self._num_passage)
+        assert(self._agents is not None)
+
+        self._board = utility.make_board(self._board_size, self._num_rigid, self._num_passage)
         self._bombs = []
-        self._agents = []
         self._powerups = []
-        for i in range(self.num_agents):
-            agent_id = i+8
-            pos = np.where(self._board == agent_id)
+        for agent_id, agent in enumerate(self._agents):
+            pos = np.where(self._board == agent_id+8)
             row = pos[0][0]
             col = pos[1][0]
-            self._agents.append(BomberAgent(agent_id, (pos[0][0], pos[1][0])))
+            agent.set_start_position((row, col))
+            agent.reset()
 
-        obs = self._get_observations()
-        return obs
+        return self._get_observations()
 
     def _seed(self, seed=None):
         gym.spaces.prng.seed(seed)
@@ -132,7 +127,7 @@ class Pomme(gym.Env):
 
     def _step(self, actions):
         # Replace the flames with passage
-        self._board[np.where(self._board == Items.FLAMES.value)] = 0
+        self._board[np.where(self._board == utility.Items.FLAMES.value)] = 0
 
         # Step the living agents.
         for num, agent in enumerate(self._agents):
@@ -146,7 +141,7 @@ class Pomme(gym.Env):
                     bomb = agent.maybe_lay_bomb()
                     if bomb:
                         self._bombs.append(bomb)
-                elif is_valid_direction(self._board, position, action):
+                elif utility.is_valid_direction(self._board, position, action):
                     agent.move(action)
 
         # Explode bombs.
@@ -156,10 +151,15 @@ class Pomme(gym.Env):
             bomb.step()
             if bomb.exploded():
                 bomb.bomber.incr_ammo()
-                indices = bomb.explode()
-                for r, c in indices:
-                    if all([r >= 0, c >= 0, r < self._board_size, c < self._board_size]):
+                for _, indices in bomb.explode().items():
+                    for r, c in indices:
+                        if not all([r >= 0, c >= 0, r < self._board_size, c < self._board_size]):
+                            break
+                        if self._board[r][c] == 1:
+                            break
                         exploded_map[r][c] = 1
+                        if self._board[r][c] == 2:
+                            break
             else:
                 next_bombs.append(bomb)
 
@@ -174,6 +174,7 @@ class Pomme(gym.Env):
         # Kill these agents.
         for agent in self._agents:
             if agent.in_range(exploded_map):
+                continue
                 agent.die()
         exploded_map = np.array(exploded_map)
 
@@ -181,17 +182,20 @@ class Pomme(gym.Env):
         for bomb in self._bombs:
             self._board[bomb.position] = 3
         for agent in self._agents:
-            self._board[np.where(self._board == agent.agent_id)] = 0
-            self._board[agent.position] = agent.agent_id
-        self._board[np.where(exploded_map == 1)] = Items.FLAMES.value
+            self._board[np.where(self._board == agent.agent_id+8)] = 0
+            if agent.is_alive:
+                self._board[agent.position] = agent.agent_id+8
+                
+        self._board[np.where(exploded_map == 1)] = utility.Items.FLAMES.value
 
-        num_alive = len([agent for agent in self._agents if agent.is_alive])
-        done = num_alive <= 1
+        done = self._get_done()
         obs = self._get_observations()
         reward = self._get_rewards()
-        return obs, reward, done, {}
+        info = self._get_info()
+        return obs, reward, done, info
 
     def _render_frames(self):
+        agent_view_size = utility.AGENT_VIEW_SIZE
         frames = []
 
         all_frame = np.zeros((self._board_size, self._board_size, 3))
@@ -200,9 +204,9 @@ class Pomme(gym.Env):
                 if self._board[row][col] in list(range(8, 12)):
                     num_agent = self._board[row][col] - 8
                     if self._agents[num_agent].is_alive:
-                        all_frame[row][col] = AGENT_COLORS[num_agent]
+                        all_frame[row][col] = utility.AGENT_COLORS[num_agent]
                 else:
-                    all_frame[row][col] = ITEM_COLORS[self._board[row][col]]
+                    all_frame[row][col] = utility.ITEM_COLORS[self._board[row][col]]
 
         all_frame = np.array(all_frame)
         frames.append(all_frame)
@@ -212,9 +216,9 @@ class Pomme(gym.Env):
             my_frame = all_frame.copy()
             for r in range(self._board_size):
                 for c in range(self._board_size):
-                    if not all([row >= r - AGENT_VIEW_SIZE, row < r + AGENT_VIEW_SIZE,
-                                col >= c - AGENT_VIEW_SIZE, col < c + AGENT_VIEW_SIZE]):
-                        my_frame[r, c] = ITEM_COLORS[Items.FOG.value]
+                    if not all([row >= r - agent_view_size, row < r + agent_view_size,
+                                col >= c - agent_view_size, col < c + agent_view_size]):
+                        my_frame[r, c] = utility.ITEM_COLORS[utility.Items.FOG.value]
             frames.append(my_frame)
 
         return frames
@@ -226,13 +230,14 @@ class Pomme(gym.Env):
                 self._viewer = None
             return
 
+        human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
         if mode == 'rgb_array':
             return frames[0] # just return the first value in this case.
 
-        all_img = resize(frames[0], (self._board_size*HUMAN_FACTOR, self._board_size*HUMAN_FACTOR), interp='nearest')
+        all_img = resize(frames[0], (self._board_size*human_factor, self._board_size*human_factor), interp='nearest')
         other_imgs = [
-            resize(frame, (int(self._board_size*HUMAN_FACTOR/4), int(self._board_size*HUMAN_FACTOR/4)), interp='nearest')
+            resize(frame, (int(self._board_size*human_factor/4), int(self._board_size*human_factor/4)), interp='nearest')
             for frame in frames[1:]
         ]
 
@@ -243,194 +248,11 @@ class Pomme(gym.Env):
             from gym.envs.classic_control import rendering
             self._viewer = rendering.SimpleImageViewer()
         self._viewer.imshow(img)
-        self._viewer.window.on_key_press = self._on_key_press
-        self._viewer.window.on_key_release = self._on_key_release
-        time.sleep(1.0 / RENDER_FPS)
 
-
-def make_board(size, num_rigid=None, num_passage=0):
-    """Make the random but symmetric board.
-
-    The numbers refer to:
-     0 - passage
-     1 - rigid wall
-     2 - wood wall
-     3 - bomb
-     4 - extra bomb item (not implemented)
-     5 - extra firepower item (not implemented)
-     6 - current flames
-     7 - fog of war.
-     8 - 11: agents.
-
-    Args:
-      size: The dimension of the board, i.e. it's sizeXsize.
-
-    Returns:
-      board: The resulting random board.
-    """
-    # Initialize everything as a wood wall.
-    board = 2 * np.ones((size, size)).astype(np.uint8)
-
-    # Set the players down.
-    board[1, 1] = 8
-    board[size-2, 1] = 9
-    board[1, size-2] = 10
-    board[size-2, size-2] = 11
-
-    # Give the players some breathing room on either side.
-    for i in range(2, 4):
-        board[1, i] = 0
-        board[i, 1] = 0
-        board[1, size-i-1] = 0
-        board[size-i-1, 1] = 0
-        board[size-2, size-i-1] = 0
-        board[size-i-1, size-2] = 0
-        board[size-2, i] = 0
-        board[i, size-2] = 0
-
-    if num_rigid == None:
-        num_rigid = size
-
-    while num_rigid > 0:
-        row = random.randint(0, size-1)
-        col = random.randint(0, size-1)
-        if board[row, col] != 2:
-            continue
-        board[row, col] = 1
-        num_rigid -= 1
-
-    while num_passage > 0:
-        row = random.randint(0, size-1)
-        col = random.randint(0, size-1)
-        if board[row, col] != 2:
-            continue
-        board[row, col] = 0
-        num_passage -= 1
-
-    return board
-
-
-def is_valid_direction(board, position, direction):
-    row, col = position
-
-    if Direction(direction) == Direction.UP:
-        return row - 1 >= 0 and board[row-1][col] in [0, 3]
-    
-    if Direction(direction) == Direction.DOWN:
-        return row + 1 < len(board) and board[row+1][col] in [0, 3]
-    
-    if Direction(direction) == Direction.LEFT:
-        return col - 1 >= 0 and board[row][col-1] in [0, 3]
-    
-    if Direction(direction) == Direction.RIGHT:
-        return col + 1 < len(board[0]) and board[row][col+1] in [0, 3]
-
-    raise InvalidDirection("We did not receive a valid direction.")
-
-
-class BomberAgent:
-    """Container to keep the agent state."""
-    def __init__(self, agent_id, position):
-        self.agent_id = agent_id
-        self.position = position
-        self.ammo = 1
-        self.is_alive = True
-        self.blast_strength = DEFAULT_BLAST_STRENGTH
-
-    def maybe_lay_bomb(self):
-        if self.ammo > 0:
-            self.ammo -= 1
-            return Bomb(self, self.position, DEFAULT_BOMB_LIFE, self.blast_strength)
-        return None
-
-    def incr_ammo(self):
-        self.ammo += 1
-
-    def move(self, direction):
-        row, col = self.position
-        if Direction(direction) == Direction.UP:
-            row -= 1
-        elif Direction(direction) == Direction.DOWN:
-            row += 1
-        elif Direction(direction) == Direction.LEFT:
-            col -= 1
-        elif Direction(direction) == Direction.RIGHT:
-            col += 1
-        self.position = (row, col)
-
-    def in_range(self, exploded_map):
-        row, col = self.position
-        return exploded_map[row][col] == 1
-
-    def die(self):
-        self.is_alive = False
-
-
-class Bomb:
-    def __init__(self, bomber, position, life, blast_strength):
-        self.bomber = bomber
-        self.position = position
-        self._life = life
-        self.blast_strength = blast_strength
-
-    def step(self):
-        self._life -= 1
-
-    def exploded(self):
-        return self._life == 0
-
-    def explode(self):
-        row, col = self.position
-        indices = []
-        indices.extend([row + i, col] for i in range(self.blast_strength))
-        indices.extend([row - i, col] for i in range(1, self.blast_strength))
-        indices.extend([row, col + i] for i in range(1, self.blast_strength))
-        indices.extend([row, col - i] for i in range(1, self.blast_strength))
-        return indices
-
-    def in_range(self, exploded_map):
-        row, col = self.position
-        return exploded_map[row][col] == 1
-
-
-if __name__=="__main__":
-    # keyboard: player 1 is human
-    from pyglet.window import key
-    
-    key_input = 0
-  
-    def on_key_press(k, mod):
-        global key_input
-        key_input = {
-            key.UP: 1,
-            key.DOWN: 2,
-            key.LEFT: 3,
-            key.RIGHT: 4,
-            key.SPACE: 5,
-            key.DELETE: 6,
-        }.get(k)
-        print("KI: ", key_input)
-
-    def on_key_release(k, mod):
-        global key_input
-        key_input = 0
-
-    env = PommeEnv(GameType.FFA, on_key_press=on_key_press, on_key_release=on_key_release)
-    env.seed(np.random.randint(1000000))
-
-    done = False
-    obs = env.reset()
-
-    while not done:
-        env.render()
-        actions = []
-        if key_input == 6:
-            time.sleep(50)
-        actions.append(key_input)
-        for i in range(1, env.num_agents):
-            action = env.action_space.sample()
-            actions.append(action)
-
-        obs, reward, done, info = env.step(actions)
-
-    env.render()
+        for agent in self._agents:
+            if agent.has_key_input():
+                self._viewer.window.on_key_press = agent.on_key_press
+                self._viewer.window.on_key_release = agent.on_key_release
+                break
+        
+        time.sleep(1.0 / utility.RENDER_FPS)

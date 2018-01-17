@@ -1,18 +1,20 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
+from . import envs
+from . import agents
 
 import gym
 
-from envs import v0
 
-
-def testFFA():
-    env = v0.Pomme
-    ret = locals()
-    gym.envs.registration.register(
-        id='Pomme-v0',
-        entry_point='v0:Pomme',
-    )
-    return ret
+# TODO: Remove the pommerman_ and make it universal to the configs here.
+def pommerman_testFFA():
+    env = envs.v0.Pomme
+    env_entry_point = 'envs:v0:Pomme'
+    env_id = 'Pomme-v0'
+    env_kwargs = {
+        'game_type': envs.utility.GameType.FFA,
+        'board_size': envs.utility.BOARD_SIZE,
+        'num_rigid': envs.utility.NUM_RIGID,
+        'num_passage': envs.utility.NUM_PASSAGE,
+    }
+    print(env_kwargs)
+    agent = agents.Agent
+    return locals()
