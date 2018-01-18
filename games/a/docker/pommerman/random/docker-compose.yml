@@ -1,0 +1,21 @@
+version: "3"
+services:
+  web:
+    image: cinjon/playground-start:random
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "80:80"
+      - "81:80"
+      - "82:80"
+      - "83:80"
+    networks:
+      - webnet
+networks:
+  webnet:
