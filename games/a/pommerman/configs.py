@@ -14,6 +14,7 @@ def pommerman_testFFA():
         'board_size': envs.utility.BOARD_SIZE,
         'num_rigid': envs.utility.NUM_RIGID,
         'num_passage': envs.utility.NUM_PASSAGE,
+        'num_items': envs.utility.NUM_ITEMS,
     }
     print(env_kwargs)
     agent = agents.Agent

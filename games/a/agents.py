@@ -2,6 +2,7 @@ import requests
 import pickle
 import time
 
+
 class _Agent(object):
     def __init__(self, agent):
         self._agent = agent

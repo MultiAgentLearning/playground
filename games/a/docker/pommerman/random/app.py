@@ -13,8 +13,6 @@ def action():
     data = request.get_json()
     obs = data.get("obs")
     ret = random.randint(0, 5)
-    print(ret)
-    print(obs)
     return jsonify({"action": ret})
 
 @app.route("/")

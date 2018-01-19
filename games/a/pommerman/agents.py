@@ -11,6 +11,7 @@ class Agent(object):
         self.ammo = 1
         self.is_alive = True
         self.blast_strength = DEFAULT_BLAST_STRENGTH
+        self.can_kick = False
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
@@ -23,13 +24,13 @@ class Agent(object):
 
     def move(self, direction):
         row, col = self.position
-        if Direction(direction) == Direction.UP:
+        if Direction(direction) == Direction.Up:
             row -= 1
-        elif Direction(direction) == Direction.DOWN:
+        elif Direction(direction) == Direction.Down:
             row += 1
-        elif Direction(direction) == Direction.LEFT:
+        elif Direction(direction) == Direction.Left:
             col -= 1
-        elif Direction(direction) == Direction.RIGHT:
+        elif Direction(direction) == Direction.Right:
             col += 1
         self.position = (row, col)
 
@@ -48,6 +49,22 @@ class Agent(object):
         self.ammo = 1
         self.is_alive = True
         self.blast_strength = DEFAULT_BLAST_STRENGTH
+
+    def pick_up(self, item):
+        if item == Items.ExtraBomb:
+            self.ammo += 1
+        elif item == Items.IncrRange:
+            self.blast_strength += 1
+        elif item == Items.MoveFast:
+            # TODO: How should we do this?
+            pass
+        elif item == Items.Kick:
+            self.can_kick = True
+        elif item == Items.Skull:
+            if random.random() < .5:
+                self.blast_strength = max(2, self.blast_strength - 1)
+            else:
+                self.ammo = max(1, self.ammo - 1)
 
 
 class Bomb(object):

@@ -18,12 +18,14 @@ class Pomme(gym.Env):
                  game_type=None,
                  board_size=None,
                  num_rigid=None,
-                 num_passage=None):
+                 num_passage=None,
+                 num_items=None):
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
         self._num_rigid = num_rigid
         self._num_passage = num_passage
+        self._num_items = num_items
         self._viewer = None
 
         # Actions are: [Null, Up, Down, Left, Right, Bomb]
@@ -109,10 +111,11 @@ class Pomme(gym.Env):
         assert(self._agents is not None)
 
         self._board = utility.make_board(self._board_size, self._num_rigid, self._num_passage)
+        self._items = utility.make_items(self._board, self._num_items)
         self._bombs = []
         self._powerups = []
         for agent_id, agent in enumerate(self._agents):
-            pos = np.where(self._board == agent_id+8)
+            pos = np.where(self._board == agent_id + len(utility.Items))
             row = pos[0][0]
             col = pos[1][0]
             agent.set_start_position((row, col))
@@ -126,8 +129,15 @@ class Pomme(gym.Env):
         return [seed]
 
     def _step(self, actions):
-        # Replace the flames with passage
-        self._board[np.where(self._board == utility.Items.FLAMES.value)] = 0
+        # Replace the flames with passage. If there is an item there, then reveal that item.
+        flame_positions = np.where(self._board == utility.Items.Flames.value)
+        for r, c in zip(flame_positions[0], flame_positions[1]):
+            value = self._items.get((r, c))
+            if value:
+                del self._items[(r, c)]
+            else:
+                value = utility.Items.Passage.value
+            self._board[(r, c)] = value
 
         # Step the living agents.
         for num, agent in enumerate(self._agents):
@@ -143,6 +153,25 @@ class Pomme(gym.Env):
                         self._bombs.append(bomb)
                 elif utility.is_valid_direction(self._board, position, action):
                     agent.move(action)
+                    if agent.can_kick and utility.is_bomb(self._board, agent.position):
+                        row, col = agent.position
+                        bomb = [b for b in self._bombs if b.position == (row, col)][0]
+                        if utility.Direction(direction) == utility.Direction.Up:
+                            while row > 0 and self._board[row-1][col] == utility.Items.Passage.value:
+                                row -= 1
+                        elif utility.Direction(direction) == utility.Direction.Down:
+                            while row < self._size-1 and self._board[row+1][col] == utility.Items.Passage.value:
+                                row += 1
+                        elif utility.Direction(direction) == utility.Direction.Left:
+                            while col > 0 and self._board[row][col-1] == utility.Items.Passage.value:
+                                col -= 1
+                        elif utility.Direction(direction) == utility.Direction.Right:
+                            while col < self._size-1 and self._board[row][col+1] == utility.Items.Passage.value:
+                                col += 1
+                        # TODO: animate this.
+                        bomb.position = (row, col)
+                    if utility.is_item(self._board, agent.position):
+                        agent.pick_up(utility.Items(self._board[agent.position]))
 
         # Explode bombs.
         next_bombs = []
@@ -155,10 +184,10 @@ class Pomme(gym.Env):
                     for r, c in indices:
                         if not all([r >= 0, c >= 0, r < self._board_size, c < self._board_size]):
                             break
-                        if self._board[r][c] == 1:
+                        if self._board[r][c] == utility.Items.Rigid.value:
                             break
                         exploded_map[r][c] = 1
-                        if self._board[r][c] == 2:
+                        if self._board[r][c] == utility.Items.Wood.value:
                             break
             else:
                 next_bombs.append(bomb)
@@ -174,19 +203,18 @@ class Pomme(gym.Env):
         # Kill these agents.
         for agent in self._agents:
             if agent.in_range(exploded_map):
-                continue
                 agent.die()
         exploded_map = np.array(exploded_map)
 
         # Update the board
         for bomb in self._bombs:
-            self._board[bomb.position] = 3
+            self._board[bomb.position] = utility.Items.Bomb.value
         for agent in self._agents:
-            self._board[np.where(self._board == agent.agent_id+8)] = 0
+            self._board[np.where(self._board == agent.agent_id + len(utility.Items))] = utility.Items.Passage.value
             if agent.is_alive:
-                self._board[agent.position] = agent.agent_id+8
+                self._board[agent.position] = agent.agent_id + len(utility.Items)
                 
-        self._board[np.where(exploded_map == 1)] = utility.Items.FLAMES.value
+        self._board[np.where(exploded_map == 1)] = utility.Items.Flames.value
 
         done = self._get_done()
         obs = self._get_observations()
@@ -199,10 +227,11 @@ class Pomme(gym.Env):
         frames = []
 
         all_frame = np.zeros((self._board_size, self._board_size, 3))
+        num_items = len(utility.Items)
         for row in range(self._board_size):
             for col in range(self._board_size):
-                if self._board[row][col] in list(range(8, 12)):
-                    num_agent = self._board[row][col] - 8
+                if self._board[row][col] in list(range(num_items, num_items+4)):
+                    num_agent = self._board[row][col] - num_items
                     if self._agents[num_agent].is_alive:
                         all_frame[row][col] = utility.AGENT_COLORS[num_agent]
                 else:
@@ -218,7 +247,7 @@ class Pomme(gym.Env):
                 for c in range(self._board_size):
                     if not all([row >= r - agent_view_size, row < r + agent_view_size,
                                 col >= c - agent_view_size, col < c + agent_view_size]):
-                        my_frame[r, c] = utility.ITEM_COLORS[utility.Items.FOG.value]
+                        my_frame[r, c] = utility.ITEM_COLORS[utility.Items.Fog.value]
             frames.append(my_frame)
 
         return frames

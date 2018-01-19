@@ -6,40 +6,49 @@ import numpy as np
 
 RENDER_FPS = 10
 BOARD_SIZE = 13 # Square map with this size
-NUM_RIGID = 40
+NUM_RIGID = 45
 NUM_PASSAGE = 12
+NUM_ITEMS = 16
 AGENT_VIEW_SIZE = 4 # How much of the map the agent sees not under fog of war.
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
 DEFAULT_BOMB_LIFE = 20
 AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
-ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], None, None, [241, 196, 15], [141, 137, 124]]
-
+ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
+ITEM_COLORS += [(153, 153, 255)]*5 # TODO: This is for the ExtraBomb, IncrRange, etc. Change so that they are distinct.
+            
 
 class Items(Enum):
-    PASSAGE = 0
-    RIGID = 1
-    WOOD = 2
-    BOMB = 3 # prev was [19, 20, 24]
-    ITEMEXTRA = 4
-    ITEMBLAST = 5
-    FLAMES = 6
-    FOG = 7
+    Passage = 0
+    Rigid = 1
+    Wood = 2
+    Bomb = 3
+    Flames = 4
+    Fog = 5
+    ExtraBomb = 6 # adds ammo.
+    IncrRange = 7 # increases the blast_strength
+    MoveFast = 8 # TODO
+    Kick = 9 # can kick bombs by touching them.
+    Skull = 10 # randomly either reduces ammo (capped at 1) or blast_strength (capped at 2)
 
 
 class GameType(Enum):
-    FFA = 1 # 1v1v1v1
-    TEAM = 2 # 2v2 where each team can share observations. 
-    TEAMDIFF = 3 # 2v2 where each team cannot share observations.
-    TEAMDIFFCOMM = 4 # 2v2 where each cannot share observations but can pass a discrete communication.
-    
+    # 1v1v1v1. You submit an agent and it competes against other single agents.
+    FFA = 1 
+    # 2v2: team shares observations. You submit a one agent that accepts observations for a team.
+    TeamShareObs = 2
+    # 2v2: team does not share observations. You submit two agents and they compete together against other teams.
+    TeamDiffObs = 3 
+    # 2v2: team additionally passes discrete communications.
+    TeamDiffObsDiscreteComm = 4
 
+    
 class Direction(Enum):
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
+    Up = 1
+    Down = 2
+    Left = 3
+    Right = 4
 
 
 class Result(Enum):
@@ -73,25 +82,30 @@ def make_board(size, num_rigid=None, num_passage=0):
     Returns:
       board: The resulting random board.
     """
+    _num_rigid = num_rigid
+    _num_passage = num_passage
+
     # Initialize everything as a wood wall.
     board = 2 * np.ones((size, size)).astype(np.uint8)
 
     # Set the players down.
-    board[1, 1] = 8
-    board[size-2, 1] = 9
-    board[1, size-2] = 10
-    board[size-2, size-2] = 11
+    num_first_agent = len(Items)
+    board[1, 1] = num_first_agent
+    board[size-2, 1] = num_first_agent + 1
+    board[1, size-2] = num_first_agent + 2
+    board[size-2, size-2] = num_first_agent + 3
 
     # Give the players some breathing room on either side.
+    passage = Items.Passage.value
     for i in range(2, 4):
-        board[1, i] = 0
-        board[i, 1] = 0
-        board[1, size-i-1] = 0
-        board[size-i-1, 1] = 0
-        board[size-2, size-i-1] = 0
-        board[size-i-1, size-2] = 0
-        board[size-2, i] = 0
-        board[i, size-2] = 0
+        board[1, i] = passage
+        board[i, 1] = passage
+        board[1, size-i-1] = passage
+        board[size-i-1, 1] = passage
+        board[size-2, size-i-1] = passage
+        board[size-i-1, size-2] = passage
+        board[size-2, i] = passage
+        board[i, size-2] = passage
 
     if num_rigid == None:
         num_rigid = size
@@ -99,37 +113,93 @@ def make_board(size, num_rigid=None, num_passage=0):
     while num_rigid > 0:
         row = random.randint(0, size-1)
         col = random.randint(0, size-1)
-        if board[row, col] != 2:
+        if board[row, col] != Items.Wood.value:
             continue
-        board[row, col] = 1
+        board[row, col] = Items.Rigid.value
+        board[col, row]
         num_rigid -= 1
 
     while num_passage > 0:
         row = random.randint(0, size-1)
         col = random.randint(0, size-1)
-        if board[row, col] != 2:
+        if board[row, col] != Items.Wood.value:
             continue
-        board[row, col] = 0
+        board[row, col] = passage
         num_passage -= 1
+
+    if not is_accessible(board, [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]):
+        return make_board(size, _num_rigid, _num_passage)
 
     return board
 
 
+def make_items(board, num_items):
+    item_positions = {}
+    while num_items > 0:
+        row = random.randint(0, len(board)-1)
+        col = random.randint(0, len(board[0])-1)
+        if board[row, col] != Items.Wood.value:
+            continue
+        if (row, col) in item_positions:
+            continue
+
+        item_positions[(row, col)] = random.randint(Items.Fog.value + 1, len(Items) + 1)
+        num_items -= 1
+    return item_positions
+
+
+def is_accessible(board, agent_positions):
+    """Return true if all of the agents can reach each other."""
+    seen = set()
+    agent_position = agent_positions.pop()
+    Q = [agent_position]
+    while Q:
+        row, col = Q.pop()
+        for (i, j) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            next_row = row+i
+            next_col = col+j
+            if (next_row, next_col) in seen:
+                continue
+            if next_row < 0 or next_row >= len(board) or next_col < 0 or next_col >= len(board):
+                continue
+            if board[next_row, next_col] == 1:
+                continue
+
+            if (next_row, next_col) in agent_positions:
+                agent_positions.pop(agent_positions.index((next_row, next_col)))
+                if not len(agent_positions):
+                    return True
+
+            seen.add((next_row, next_col))
+            Q.append((next_row, next_col))
+    return False
+    
+
 def is_valid_direction(board, position, direction):
     row, col = position
+    invalid_values = [item.value for item in [Items.Rigid, Items.Wood]]
 
-    if Direction(direction) == Direction.UP:
-        return row - 1 >= 0 and board[row-1][col] in [0, 3]
+    if Direction(direction) == Direction.Up:
+        return row - 1 >= 0 and board[row-1][col] not in invalid_values
     
-    if Direction(direction) == Direction.DOWN:
-        return row + 1 < len(board) and board[row+1][col] in [0, 3]
+    if Direction(direction) == Direction.Down:
+        return row + 1 < len(board) and board[row+1][col] not in invalid_values
     
-    if Direction(direction) == Direction.LEFT:
-        return col - 1 >= 0 and board[row][col-1] in [0, 3]
-    
-    if Direction(direction) == Direction.RIGHT:
-        return col + 1 < len(board[0]) and board[row][col+1] in [0, 3]
+    if Direction(direction) == Direction.Left:
+        return col - 1 >= 0 and board[row][col-1] not in invalid_values
+
+    if Direction(direction) == Direction.Right:
+        return col + 1 < len(board[0]) and board[row][col+1] not in invalid_values
 
     raise InvalidDirection("We did not receive a valid direction.")
 
 
+def is_item(board, position):
+    item_values = [
+        item.value for item in [Items.ExtraBomb, Items.IncrRange, Items.MoveFast, Items.Kick, Items.Skull]
+    ]
+    return board[position] in item_values
+        
+
+def is_bomb(board, position):
+    return board[position] == Items.Bomb.value
