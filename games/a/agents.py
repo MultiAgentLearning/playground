@@ -1,3 +1,7 @@
+import requests
+import pickle
+import time
+
 class _Agent(object):
     def __init__(self, agent):
         self._agent = agent
@@ -11,6 +15,9 @@ class _Agent(object):
     @staticmethod
     def has_key_input():
         return False
+
+    def stop(self):
+        pass
 
 
 class PlayerAgent(_Agent):
@@ -35,11 +42,25 @@ class RandomAgent(_Agent):
 
 class DockerAgent(_Agent):
     """TODO"""
-    def __init__(self, agent, docker_image, docker_client):
+    def __init__(self, agent, docker_image, docker_client, port, **kwargs):
         self._agent = agent
         self._docker_image = docker_image
         self._docker_client = docker_client
-        self._docker_client.containers.run(docker_image, detach=True)
+        self._port = port
+        self._container = self._docker_client.containers.run(
+            docker_image, detach=True, auto_remove=True, ports={80: port}, **kwargs)
+        # TODO: Should really wait until http endpoint available instead of sleeping
+        time.sleep(5)
 
-    def act(self):
-        pass
+    def act(self, obs, action_space):
+        obs_serialized = pickle.dumps(obs, protocol=0).decode("utf-8")
+        request_url = "http://localhost:{}/action".format(self._port)
+        req = requests.post(request_url, json={"obs": obs_serialized})
+        res = req.json()
+        print(res)
+        return res["action"]
+
+    def stop(self):
+        print("Stopping container..")
+        if self._container:
+            return self._container.remove(force=True)
