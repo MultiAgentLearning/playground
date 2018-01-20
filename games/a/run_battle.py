@@ -10,6 +10,8 @@ to operate the agents and then report back the result.
 import agents
 import configs
 import utility
+import atexit
+import functools
 
 import gym
 import tensorflow as tf
@@ -17,14 +19,17 @@ import tensorflow as tf
 import docker
 client = docker.from_env()
 
+def clean_up_agents(agents):
+    """Stops all agents"""
+    return [agent.stop() for agent in agents]
 
 if __name__=="__main__":
     FLAGS = tf.app.flags.FLAGS
     tf.app.flags.DEFINE_string('config', 'pommerman_testFFA', 'Configuration to execute.')
     tf.app.flags.DEFINE_string(
         'agents',
-        # 'player::arrows,random::null,random::null,docker::cinjon/playground-start:random',
-        'player::arrows,random::null,random::null,random::null',
+        'random::null,random::null,random::null,docker::dennybritz/env-test',
+        # 'player::arrows,random::null,random::null,random::null',
         'Comma delineated list of agent types and docker locations to run the agents.')
     # TODO: Incoporate the resource requirements.
 
@@ -44,8 +49,12 @@ if __name__=="__main__":
         elif agent_type == 'random':
             _agents.append(agents.RandomAgent(agent))
         elif agent_type == 'docker':
-            _agents.append(agents.DockerAgent(agent, docker_image=agent_control, docker_client=client,
-                                              port=agent_id+80))
+            agent = agents.DockerAgent(
+                agent,
+                docker_image=agent_control,
+                docker_client=client,
+                port=agent_id+1000)
+            _agents.append(agent)
 
     print(config.env_kwargs)
     gym.envs.registration.register(
@@ -56,6 +65,8 @@ if __name__=="__main__":
     env = config.env(**config.env_kwargs)
     env.seed(0)
     env.set_agents(_agents)
+
+    atexit.register(functools.partial(clean_up_agents, _agents))
 
     print("Starting the Game.")
     obs = env.reset()

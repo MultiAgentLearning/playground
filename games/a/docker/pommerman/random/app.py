@@ -1,6 +1,7 @@
 import os
 import random
 import socket
+from flask import jsonify
 
 from flask import Flask, request
 
@@ -9,11 +10,12 @@ app = Flask(__name__)
 
 @app.route("/action", methods=["POST"])
 def action():
-    obs = request.form["obs"]
+    data = request.get_json()
+    obs = data.get("obs")
     ret = random.randint(0, 5)
     print(ret)
     print(obs)
-    return ret
+    return jsonify({"action": ret})
 
 @app.route("/")
 def test():
