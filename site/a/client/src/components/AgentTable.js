@@ -7,9 +7,9 @@ class AgentTableRow extends Component {
   render() {
     return (
       <Table.Row>
-        <Table.Cell>{this.name}</Table.Cell>
-        <Table.Cell>{this.record}</Table.Cell>
-        <Table.Cell>{this.battles}</Table.Cell>
+        <Table.Cell>{this.props.agent.name}</Table.Cell>
+        <Table.Cell>{this.props.agent.record}</Table.Cell>
+        <Table.Cell>{this.props.agent.battles}</Table.Cell>
       </Table.Row>
     )
   }
@@ -17,6 +17,9 @@ class AgentTableRow extends Component {
 
 class AgentTable extends Component {
   render() {
+    console.log('watat');
+    console.log(this.props);
+    console.log(this.props.agents);
     return (
       <Table celled striped>
         <Table.Header>
@@ -26,7 +29,7 @@ class AgentTable extends Component {
         </Table.Header>
         
         <Table.Body>
-          {this.agents.map((agent, i) => <AgentTableRow agent={agent} key={i} />)}
+          {this.props.agents.map((agent, i) => <AgentTableRow agent={agent} key={i} />)}
         </Table.Body>
       </Table>
     );

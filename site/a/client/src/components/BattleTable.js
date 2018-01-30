@@ -7,10 +7,10 @@ class BattleTableRow extends Component {
   render() {
     return (
       <Table.Row>
-        <Table.Cell>{this.date}</Table.Cell>
-        <Table.Cell>{this.agents}</Table.Cell>
-        <Table.Cell>{this.players}</Table.Cell>
-        <Table.Cell>{this.resultp}</Table.Cell>
+        <Table.Cell>{this.props.battle.date}</Table.Cell>
+        <Table.Cell>{this.props.battle.agents}</Table.Cell>
+        <Table.Cell>{this.props.battle.players}</Table.Cell>
+        <Table.Cell>{this.props.battle.resultp}</Table.Cell>
       </Table.Row>
     )
   }
@@ -27,7 +27,7 @@ class BattleTable extends Component {
         </Table.Header>
         
         <Table.Body>
-          {this.battles.map((battle, i) => <BattleTableRow battle={battle} key={i} />)}
+          {this.props.battles.map((battle, i) => <BattleTableRow battle={battle} key={i} />)}
         </Table.Body>
       </Table>
     );

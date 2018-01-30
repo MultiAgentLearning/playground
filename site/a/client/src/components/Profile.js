@@ -3,7 +3,7 @@ import React from 'react'
 import { Component } from 'react'
 import { connect } from 'react-redux';
 import { history } from '../utils';
-import { agentActions } from '../actions';
+import { dataActions } from '../actions';
 import HeaderFloating from './HeaderFloating'
 import HeaderStationary from './HeaderStationary'
 import AgentTable from './AgentTable'
@@ -33,11 +33,9 @@ class Profile extends Component {
     console.log(params);
     console.log(this.props);
     if (params) {
-      this.getBattles(params.name)
-      this.getAgents(params.name)
-    } else {
-      this.getBattles(this.props.user.slug)
-      this.getAgents(this.props.user.slug)
+      this.getData(params.name);
+    } else if (this.props.user) {
+      this.getData(this.props.user.slug);
     }
   }
 
@@ -45,18 +43,23 @@ class Profile extends Component {
     let params = props.match.params;
     console.log('CWRP');
     console.log(params);
-    console.log(this.props);
-    if (params && params.name === props.user.slug) {
+    console.log(props);
+    if (params && props.user && params.name === props.user.slug) {
       history.push('/me')
-    }
+    } 
   }
 
-  getBattles() {
-    this.props.dispatch(agentActions.getBattles());
+  getData(slug) {
+    this.getBattles(slug)
+    this.getAgents(slug)
+
+  }
+  getBattles(slug) {
+    this.props.dispatch(dataActions.getBattles(slug));
   }
 
-  getAgents() {
-    this.props.dispatch(agentActions.getAgents());
+  getAgents(slug) {
+    this.props.dispatch(dataActions.getAgents(slug));
   }
 
   hideHeader = () => this.setState({
@@ -68,6 +71,20 @@ class Profile extends Component {
 
   render() {
     const { visible } = this.state
+
+    var name = ''
+    var agents = [];
+    var battles = [];
+
+    if (this.props.user) {
+      name = this.props.user.name;
+    }
+    if (this.props.agents) {
+      agents = this.props.agents;
+    }
+    if (this.props.battles) {
+      battles = this.props.battles;
+    }
 
     return (
       <div>
@@ -88,9 +105,9 @@ class Profile extends Component {
             </Container>
 
             <Container text style={{ marginTop: '7em' }}>
-              <Header as='h1'>{this.props.user.name}</Header>
-              <AgentTable agents={this.props.agents} />
-              <BattleTable battles={this.props.battles} />
+              <Header as='h1'>{name}</Header>
+              <AgentTable agents={agents} />
+              <BattleTable battles={battles} />
             </Container>
           </Segment>
         </Visibility>
@@ -100,8 +117,9 @@ class Profile extends Component {
 }
 
 function mapStateToProps(state) {
+  console.log(state);
   const { loggedIn, user } = state.authentication;
-  const { agents, battles } = state.data;
+  const { agents , battles } = state;
   return {
     loggedIn,
     user,

@@ -42,8 +42,6 @@ class HeaderStationary extends Component {
   }
   
   render() {
-    console.log('HEAD stat');
-    console.log(this.props);
     if (this.props.loggedIn) {
       return this.renderLoggedIn();
     } else {

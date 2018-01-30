@@ -16,6 +16,7 @@ class LogoutButton extends Component {
 
   logoutUser() {
     this.props.dispatch(userActions.logout());
+
   }
 
   render() {

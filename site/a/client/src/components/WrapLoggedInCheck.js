@@ -12,14 +12,17 @@ export function WrapLoggedInCheck(Component) {
     }
 
     componentWillMount() {
+      console.log('CWM')
       this.checkLoggedIn(this.props);
     }
 
     componentWillReceiveProps(props) {
+      console.log('CWRP in WLIC')
       this.checkLoggedIn(props);
     }
 
     checkLoggedIn(props) {
+      console.log('CLI!');
       const { dispatch } = this.props;
       const token = JSON.parse(localStorage.getItem('token'));
       if (token && (!props.loggedIn || !props.user) && !this.state.gettingUserInfo) {
