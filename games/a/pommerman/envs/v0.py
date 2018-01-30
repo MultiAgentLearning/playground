@@ -103,25 +103,45 @@ class Pomme(gym.Env):
             return self._step >= self._max_steps
 
     def _collapse_board(self, ring):
+        """Collapses the board at a certain ring radius.
+
+        For example, if the board is 13x13 and ring is 0, then the the ring of the first row, last row,
+        first column, and last column is all going to be turned into rigid walls. All agents in that ring
+        die and all bombs are removed without detonating.
+
+        For further rings, the values get closer to the center.
+
+        Args:
+          ring: Integer value of which cells to collapse.
+        """
+        board = self._board.copy()
+
         def do(r, c):
-            if self._board[r][c] in list(range(num_items, num_items+4)):
+            if board[r][c] in list(range(num_items, num_items+4)):
                 # Agent. Kill it.
-                num_agent = self._board[r][c] - num_items
+                num_agent = board[r][c] - num_items
                 agent = self._agents[num_agent]
                 agent.die()
-            elif utility.is_bomb(self._board, (r, c)):
+            elif utility.is_bomb(board, (r, c)):
                 # Bomb. Remove the bomb.
                 self._bombs = [b for b in self._bombs if b.position != (r, c)]
             elif (r, c) in self._items:
                 # Item. Remove the item.
                 del self._items[(r, c)]
-            self._board[r][c] = utility.Items.Rigid.value
+            board[r][c] = utility.Items.Rigid.value
 
         num_items = len(utility.Items)
-        for cell in range(ring, self._board_size - ring):
+        for cell in range(ring, board_size - ring):
             do(ring, cell)
             if ring != cell:
                 do(cell, ring)
+
+            end = board_size - ring - 1
+            if end != cell:
+                do(end, cell)
+                do(cell, end)
+
+        return board
 
     def _get_info(self):
         alive = [agent for agent in self._agents if agent.is_alive]
@@ -259,7 +279,8 @@ class Pomme(gym.Env):
 
         for ring, collapse in enumerate(self._collapses):
             if self._step == collapse:
-                self._collapse_board(ring)
+                self._board = self._collapse_board(ring)
+                break
 
         return obs, reward, done, info
 
