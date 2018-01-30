@@ -1,8 +1,8 @@
-import { agentConstants } from '../constants';
-import { agentService } from '../services';
+import { dataConstants } from '../constants';
+import { dataService } from '../services';
 import { alertActions } from './';
 
-export const agentActions = {
+export const dataActions = {
   getBattles,
   getAgents,
 };
@@ -11,7 +11,7 @@ function getBattles(userSlug) {
   return dispatch => {
     dispatch(request(userSlug));
 
-    agentService.getBattles(userSlug)
+    dataService.getBattles(userSlug)
                 .then(
                   response => {
                     dispatch(alertActions.success('Received Battles for ' + userSlug + '.'))
@@ -24,16 +24,16 @@ function getBattles(userSlug) {
                 );
   };
   
-  function request(userSlug) { return { type: agentConstants.GET_BATTLES_REQUEST, userSlug } }
-  function success(battles) { return { type: agentConstants.GET_BATTLES_SUCCESS, battles } }
-  function failure(error) { return { type: agentConstants.GET_BATTLES_FAILURE, error } }
+  function request(userSlug) { return { type: dataConstants.GET_BATTLES_REQUEST, userSlug } }
+  function success(battles) { return { type: dataConstants.GET_BATTLES_SUCCESS, battles } }
+  function failure(error) { return { type: dataConstants.GET_BATTLES_FAILURE, error } }
 }
 
 function getAgents(userSlug) {
   return dispatch => {
     dispatch(request());
 
-    agentService.getAgents(userSlug)
+    dataService.getAgents(userSlug)
                 .then(
                   response => {
                     dispatch(alertActions.success('Received Agents for ' + userSlug + '.'))
@@ -46,7 +46,7 @@ function getAgents(userSlug) {
                 );
   };
   
-  function request() { return { type: agentConstants.GET_AGENTS_REQUEST } }
-  function success(agents) { return { type: agentConstants.GET_AGENTS_SUCCESS, agents } }
-  function failure(error) { return { type: agentConstants.GET_AGENTS_FAILURE, error } }
+  function request() { return { type: dataConstants.GET_AGENTS_REQUEST } }
+  function success(agents) { return { type: dataConstants.GET_AGENTS_SUCCESS, agents } }
+  function failure(error) { return { type: dataConstants.GET_AGENTS_FAILURE, error } }
 }

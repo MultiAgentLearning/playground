@@ -1,6 +1,6 @@
 import { handleResponse } from '../utils'
 
-export const agentService = {
+export const dataService = {
   getBattles,
   getAgents,
 }

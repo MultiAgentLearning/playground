@@ -1,4 +1,4 @@
-export const agentConstants = {
+export const dataConstants = {
   GET_BATTLES_REQUEST: 'GET_BATTLES_REQUEST',
   GET_BATTLES_SUCCESS: 'GET_BATTLES_SUCCESS',
   GET_BATTLES_FAILURE: 'GET_BATTLES_FAILURE',
