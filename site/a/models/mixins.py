@@ -1,9 +1,8 @@
-from a import db
+import a
 from collections import OrderedDict
 import datetime
 from flask import abort
 from sqlalchemy import Column, DateTime, Text
-from a.utils import sql
 
 
 def camel_case(snake_str):
@@ -27,10 +26,12 @@ class DictSerializableMixin(object):
 class SlugMixin(object):
     slug = Column(Text, index=True)
 
+    @a.utils.sql.commit_decorator
     def set_slug(self, name=None):
         name = name.replace(',', '')
         name = '-'.join(name.lower().split(' '))
         count = self.__class__.query.filter_by(name=name).count()
+        slug = name
         if count:
             slug += '-%d' % count
         self.slug = slug
@@ -45,7 +46,7 @@ class TimeMixin(object):
 
 
 class AttrsMixin(object):
-    @sql.commit_decorator
+    @a.utils.sql.commit_decorator
     def setattr(self, **kwargs):
         for k,v in kwargs.iteritems():
             if hasattr(self, k):
@@ -85,15 +86,15 @@ class BaseModelMixin(TimeMixin, DictSerializableMixin, AttrsMixin):
     @classmethod
     def create(cls, **kwargs):
         r = cls(**kwargs)
-        db.session.add(r)
-        db.session.commit()
+        a.db.session.add(r)
+        a.db.session.commit()
         return r
 
     def save(self):
-        db.session.add(self)
+        a.db.session.add(self)
 
     def delete(self):
-        db.session.delete(self)
+        a.db.session.delete(self)
 
     def __repr__(self):
         values = ', '.join("%s=%r" % (n, getattr(self, n)) for n in
