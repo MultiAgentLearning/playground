@@ -17,7 +17,7 @@ DEFAULT_BOMB_LIFE = 20
 AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
 ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
 ITEM_COLORS += [(153, 153, 255)]*5 # TODO: This is for the ExtraBomb, IncrRange, etc. Change so that they are distinct.
-            
+
 
 class Items(Enum):
     Passage = 0
@@ -36,12 +36,10 @@ class Items(Enum):
 class GameType(Enum):
     # 1v1v1v1. You submit an agent and it competes against other single agents.
     FFA = 1 
-    # 2v2: team shares observations. You submit a one agent that accepts observations for a team.
-    TeamShareObs = 2
-    # 2v2: team does not share observations. You submit two agents and they compete together against other teams.
-    TeamDiffObs = 3 
-    # 2v2: team additionally passes discrete communications.
-    TeamDiffObsDiscreteComm = 4
+    # 2v2: You submit two agents and they compete together against other teams.
+    Team = 2
+    # 2v2: Same as `Team` but additionally the agents pass discrete communications to each other.
+    TeamRadio = 3
 
     
 class Direction(Enum):
