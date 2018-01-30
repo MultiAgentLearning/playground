@@ -19,13 +19,19 @@ class Pomme(gym.Env):
                  board_size=None,
                  num_rigid=None,
                  num_passage=None,
-                 num_items=None):
+                 num_items=None,
+                 first_step_collapse=800,
+                 max_steps=1000
+    ):
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
         self._num_rigid = num_rigid
         self._num_passage = num_passage
         self._num_items = num_items
+        self._collapses = [first_step_collapse + k * board_size
+                           for k in range(0, int((max_steps - first_step_collapse)/board_size))]
+        self._max_steps = max_steps
         self._viewer = None
 
         # Actions are: [Null, Up, Down, Left, Right, Bomb]
@@ -64,30 +70,58 @@ class Pomme(gym.Env):
     def _get_rewards(self):
         alive_agents = [num for num, agent in enumerate(self._agents) if agent.is_alive]
         if self._game_type == utility.GameType.FFA:
-            if len(alive_agents) == 1:
-                ret = [-1]*4
-                ret[alive_agents[0]] = 1
-                return ret
-            return [0]*4
+            ret = [-1]*4
+            if len(alive_agents) == 1 or self._step >= self._max_steps:
+                for num in alive_agents:
+                    ret[num] = 1
+            else:
+                for num in alive_agents:
+                    ret[num] = 0
+            return ret
         elif alive_agents == [0, 2] or alive_agents == [0] or alive_agents == [2]:
             return [1, -1, 1, -1]
         elif alive_agents == [1, 3] or alive_agents == [1] or alive_agents == [3]:
             return [-1, 1, -1, 1]
+        elif self._step >= self._max_steps:
+            return [1]*4
         else:
             return [0]*4
 
     def _get_done(self):
         alive = [agent for agent in self._agents if agent.is_alive]
+        alive_ids = sorted([agent.agent_id for agent in alive])
         if self._game_type == utility.GameType.FFA:
             # TODO: Change back to 1.
             return len(alive) <= 0
-        else:
-            alive_ids = sorted([agent.agent_id for agent in alive])
-            return any([
+        elif any([
                 len(alive_ids) <= 1,
                 alive_ids == [0, 2],
                 alive_ids == [1, 3],
-            ])
+        ]):
+            return True
+        else:
+            return self._step >= self._max_steps
+
+    def _collapse_board(self, ring):
+        def do(r, c):
+            if self._board[r][c] in list(range(num_items, num_items+4)):
+                # Agent. Kill it.
+                num_agent = self._board[r][c] - num_items
+                agent = self._agents[num_agent]
+                agent.die()
+            elif utility.is_bomb(self._board, (r, c)):
+                # Bomb. Remove the bomb.
+                self._bombs = [b for b in self._bombs if b.position != (r, c)]
+            elif (r, c) in self._items:
+                # Item. Remove the item.
+                del self._items[(r, c)]
+            self._board[r][c] = utility.Items.Rigid.value
+
+        num_items = len(utility.Items)
+        for cell in range(ring, self._board_size - ring):
+            do(ring, cell)
+            if ring != cell:
+                do(cell, ring)
 
     def _get_info(self):
         alive = [agent for agent in self._agents if agent.is_alive]
@@ -110,6 +144,7 @@ class Pomme(gym.Env):
     def _reset(self):
         assert(self._agents is not None)
 
+        self._step = 0
         self._board = utility.make_board(self._board_size, self._num_rigid, self._num_passage)
         self._items = utility.make_items(self._board, self._num_items)
         self._bombs = []
@@ -213,13 +248,19 @@ class Pomme(gym.Env):
             self._board[np.where(self._board == agent.agent_id + len(utility.Items))] = utility.Items.Passage.value
             if agent.is_alive:
                 self._board[agent.position] = agent.agent_id + len(utility.Items)
-                
+
         self._board[np.where(exploded_map == 1)] = utility.Items.Flames.value
 
         done = self._get_done()
         obs = self._get_observations()
         reward = self._get_rewards()
         info = self._get_info()
+        self._step += 1
+
+        for ring, collapse in enumerate(self._collapses):
+            if self._step == collapse:
+                self._collapse_board(ring)
+
         return obs, reward, done, info
 
     def _render_frames(self):
