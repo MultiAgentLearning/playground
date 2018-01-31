@@ -17,26 +17,29 @@ class Pomme(gym.Env):
     def __init__(self,
                  game_type=None,
                  board_size=None,
+                 agent_view_size=None,
                  num_rigid=None,
-                 num_passage=None,
+                 num_wood=None,
                  num_items=None,
-                 first_step_collapse=800,
-                 max_steps=1000
+                 first_collapse=800,
+                 max_steps=1000,
     ):
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
         self._num_rigid = num_rigid
-        self._num_passage = num_passage
+        self._num_wood = num_wood
         self._num_items = num_items
-        self._collapses = [first_step_collapse + k * board_size
-                           for k in range(0, int((max_steps - first_step_collapse)/board_size))]
+        self._collapses = list(range(first_collapse, max_steps, int((max_steps - first_collapse)/board_size)))
         self._max_steps = max_steps
         self._viewer = None
 
-        # Actions are: [Null, Up, Down, Left, Right, Bomb]
+        # Observation and Action Spaces. These are both geared towards a single agent even though the environment expects
+        # actions and returns observations for all four agents. We do this so that it's clear what the actions and obs are
+        # for a single agent. Wrt the observations, they are actually returned as a dict for easier understanding.
         self.action_space = spaces.Discrete(6)
-        self.observation_space = spaces.Box(low=0, high=11, shape=(2, self._board_size, self._board_size))
+        # Observations: This is geared towards a single agent.
+        self.observation_space = spaces.Box(low=0, high=len(utility.Items), shape=(self._board_size, self._board_size))
 
     def set_agents(self, agents):
         self._agents = agents
@@ -49,6 +52,9 @@ class Pomme(gym.Env):
 
         The agent gets to choose whether it wants to keep the fogged part in memory.
         """
+        attrs = ['position', 'ammo', 'blast_strength', 'can_kick', 'speed', 'acceleration', 'max_speed', 'teammate']
+        keys = ['board'] + attrs
+
         agent_view_size = utility.AGENT_VIEW_SIZE
         observations = []
         for agent in self._agents:
@@ -61,17 +67,17 @@ class Pomme(gym.Env):
                                 col >= c - agent_view_size, col < c + agent_view_size]):
                         board[r, c] = 7
             agent_obs['board'] = board
-            agent_obs['position'] = (row, col)
-            agent_obs['ammo'] = agent.ammo
-            agent_obs['blast_strength'] = agent.blast_strength
+            for attr in attrs:
+                agent_obs[attr] = getattr(agent, attr)
             observations.append(agent_obs)
+
         return observations
 
     def _get_rewards(self):
         alive_agents = [num for num, agent in enumerate(self._agents) if agent.is_alive]
         if self._game_type == utility.GameType.FFA:
             ret = [-1]*4
-            if len(alive_agents) == 1 or self._step >= self._max_steps:
+            if len(alive_agents) == 1 or self._step_count >= self._max_steps:
                 for num in alive_agents:
                     ret[num] = 1
             else:
@@ -82,7 +88,7 @@ class Pomme(gym.Env):
             return [1, -1, 1, -1]
         elif alive_agents == [1, 3] or alive_agents == [1] or alive_agents == [3]:
             return [-1, 1, -1, 1]
-        elif self._step >= self._max_steps:
+        elif self._step_count >= self._max_steps:
             return [1]*4
         else:
             return [0]*4
@@ -100,7 +106,7 @@ class Pomme(gym.Env):
         ]):
             return True
         else:
-            return self._step >= self._max_steps
+            return self._step_count >= self._max_steps
 
     def _collapse_board(self, ring):
         """Collapses the board at a certain ring radius.
@@ -116,7 +122,7 @@ class Pomme(gym.Env):
         """
         board = self._board.copy()
 
-        def do(r, c):
+        def collapse(r, c):
             if board[r][c] in list(range(num_items, num_items+4)):
                 # Agent. Kill it.
                 num_agent = board[r][c] - num_items
@@ -131,15 +137,15 @@ class Pomme(gym.Env):
             board[r][c] = utility.Items.Rigid.value
 
         num_items = len(utility.Items)
-        for cell in range(ring, board_size - ring):
-            do(ring, cell)
+        for cell in range(ring, self._board_size - ring):
+            collapse(ring, cell)
             if ring != cell:
-                do(cell, ring)
+                collapse(cell, ring)
 
-            end = board_size - ring - 1
+            end = self._board_size - ring - 1
+            collapse(end, cell)
             if end != cell:
-                do(end, cell)
-                do(cell, end)
+                collapse(cell, end)
 
         return board
 
@@ -161,11 +167,11 @@ class Pomme(gym.Env):
             else:
                 return {'result': utility.Result.Incomplete}
 
-    def _reset(self):
+    def reset(self):
         assert(self._agents is not None)
 
-        self._step = 0
-        self._board = utility.make_board(self._board_size, self._num_rigid, self._num_passage)
+        self._step_count = 0
+        self._board = utility.make_board(self._board_size, self._num_rigid, self._num_wood)
         self._items = utility.make_items(self._board, self._num_items)
         self._bombs = []
         self._powerups = []
@@ -178,12 +184,12 @@ class Pomme(gym.Env):
 
         return self._get_observations()
 
-    def _seed(self, seed=None):
+    def seed(self, seed=None):
         gym.spaces.prng.seed(seed)
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, actions):
+    def step(self, actions):
         # Replace the flames with passage. If there is an item there, then reveal that item.
         flame_positions = np.where(self._board == utility.Items.Flames.value)
         for r, c in zip(flame_positions[0], flame_positions[1]):
@@ -201,38 +207,45 @@ class Pomme(gym.Env):
                 position = agent.position
 
                 if action == 0:
-                    continue
+                    agent.stop()
                 elif action == 5:
                     bomb = agent.maybe_lay_bomb()
                     if bomb:
                         self._bombs.append(bomb)
                 elif utility.is_valid_direction(self._board, position, action):
-                    agent.move(action)
-                    if agent.can_kick and utility.is_bomb(self._board, agent.position):
+                    next_position = agent.get_next_position(action)
+
+                    # This might be a bomb position. Only move in that case if the agent can kick.
+                    if not utility.is_bomb(self._board, next_position):
+                        agent.move(action)
+                    elif not agent.can_kick:
+                        agent.stop()
+                    else:
+                        agent.move(action)
                         row, col = agent.position
                         bomb = [b for b in self._bombs if b.position == (row, col)][0]
-                        if utility.Direction(direction) == utility.Direction.Up:
-                            while row > 0 and self._board[row-1][col] == utility.Items.Passage.value:
-                                row -= 1
-                        elif utility.Direction(direction) == utility.Direction.Down:
-                            while row < self._size-1 and self._board[row+1][col] == utility.Items.Passage.value:
-                                row += 1
-                        elif utility.Direction(direction) == utility.Direction.Left:
-                            while col > 0 and self._board[row][col-1] == utility.Items.Passage.value:
-                                col -= 1
-                        elif utility.Direction(direction) == utility.Direction.Right:
-                            while col < self._size-1 and self._board[row][col+1] == utility.Items.Passage.value:
-                                col += 1
-                        # TODO: animate this.
-                        bomb.position = (row, col)
+                        bomb.moving_direction = utility.Direction(action)
                     if utility.is_item(self._board, agent.position):
                         agent.pick_up(utility.Items(self._board[agent.position]))
+                        self._board[agent.position] = utility.Items.Passage.value
+                else:
+                    # The agent made an invalid direction.
+                    # NOTE: Another possibility to do here is to use it as a way to reset speed.
+                    agent.stop()
 
         # Explode bombs.
         next_bombs = []
         exploded_map = np.zeros_like(self._board)
         for bomb in self._bombs:
-            bomb.step()
+            bomb.tick()
+            if bomb.is_moving():
+                invalid_values = list(range(1, len(utility.Items)+1+4))
+                if utility.is_valid_direction(self._board, bomb.position, bomb.moving_direction.value, invalid_values=invalid_values):
+                    self._board[bomb.position] = utility.Items.Passage.value
+                    bomb.move()
+                else:
+                     bomb.stop()
+
             if bomb.exploded():
                 bomb.bomber.incr_ammo()
                 for _, indices in bomb.explode().items():
@@ -275,10 +288,10 @@ class Pomme(gym.Env):
         obs = self._get_observations()
         reward = self._get_rewards()
         info = self._get_info()
-        self._step += 1
+        self._step_count += 1
 
         for ring, collapse in enumerate(self._collapses):
-            if self._step == collapse:
+            if self._step_count == collapse:
                 self._board = self._collapse_board(ring)
                 break
 
@@ -314,7 +327,7 @@ class Pomme(gym.Env):
 
         return frames
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         if close:
             if self._viewer is not None:
                 self._viewer.close()

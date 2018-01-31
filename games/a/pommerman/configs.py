@@ -1,5 +1,5 @@
 from . import envs
-from . import agents
+from . import characters
 
 import gym
 
@@ -13,9 +13,11 @@ def pommerman_testFFA():
         'game_type': envs.utility.GameType.FFA,
         'board_size': envs.utility.BOARD_SIZE,
         'num_rigid': envs.utility.NUM_RIGID,
-        'num_passage': envs.utility.NUM_PASSAGE,
+        'num_wood': envs.utility.NUM_WOOD,
         'num_items': envs.utility.NUM_ITEMS,
+        'first_collapse': envs.utility.FIRST_COLLAPSE,
+        'max_steps': envs.utility.MAX_STEPS
     }
     print(env_kwargs)
-    agent = agents.Agent
+    agent = characters.Agent
     return locals()

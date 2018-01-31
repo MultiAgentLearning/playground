@@ -1,12 +1,13 @@
-import a
-from a.pommerman.envs.utility import DEFAULT_BLAST_STRENGTH, DEFAULT_BOMB_LIFE
-from a.pommerman.envs.utility import Direction, Items
+import random
+
+from .envs.utility import DEFAULT_BLAST_STRENGTH, DEFAULT_BOMB_LIFE
+from .envs.utility import Direction, Items
 
 
 class Agent(object):
     """Container to keep the agent state."""
 
-    def __init__(self, agent_id, start_position=None, max_speed=1):
+    def __init__(self, agent_id, start_position=None, max_speed=1, teammate=None):
         self.agent_id = agent_id
         self.start_position = start_position
         self.position = start_position
@@ -16,7 +17,9 @@ class Agent(object):
         self.can_kick = False
         self.speed = 0
         self.acceleration = 1
+        self._max_speed = max_speed
         self.max_speed = max_speed
+        self.teammate = teammate
         self._current_direction = None
 
     def maybe_lay_bomb(self):
@@ -28,13 +31,13 @@ class Agent(object):
     def incr_ammo(self):
         self.ammo += 1
 
-    def move(self, direction):
-        # Reset the speed if we were going in the other direction.
+    def get_next_position(self, direction):
         if direction != self._current_direction:
-            self._current_direction = direction
-            self.speed = 0
+            speed = 0
+        else:
+            speed = self.speed
 
-        speed = self.speed + self.acceleration
+        speed += self.acceleration
         speed = max(speed, self.max_speed)
 
         row, col = self.position
@@ -46,7 +49,15 @@ class Agent(object):
             col -= speed
         elif Direction(direction) == Direction.Right:
             col += speed
-        self.position = (row, col)
+        return (row, col)
+
+    def move(self, direction):
+        # Reset the speed if we were going in the other direction.
+        if direction != self._current_direction:
+            self._current_direction = direction
+            self.speed = 0
+
+        self.position = self.get_next_position(direction)
 
     def stop(self):
         self.speed = 0
@@ -66,6 +77,11 @@ class Agent(object):
         self.ammo = 1
         self.is_alive = True
         self.blast_strength = DEFAULT_BLAST_STRENGTH
+        self.can_kick = False
+        self.speed = 0
+        self.acceleration = 1
+        self.max_speed = self._max_speed
+        self._current_direction = None
 
     def pick_up(self, item):
         if item == Items.ExtraBomb:
@@ -89,9 +105,25 @@ class Bomb(object):
         self.position = position
         self._life = life
         self.blast_strength = blast_strength
+        self.moving_direction = None
 
-    def step(self):
+    def tick(self):
         self._life -= 1
+
+    def move(self):
+        row, col = self.position
+        if self.moving_direction == Direction.Up:
+            row -= 1
+        elif self.moving_direction == Direction.Down:
+            row += 1
+        elif self.moving_direction == Direction.Left:
+            col -= 1
+        elif self.moving_direction == Direction.Right:
+            col += 1
+        self.position = (row, col)
+
+    def stop(self):
+        self.moving_direction = None
 
     def exploded(self):
         return self._life == 0
@@ -110,7 +142,7 @@ class Bomb(object):
         row, col = self.position
         return exploded_map[row][col] == 1
 
-    
-class TestAgent(a.agents.Agent):
-    def act(self, obs):
-        pass
+    def is_moving(self):
+        return self.moving_direction is not None
+
+

@@ -1,22 +1,27 @@
+from collections import defaultdict
 from enum import Enum
+import itertools
 import random
 
 import numpy as np
 
 
-RENDER_FPS = 10
+RENDER_FPS = 15
 BOARD_SIZE = 13 # Square map with this size
-NUM_RIGID = 45
-NUM_PASSAGE = 12
+NUM_RIGID = 50
+NUM_WOOD = 50
 NUM_ITEMS = 16
-AGENT_VIEW_SIZE = 4 # How much of the map the agent sees not under fog of war.
+AGENT_VIEW_SIZE = 5 # How much of the map the agent sees not under fog of war.
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
-DEFAULT_BOMB_LIFE = 20
+DEFAULT_BOMB_LIFE = 25
 AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
 ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
-ITEM_COLORS += [(153, 153, 255)]*5 # TODO: This is for the ExtraBomb, IncrRange, etc. Change so that they are distinct.
+# NOTE: This is for the ExtraBomb, IncrRange, etc. 
+ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)]
+FIRST_COLLAPSE = 500 # The first step at which the board starts to collapse.
+MAX_STEPS = 2500
 
 
 class Items(Enum):
@@ -28,9 +33,8 @@ class Items(Enum):
     Fog = 5
     ExtraBomb = 6 # adds ammo.
     IncrRange = 7 # increases the blast_strength
-    MoveFast = 8 # TODO
-    Kick = 9 # can kick bombs by touching them.
-    Skull = 10 # randomly either reduces ammo (capped at 1) or blast_strength (capped at 2)
+    Kick = 8 # can kick bombs by touching them.
+    Skull = 9 # randomly either reduces ammo (capped at 1) or blast_strength (capped at 2)
 
 
 class GameType(Enum):
@@ -60,73 +64,87 @@ class InvalidDirection(Exception):
     pass
 
 
-def make_board(size, num_rigid=None, num_passage=0):
+def make_board(size, num_rigid=0, num_wood=0):
     """Make the random but symmetric board.
 
-    The numbers refer to:
+    The numbers refer to the Items enum in utility. This is:
      0 - passage
      1 - rigid wall
      2 - wood wall
      3 - bomb
-     4 - extra bomb item (not implemented)
-     5 - extra firepower item (not implemented)
-     6 - current flames
-     7 - fog of war.
-     8 - 11: agents.
+     4 - flames
+     5 - fog
+     6 - extra bomb item
+     7 - extra firepower item
+     8 - kick
+     9 - skull
+     10 - 13: agents
 
     Args:
       size: The dimension of the board, i.e. it's sizeXsize.
+      num_rigid: The number of rigid walls on the board. This should be even.
+      num_wood: Similar to above but for wood walls.
 
     Returns:
       board: The resulting random board.
     """
+    assert(num_rigid % 2 == 0)
+    assert(num_wood % 2 == 0)
+
+    def lay_wall(value, num_left):
+        x, y = random.sample(coordinates, 1)[0]
+        coordinates.remove((x, y))
+        coordinates.remove((y, x))
+        board[x, y] = value
+        board[y, x] = value
+        num_left -= 2
+        return num_left
+
+    if num_rigid is None:
+        num_rigid = size
     _num_rigid = num_rigid
-    _num_passage = num_passage
+    _num_wood = num_wood
 
-    # Initialize everything as a wood wall.
-    board = 2 * np.ones((size, size)).astype(np.uint8)
+    # Initialize everything as a passage.
+    board = np.ones((size, size)).astype(np.uint8) * Items.Passage.value
 
-    # Set the players down.
+    # Gather all the possible coordinates to use for walls.
+    coordinates = set([(x, y) for x, y in itertools.product(range(size), range(size)) if x != y])
+
+    # Set the players down. Exclude them from coordinates.
     num_first_agent = len(Items)
     board[1, 1] = num_first_agent
     board[size-2, 1] = num_first_agent + 1
     board[1, size-2] = num_first_agent + 2
     board[size-2, size-2] = num_first_agent + 3
+    agents = [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]
+    for position in agents:
+        if position in coordinates:
+            coordinates.remove(position)
 
-    # Give the players some breathing room on either side.
-    passage = Items.Passage.value
+    # Exclude breathing room on either side of the agents.
     for i in range(2, 4):
-        board[1, i] = passage
-        board[i, 1] = passage
-        board[1, size-i-1] = passage
-        board[size-i-1, 1] = passage
-        board[size-2, size-i-1] = passage
-        board[size-i-1, size-2] = passage
-        board[size-2, i] = passage
-        board[i, size-2] = passage
+        coordinates.remove((1, i))
+        coordinates.remove((i, 1))
+        coordinates.remove((1, size-i-1))
+        coordinates.remove((size-i-1, 1))
+        coordinates.remove((size-2, size-i-1))
+        coordinates.remove((size-i-1, size-2))
+        coordinates.remove((i, size-2))
+        coordinates.remove((size-2, i))
 
-    if num_rigid == None:
-        num_rigid = size
-
+    # Lay down the rigid walls.
     while num_rigid > 0:
-        row = random.randint(0, size-1)
-        col = random.randint(0, size-1)
-        if board[row, col] != Items.Wood.value:
-            continue
-        board[row, col] = Items.Rigid.value
-        board[col, row]
-        num_rigid -= 1
+        num_rigid = lay_wall(Items.Rigid.value, num_rigid)
 
-    while num_passage > 0:
-        row = random.randint(0, size-1)
-        col = random.randint(0, size-1)
-        if board[row, col] != Items.Wood.value:
-            continue
-        board[row, col] = passage
-        num_passage -= 1
+    # Lay down the wooden walls.
+    while num_wood > 0:
+        num_wood = lay_wall(Items.Wood.value, num_wood)
 
-    if not is_accessible(board, [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]):
-        return make_board(size, _num_rigid, _num_passage)
+    # Make sure it's possible for the agents to reach each other.
+    if not is_accessible(board, agents):
+        print('not accessible, rerunning')
+        return make_board(size, _num_rigid, _num_wood)
 
     return board
 
@@ -173,9 +191,9 @@ def is_accessible(board, agent_positions):
     return False
     
 
-def is_valid_direction(board, position, direction):
+def is_valid_direction(board, position, direction, invalid_values=None):
     row, col = position
-    invalid_values = [item.value for item in [Items.Rigid, Items.Wood]]
+    invalid_values = invalid_values or [item.value for item in [Items.Rigid, Items.Wood]]
 
     if Direction(direction) == Direction.Up:
         return row - 1 >= 0 and board[row-1][col] not in invalid_values
@@ -194,7 +212,7 @@ def is_valid_direction(board, position, direction):
 
 def is_item(board, position):
     item_values = [
-        item.value for item in [Items.ExtraBomb, Items.IncrRange, Items.MoveFast, Items.Kick, Items.Skull]
+        item.value for item in [Items.ExtraBomb, Items.IncrRange, Items.Kick, Items.Skull]
     ]
     return board[position] in item_values
         
