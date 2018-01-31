@@ -1,6 +1,5 @@
 from enum import Enum
 
-from pyglet.window import key
 import ruamel.yaml as yaml
 # TODO: Remove the dependency on TF.
 import tensorflow as tf 
@@ -16,15 +15,18 @@ class KeyInput(Enum):
 
 KEY_INPUT = {'curr': 0}
 def get_key_control(ty):
+    from pyglet.window import key
+
     def on_key_press(k, mod):
         global KEY_INPUT
-        KEY_INPUT['curr'] = {
-            key.UP: 1,
-            key.DOWN: 2,
-            key.LEFT: 3,
-            key.RIGHT: 4,
-            key.SPACE: 5,
-        }.get(k)
+        if ty == 'arrows':
+            KEY_INPUT['curr'] = {
+                key.UP: 1,
+                key.DOWN: 2,
+                key.LEFT: 3,
+                key.RIGHT: 4,
+                key.SPACE: 5,
+            }.get(k)
 
     def on_key_release(k, mod):
         global KEY_INPUT
