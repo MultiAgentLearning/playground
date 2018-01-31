@@ -1,10 +1,12 @@
-from .envs.utility import *
+import a
+from a.pommerman.envs.utility import DEFAULT_BLAST_STRENGTH, DEFAULT_BOMB_LIFE
+from a.pommerman.envs.utility import Direction, Items
 
 
 class Agent(object):
     """Container to keep the agent state."""
 
-    def __init__(self, agent_id, start_position=None):
+    def __init__(self, agent_id, start_position=None, max_speed=1):
         self.agent_id = agent_id
         self.start_position = start_position
         self.position = start_position
@@ -12,6 +14,10 @@ class Agent(object):
         self.is_alive = True
         self.blast_strength = DEFAULT_BLAST_STRENGTH
         self.can_kick = False
+        self.speed = 0
+        self.acceleration = 1
+        self.max_speed = max_speed
+        self._current_direction = None
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
@@ -23,16 +29,27 @@ class Agent(object):
         self.ammo += 1
 
     def move(self, direction):
+        # Reset the speed if we were going in the other direction.
+        if direction != self._current_direction:
+            self._current_direction = direction
+            self.speed = 0
+
+        speed = self.speed + self.acceleration
+        speed = max(speed, self.max_speed)
+
         row, col = self.position
         if Direction(direction) == Direction.Up:
-            row -= 1
+            row -= speed
         elif Direction(direction) == Direction.Down:
-            row += 1
+            row += speed
         elif Direction(direction) == Direction.Left:
-            col -= 1
+            col -= speed
         elif Direction(direction) == Direction.Right:
-            col += 1
+            col += speed
         self.position = (row, col)
+
+    def stop(self):
+        self.speed = 0
 
     def in_range(self, exploded_map):
         row, col = self.position
@@ -55,9 +72,6 @@ class Agent(object):
             self.ammo += 1
         elif item == Items.IncrRange:
             self.blast_strength += 1
-        elif item == Items.MoveFast:
-            # TODO: How should we do this?
-            pass
         elif item == Items.Kick:
             self.can_kick = True
         elif item == Items.Skull:
@@ -68,6 +82,8 @@ class Agent(object):
 
 
 class Bomb(object):
+    """Container for the Bomb object."""
+
     def __init__(self, bomber, position, life, blast_strength):
         self.bomber = bomber
         self.position = position
@@ -94,3 +110,7 @@ class Bomb(object):
         row, col = self.position
         return exploded_map[row][col] == 1
 
+    
+class TestAgent(a.agents.Agent):
+    def act(self, obs):
+        pass

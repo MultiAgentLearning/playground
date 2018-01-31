@@ -3,7 +3,7 @@ import pickle
 import time
 
 
-class _Agent(object):
+class Agent(object):
     def __init__(self, agent):
         self._agent = agent
 
@@ -21,7 +21,7 @@ class _Agent(object):
         pass
 
 
-class PlayerAgent(_Agent):
+class PlayerAgent(Agent):
     def __init__(self, agent, key_input, on_key_press, on_key_release):
         self._agent = agent
         self._key_input = key_input
@@ -36,12 +36,12 @@ class PlayerAgent(_Agent):
         return True
 
 
-class RandomAgent(_Agent):
+class RandomAgent(Agent):
     def act(self, obs, action_space):
         return action_space.sample()
 
 
-class DockerAgent(_Agent):
+class DockerAgent(Agent):
     """TODO"""
     def __init__(self, agent, docker_image, docker_client, port, **kwargs):
         self._agent = agent
