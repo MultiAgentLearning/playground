@@ -2,6 +2,7 @@ from collections import defaultdict
 import random
 
 import a
+from a.pommerman.envs import utility
 
 
 class TestAgent(a.agents.Agent):
@@ -13,41 +14,49 @@ class TestAgent(a.agents.Agent):
         super().__init__(*args, **kwargs)
         self._my_bombs = []
 
-    def act(self, obs):
+    def act(self, obs, action_space):
         my_position = obs['position']
         board = obs['board']
         enemies = obs['enemies']
         items, dist, prev = self._djikstra(board, my_position)
 
         print("ACT: ")
-        print(items, dist, prev)
+        # print(items)
+        # print(dist)
+        # print(prev)
 
         # Move if we are in an unsafe place.
-        unsafe_directions = self._directions_in_range_of_bomb(board, items, dist)
+        unsafe_directions = self._directions_in_range_of_bomb(board, my_position, items, dist)
         if unsafe_directions:
+            print('1')
             directions = self._find_safe_directions(board, my_position, unsafe_directions)
             return random.choice(directions).value
 
         # Lay pomme if we are adjacent to an enemy.
         if self._is_adjacent_enemy(items, dist, enemies) and self._has_bomb(obs):
-            return a.pommerman.envs.utility.Action.Bomb.value
+            print('2')
+            return utility.Action.Bomb.value
 
         # Move towards an enemy if there is one within three reachable spaces.
         direction = self._near_enemy(my_position, items, dist, prev, enemies, 3)
         if direction is not None:
+            print('3')
             return direction.value
 
         # Move towards a good item if there is one within two reachable spaces.
         direction = self._near_item(my_position, items, dist, prev, 2)
         if direction is not None:
+            print('4')
             return direction.value
 
         # Lay a bomb if we are within two spaces of a wooden wall.
-        if self._near_wood(my_position, items, dist, prev, 2):
-            return a.pommerman.envs.utility.Action.Bomb.value
+        if self._near_wood(my_position, items, dist, prev, 2) and self._has_bomb(obs):
+            print('5')
+            return utility.Action.Bomb.value
 
         # Choose a random but valid direction.
-        valid_directions = self._get_valid_directions()
+        valid_directions = self._get_valid_directions(board, my_position)
+        print('6')
         return random.choice(valid_directions).value
 
     @staticmethod
@@ -60,7 +69,7 @@ class TestAgent(a.agents.Agent):
         for r in range(len(board)):
             for c in range(len(board[0])):
                 position = (r, c)
-                if board[position] != a.pommerman.envs.utility.Items.Fog.value:
+                if board[position] != utility.Item.Fog.value:
                     # Value bigger than possible.
                     dist[position] = len(board)**2
                     prev[position] = []
@@ -74,55 +83,58 @@ class TestAgent(a.agents.Agent):
             position = Q.pop(0)
             x, y = position
 
-            if position_is_passable(board, position):
+            if utility.position_is_passable(board, position):
                 val = dist[(x, y)] + 1
                 for row, col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                    if val < dist[(row + x, col + y)]:
-                        dist[(row + x, col + y)] = val
-                        prev[(row + x, col + y)] = position
+                    new_position = (row + x, col + y)
+                    if not utility.position_on_board(board, new_position):
+                        continue
 
-            item = a.pommerman.envs.utility.Items(int(board[position]))
+                    if val < dist[new_position]:
+                        dist[new_position] = val
+                        prev[new_position] = position
+
+            item = utility.Item(int(board[position]))
             items[item].append(position)
 
         return items, dist, prev
 
     @staticmethod
-    def _directions_in_range_of_bomb(obs, items, dist):
+    def _directions_in_range_of_bomb(board, my_position, items, dist):
         ret = []
 
-        bombs = items.get(a.pommerman.envs.utility.Items.Bomb, [])
+        bombs = items.get(utility.Item.Bomb, [])
         if not bombs:
             return ret
 
-        me = obs['position']
-        x, y = me
+        x, y = my_position
         for position in bombs:
-            bomb_range = int((obs[position] - a.pommerman.envs.utility.Items.Bomb.value)*10)
+            bomb_range = int((board[position] - utility.Item.Bomb.value)*10)
             if dist[position] > bomb_range:
                 continue
 
-            if me == position:
+            if my_position == position:
                 # We are on a bomb. All directions are bad. Pick one of them and move.
                 return [
-                    a.pommerman.envs.utility.Action.Right,
-                    a.pommerman.envs.utility.Action.Left,
-                    a.pommerman.envs.utility.Action.Up,
-                    a.pommerman.envs.utility.Action.Down,
+                    utility.Action.Right,
+                    utility.Action.Left,
+                    utility.Action.Up,
+                    utility.Action.Down,
                 ]
             elif x == position[0]:
                 if y < position[1]:
                     # Bomb is right.
-                    ret.append(a.pommerman.envs.utility.Action.Right)
+                    ret.append(utility.Action.Right)
                 else:
                     # Bomb is left.
-                    ret.append(a.pommerman.envs.utility.Action.Left)
+                    ret.append(utility.Action.Left)
             elif y == position[1]:
                 if x < position[0]:
                     # Bomb is up.
-                    ret.append(a.pommerman.envs.utility.Action.Up)
+                    ret.append(utility.Action.Up)
                 else:
                     # Bomb is down.
-                    ret.append(a.pommerman.envs.utility.Action.Down)
+                    ret.append(utility.Action.Down)
 
         return ret
 
@@ -133,10 +145,10 @@ class TestAgent(a.agents.Agent):
         safe = []
 
         for row, col, direction in [
-                (-1, 0, a.pommerman.envs.utility.Action.Down),
-                (1, 0, a.pommerman.envs.utility.Action.Up),
-                (0, -1, a.pommerman.envs.utility.Action.Left),
-                (0, 1, a.pommerman.envs.utility.Action.Right)
+                (-1, 0, utility.Action.Down),
+                (1, 0, utility.Action.Up),
+                (0, -1, utility.Action.Left),
+                (0, 1, utility.Action.Right)
         ]:
             position = (x + row, y + col) 
 
@@ -157,7 +169,7 @@ class TestAgent(a.agents.Agent):
 
         if not safe:
             # We don't have ANY directions. So return the stop choice.
-            return [a.pommerman.envs.utility.Action.Stop]
+            return [utility.Action.Stop]
 
         return safe
 
@@ -200,35 +212,36 @@ class TestAgent(a.agents.Agent):
 
     @classmethod
     def _near_enemy(cls, my_position, items, dist, prev, enemies, radius):
-        nearest_enemy_position = cls._nearest(dist, enemies, items, radius)
+        nearest_enemy_position = cls._nearest_position(dist, enemies, items, radius)
         return cls._get_direction_towards_position(my_position, nearest_enemy_position, prev)
 
     @classmethod
     def _near_item(cls, my_position, items, dist, prev, radius):
         objs = [
-            a.pommerman.envs.utility.Item.ExtraBomb,
-            a.pommerman.envs.utility.Item.IncrRange,
-            a.pommerman.envs.utility.Item.Kick
+            utility.Item.ExtraBomb,
+            utility.Item.IncrRange,
+            utility.Item.Kick
         ]
         nearest_item_position = cls._nearest_position(dist, objs, items, radius)
         return cls._get_direction_towards_position(my_position, nearest_item_position, prev)
 
     @classmethod
     def _near_wood(cls, my_position, items, dist, prev, radius):
-        objs = [a.pommerman.envs.utility.Item.Wood]
+        objs = [utility.Item.Wood]
         nearest_item_position = cls._nearest_position(dist, objs, items, radius)
         return cls._get_direction_towards_position(my_position, nearest_item_position, prev)
 
     @staticmethod
     def _get_valid_directions(board, my_position):
-        ret = [a.pommerman.envs.utility.Action.Stop]
+        ret = [utility.Action.Stop]
         x, y = my_position
         for row, col, direction in [
-                (-1, 0, a.pommerman.envs.utility.Action.Down),
-                (1, 0, a.pommerman.envs.utility.Action.Up),
-                (0, -1, a.pommerman.envs.utility.Action.Left),
-                (0, 1, a.pommerman.envs.utility.Action.Right)
+                (-1, 0, utility.Action.Down),
+                (1, 0, utility.Action.Up),
+                (0, -1, utility.Action.Left),
+                (0, 1, utility.Action.Right)
         ]:
+
             # Don't include any direction that will go off of the board.
             position = (x + row, y + col)
             if utility.position_on_board(board, position) and utility.position_is_passable(board, position):

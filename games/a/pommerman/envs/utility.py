@@ -164,7 +164,9 @@ def make_items(board, num_items):
         if (row, col) in item_positions:
             continue
 
-        item_positions[(row, col)] = random.randint(Item.Fog.value + 1, len(Item) + 1)
+        item_positions[(row, col)] = random.choice([
+            Item.ExtraBomb, Item.IncrRange, Item.Kick, Item.Skull
+        ]).value
         num_items -= 1
     return item_positions
 
@@ -244,7 +246,7 @@ def agent_value(id_):
 
 
 def position_is_passable(board, position):
-    return any([is_agent(board, position), is_powerup(board, position), is_passage(board, position)])
+    return any([position_is_agent(board, position), position_is_powerup(board, position), position_is_passage(board, position)])
 
 
 def position_is_fog(board, position):

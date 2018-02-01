@@ -47,13 +47,13 @@ class Agent(object):
         speed = max(speed, self.max_speed)
 
         row, col = self.position
-        if Direction(direction) == Direction.Up:
+        if Action(direction) == Action.Up:
             row -= speed
-        elif Direction(direction) == Direction.Down:
+        elif Action(direction) == Action.Down:
             row += speed
-        elif Direction(direction) == Direction.Left:
+        elif Action(direction) == Action.Left:
             col -= speed
-        elif Direction(direction) == Direction.Right:
+        elif Action(direction) == Action.Right:
             col += speed
         return (row, col)
 
@@ -118,13 +118,13 @@ class Bomb(object):
 
     def move(self):
         row, col = self.position
-        if self.moving_direction == Direction.Up:
+        if self.moving_direction == Action.Up:
             row -= 1
-        elif self.moving_direction == Direction.Down:
+        elif self.moving_direction == Action.Down:
             row += 1
-        elif self.moving_direction == Direction.Left:
+        elif self.moving_direction == Action.Left:
             col -= 1
-        elif self.moving_direction == Direction.Right:
+        elif self.moving_direction == Action.Right:
             col += 1
         self.position = (row, col)
 

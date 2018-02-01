@@ -45,7 +45,13 @@ class Pomme(gym.Env):
         self._agents = agents
 
     def act(self, obs):
-        return [agent.act(obs[agent_id], action_space=self.action_space) for agent_id, agent in enumerate(self._agents)]
+        ret = []
+        for agent in self._agents:
+            if agent.is_alive:
+                ret.append(agent.act(obs[agent.agent_id], action_space=self.action_space))
+            else:
+                ret.append(utility.Action.Stop)
+        return ret
 
     def _get_observations(self):
         """Gets the observations as an np.array of the visible squares.
@@ -206,9 +212,9 @@ class Pomme(gym.Env):
                 action = actions[num]
                 position = agent.position
 
-                if action == utility.Items.Stop.value:
+                if action == utility.Action.Stop.value:
                     agent.stop()
-                elif action == utility.Items.Bomb.value:
+                elif action == utility.Action.Bomb.value:
                     bomb = agent.maybe_lay_bomb()
                     if bomb:
                         self._bombs.append(bomb)
@@ -279,9 +285,9 @@ class Pomme(gym.Env):
             self._board[bomb.position] = min(utility.Item.Bomb.value + .1*bomb.blast_strength,
                                              utility.Item.Bomb.value + .9)
         for agent in self._agents:
-            self._board[np.where(self._board == utility.agent_value(agent_id+1))] = utility.Item.Passage.value
+            self._board[np.where(self._board == utility.agent_value(agent.agent_id+1))] = utility.Item.Passage.value
             if agent.is_alive:
-                self._board[agent.position] = utility.agent_value(agent_id+1)
+                self._board[agent.position] = utility.agent_value(agent.agent_id+1)
 
         self._board[np.where(exploded_map == 1)] = utility.Item.Flames.value
 

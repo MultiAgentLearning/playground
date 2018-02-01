@@ -10,7 +10,7 @@ class Agent(object):
     def __getattr__(self, attr):
         return getattr(self._agent, attr)
 
-    def act(self, obs):
+    def act(self, obs, action_space):
         raise NotImplemented
 
     @staticmethod
