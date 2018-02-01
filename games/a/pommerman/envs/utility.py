@@ -218,4 +218,4 @@ def is_item(board, position):
         
 
 def is_bomb(board, position):
-    return board[position] == Items.Bomb.value
+    return int(board[position]) == Items.Bomb.value

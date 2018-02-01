@@ -276,7 +276,9 @@ class Pomme(gym.Env):
 
         # Update the board
         for bomb in self._bombs:
-            self._board[bomb.position] = utility.Items.Bomb.value
+            # We add the blast_strength here so that agents have some idea of what kind of bomb this is.
+            self._board[bomb.position] = min(utility.Items.Bomb.value + .1*bomb.blast_strength,
+                                             utility.Items.Bomb.value + .9)
         for agent in self._agents:
             self._board[np.where(self._board == agent.agent_id + len(utility.Items))] = utility.Items.Passage.value
             if agent.is_alive:
@@ -305,12 +307,13 @@ class Pomme(gym.Env):
         num_items = len(utility.Items)
         for row in range(self._board_size):
             for col in range(self._board_size):
-                if self._board[row][col] in list(range(num_items, num_items+4)):
-                    num_agent = self._board[row][col] - num_items
+                value = int(self._board[row][col])
+                if value in list(range(num_items, num_items+4)):
+                    num_agent = value - num_items
                     if self._agents[num_agent].is_alive:
                         all_frame[row][col] = utility.AGENT_COLORS[num_agent]
                 else:
-                    all_frame[row][col] = utility.ITEM_COLORS[self._board[row][col]]
+                    all_frame[row][col] = utility.ITEM_COLORS[value]
 
         all_frame = np.array(all_frame)
         frames.append(all_frame)
