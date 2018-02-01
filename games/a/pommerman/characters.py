@@ -1,26 +1,32 @@
 import random
 
 from .envs.utility import DEFAULT_BLAST_STRENGTH, DEFAULT_BOMB_LIFE
-from .envs.utility import Direction, Items
+from .envs.utility import Action, Item, GameType
 
 
 class Agent(object):
     """Container to keep the agent state."""
 
-    def __init__(self, agent_id, start_position=None, max_speed=1, teammate=None):
+    def __init__(self, agent_id, game_type):
         self.agent_id = agent_id
-        self.start_position = start_position
-        self.position = start_position
         self.ammo = 1
         self.is_alive = True
         self.blast_strength = DEFAULT_BLAST_STRENGTH
         self.can_kick = False
         self.speed = 0
         self.acceleration = 1
-        self._max_speed = max_speed
-        self.max_speed = max_speed
-        self.teammate = teammate
+        self._init_max_speed = 1
+        self.max_speed = 1
         self._current_direction = None
+        if game_type == GameType.FFA:
+            self.teammate = None
+            self.enemies = [getattr(Item, 'Agent%d' % (id_+1))
+                            for id_ in range(4) if id_ != agent_id]
+        else:
+            teammate_id = (agent_id + 2) % 4
+            self.teammate = getattr(Item, 'Agent%d' % (teammate_id+1))
+            self.enemies = [getattr(Item, 'Agent%d' % (id_+1))
+                            for id_ in range(4) if id_ != agent_id and id_ != teammate_id]
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
@@ -80,17 +86,17 @@ class Agent(object):
         self.can_kick = False
         self.speed = 0
         self.acceleration = 1
-        self.max_speed = self._max_speed
+        self.max_speed = self._init_max_speed
         self._current_direction = None
 
     def pick_up(self, item):
-        if item == Items.ExtraBomb:
+        if item == Item.ExtraBomb:
             self.ammo += 1
-        elif item == Items.IncrRange:
+        elif item == Item.IncrRange:
             self.blast_strength += 1
-        elif item == Items.Kick:
+        elif item == Item.Kick:
             self.can_kick = True
-        elif item == Items.Skull:
+        elif item == Item.Skull:
             if random.random() < .5:
                 self.blast_strength = max(2, self.blast_strength - 1)
             else:

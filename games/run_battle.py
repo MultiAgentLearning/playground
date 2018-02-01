@@ -29,33 +29,34 @@ if __name__ == "__main__":
     tf.app.flags.DEFINE_string(
         'agents',
         # 'random::null,random::null,random::null,docker::dennybritz/env-test',
-        'player::arrows,random::null,random::null,random::null',
+        # 'player::arrows,random::null,random::null,random::null',
+        'player::arrows,test::a.pommerman.agents.TestAgent,random::null,random::null',
         'Comma delineated list of agent types and docker locations to run the agents.')
     # TODO: Incoporate the resource requirements.
 
     config = a.utility.AttrDict(getattr(a.configs, FLAGS.config)())
     _agents = []
     for agent_id, agent_info in enumerate(FLAGS.agents.split(',')):
-        agent = config.agent(agent_id)
+        agent = config.agent(agent_id, config.game_type)
         agent_type, agent_control = agent_info.split('::')
-        assert agent_type in ['player', 'random', 'docker']
+        assert agent_type in ['player', 'random', 'docker', 'test']
         if agent_type == 'player':
             assert agent_control in ['arrows']
             on_key_press, on_key_release = a.utility.get_key_control(agent_control)
-            _agents.append(a.agents.PlayerAgent(
+            agent = a.agents.PlayerAgent(
                 agent, a.utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
-            )
-            print('player is %d' % agent_id)
         elif agent_type == 'random':
-            _agents.append(a.agents.RandomAgent(agent))
+            agent = a.agents.RandomAgent(agent)
         elif agent_type == 'docker':
             agent = a.agents.DockerAgent(
                 agent,
                 docker_image=agent_control,
                 docker_client=client,
                 port=agent_id+1000)
-            _agents.append(agent)
-
+        elif agent_type == 'test':
+            agent = eval(agent_control)(agent)
+        _agents.append(agent)
+                
     print(config.env_kwargs)
     gym.envs.registration.register(
         id=config.env_id,
