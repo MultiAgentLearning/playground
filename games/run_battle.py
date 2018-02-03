@@ -20,7 +20,7 @@ client = docker.from_env()
 
 def clean_up_agents(agents):
     """Stops all agents"""
-    return [agent.stop() for agent in agents]
+    return [agent.shutdown() for agent in agents]
 
 if __name__ == "__main__":
     print("YO")
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     tf.app.flags.DEFINE_string('config', 'pommerman_testFFA', 'Configuration to execute.')
     tf.app.flags.DEFINE_string(
         'agents',
-        # 'random::null,random::null,random::null,docker::dennybritz/env-test',
+        # 'random::null,random::null,random::null,docker::pommerman/test-agent',
         # 'player::arrows,random::null,random::null,random::null',
         'player::arrows,test::a.pommerman.agents.TestAgent,random::null,random::null',
         'Comma delineated list of agent types and docker locations to run the agents.')
