@@ -1,3 +1,6 @@
+from collections import defaultdict
+import os
+
 import numpy as np
 from scipy.misc import imresize as resize
 import time
@@ -27,6 +30,7 @@ class Pomme(gym.Env):
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
+        self._agent_view_size = agent_view_size
         self._num_rigid = num_rigid
         self._num_wood = num_wood
         self._num_items = num_items
@@ -48,7 +52,10 @@ class Pomme(gym.Env):
         ret = []
         for agent in self._agents:
             if agent.is_alive:
-                ret.append(agent.act(obs[agent.agent_id], action_space=self.action_space))
+                action = agent.act(obs[agent.agent_id], action_space=self.action_space, debug=agent.agent_id != 0)
+                if agent.agent_id == 0 and action == 6:
+                    time.sleep(300)
+                ret.append(action)
             else:
                 ret.append(utility.Action.Stop)
         return ret
@@ -62,19 +69,19 @@ class Pomme(gym.Env):
                  'acceleration', 'max_speed', 'teammate', 'enemies']
         keys = ['board'] + attrs
 
-        agent_view_size = utility.AGENT_VIEW_SIZE
+        agent_view_size = self._agent_view_size
         observations = []
         for agent in self._agents:
             agent_obs = {}
-            row, col = agent.position
             board = self._board.copy()
-            for r in range(self._board_size):
-                for c in range(self._board_size):
-                    if not all([row >= r - agent_view_size, row < r + agent_view_size,
-                                col >= c - agent_view_size, col < c + agent_view_size]):
-                        board[r, c] = 7
+            for row in range(self._board_size):
+                for col in range(self._board_size):
+                    if not self._in_view_range(agent.position, row, col):
+                        board[row, col] = utility.Item.Fog.value
             agent_obs['board'] = board
+            agent_obs['bombs'] = self._get_bombs_in_range(agent.position)
             for attr in attrs:
+                assert hasattr(agent, attr)
                 agent_obs[attr] = getattr(agent, attr)
             observations.append(agent_obs)
 
@@ -104,8 +111,7 @@ class Pomme(gym.Env):
         alive = [agent for agent in self._agents if agent.is_alive]
         alive_ids = sorted([agent.agent_id for agent in alive])
         if self._game_type == utility.GameType.FFA:
-            # TODO: Change back to 1.
-            return len(alive) <= 0
+            return len(alive) <= 1
         elif any([
                 len(alive_ids) <= 1,
                 alive_ids == [0, 2],
@@ -130,9 +136,9 @@ class Pomme(gym.Env):
         board = self._board.copy()
 
         def collapse(r, c):
-            if position_is_agent(board, (r, c)):
+            if utility.position_is_agent(board, (r, c)):
                 # Agent. Kill it.
-                num_agent = board[r][c] - num_items + 4
+                num_agent = board[r][c] - utility.Item.Agent1.value
                 agent = self._agents[num_agent]
                 agent.die()
             elif utility.position_is_bomb(board, (r, c)):
@@ -188,7 +194,8 @@ class Pomme(gym.Env):
             agent.set_start_position((row, col))
             agent.reset()
 
-        return self._get_observations()
+        ret = self._get_observations()
+        return ret
 
     def seed(self, seed=None):
         gym.spaces.prng.seed(seed)
@@ -207,9 +214,26 @@ class Pomme(gym.Env):
             self._board[(r, c)] = value
 
         # Step the living agents.
-        for num, agent in enumerate(self._agents):
+        # If two agents try to go to the same spot, they should bounce back to their previous spots.
+        # This is a little complicated because what if there are three agents all in a row.
+        # If the one in the middle tries to go to the left and bounces with the one on the left,
+        # and then the one on the right tried to go to the middle one's position, she should also bounce.
+        # A way of doing this is to gather all the new positions before taking any actions.
+        # Then, if there are disputes, correct those disputes iteratively.
+        def make_counter(next_positions):
+            counter = defaultdict(list)
+            for num, next_position in enumerate(next_positions):
+                if next_position is not None:
+                    counter[next_position].append(num)
+            return counter
+
+        def has_position_conflict(counter):
+            return any([len(agent_ids) > 1 for next_position, agent_ids in counter.items() if next_position])
+
+        curr_positions = [agent.position for agent in self._agents]
+        next_positions = [agent.position for agent in self._agents]
+        for agent, action in zip(self._agents, actions):
             if agent.is_alive:
-                action = actions[num]
                 position = agent.position
 
                 if action == utility.Action.Stop.value:
@@ -223,20 +247,36 @@ class Pomme(gym.Env):
 
                     # This might be a bomb position. Only move in that case if the agent can kick.
                     if not utility.position_is_bomb(self._board, next_position):
-                        agent.move(action)
+                        next_positions[agent.agent_id] = next_position
                     elif not agent.can_kick:
                         agent.stop()
                     else:
-                        agent.move(action)
-                        row, col = agent.position
-                        bomb = [b for b in self._bombs if b.position == (row, col)][0]
-                        bomb.moving_direction = utility.Action(action)
-                    if utility.position_is_powerup(self._board, agent.position):
-                        agent.pick_up(utility.Item(self._board[agent.position]))
-                        self._board[agent.position] = utility.Item.Passage.value
+                        next_positions[agent.agent_id] = next_position
                 else:
                     # The agent made an invalid direction.
                     agent.stop()
+            else:
+                next_positions.append(None)
+
+        counter = make_counter(next_positions)
+        while has_position_conflict(counter):
+            for next_position, agent_ids in counter.items():
+                if next_position and len(agent_ids) > 1:
+                    for agent_id in agent_ids:
+                        next_positions[agent_id] = curr_positions[agent_id]
+            counter = make_counter(next_positions)
+
+        for agent, curr_position, next_position, direction in zip(self._agents, curr_positions, next_positions, actions):
+            if curr_position != next_position:
+                agent.move(direction)
+                if agent.can_kick:
+                    bombs = [bomb for bomb in self._bombs if bomb.position == agent.position]
+                    if bombs:
+                        bombs[0].moving_direction = utility.Action(direction)
+
+            if utility.position_is_powerup(self._board, agent.position):
+                agent.pick_up(utility.Item(self._board[agent.position]))
+                self._board[agent.position] = utility.Item.Passage.value
 
         # Explode bombs.
         next_bombs = []
@@ -281,9 +321,8 @@ class Pomme(gym.Env):
 
         # Update the board
         for bomb in self._bombs:
-            # We add the blast_strength here so that agents have some idea of what kind of bomb this is.
-            self._board[bomb.position] = min(utility.Item.Bomb.value + .1*bomb.blast_strength,
-                                             utility.Item.Bomb.value + .9)
+            self._board[bomb.position] = utility.Item.Bomb.value
+
         for agent in self._agents:
             self._board[np.where(self._board == utility.agent_value(agent.agent_id+1))] = utility.Item.Passage.value
             if agent.is_alive:
@@ -304,6 +343,21 @@ class Pomme(gym.Env):
 
         return obs, reward, done, info
 
+    def _in_view_range(self, position, vrow, vcol):
+        agent_view_size = self._agent_view_size
+        row, col = position
+        return all([row >= vrow - agent_view_size, row < vrow + agent_view_size,
+                    col >= vcol - agent_view_size, col < vcol + agent_view_size])
+
+    def _get_bombs_in_range(self, position):
+        bombs = []
+        agent_view_size = self._agent_view_size
+        for bomb in self._bombs:
+            vrow, vcol = bomb.position
+            if self._in_view_range(position, vrow, vcol):
+                bombs.append({'position': bomb.position, 'blast_strength': bomb.blast_strength})
+        return bombs
+
     def _render_frames(self):
         agent_view_size = utility.AGENT_VIEW_SIZE
         frames = []
@@ -312,7 +366,7 @@ class Pomme(gym.Env):
         num_items = len(utility.Item)
         for row in range(self._board_size):
             for col in range(self._board_size):
-                value = int(self._board[row][col])
+                value = self._board[row][col]
                 if utility.position_is_agent(self._board, (row, col)):
                     num_agent = value - num_items
                     if self._agents[num_agent].is_alive:
@@ -335,12 +389,17 @@ class Pomme(gym.Env):
 
         return frames
 
-    def render(self, mode='human', close=False):
+    def render(self, mode='human', close=False, record_dir=None):
+        from PIL import Image
+
         if close:
             if self._viewer is not None:
                 self._viewer.close()
                 self._viewer = None
             return
+
+        if record_dir and not os.path.isdir(record_dir):
+            os.makedirs(record_dir)
 
         human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
@@ -360,11 +419,13 @@ class Pomme(gym.Env):
             from gym.envs.classic_control import rendering
             self._viewer = rendering.SimpleImageViewer()
         self._viewer.imshow(img)
+        if record_dir:
+            Image.fromarray(img).save(os.path.join(record_dir, '%d.png' % self._step_count))
 
         for agent in self._agents:
             if agent.has_key_input():
                 self._viewer.window.on_key_press = agent.on_key_press
                 self._viewer.window.on_key_release = agent.on_key_release
                 break
-        
+
         time.sleep(1.0 / utility.RENDER_FPS)

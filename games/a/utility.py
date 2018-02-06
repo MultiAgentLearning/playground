@@ -28,6 +28,7 @@ def get_key_control(ty):
                 key.LEFT: 3,
                 key.RIGHT: 4,
                 key.SPACE: 5,
+                key.A: 6
             }.get(k, 0)
 
     def on_key_release(k, mod):

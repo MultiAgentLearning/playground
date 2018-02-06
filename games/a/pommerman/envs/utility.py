@@ -225,7 +225,7 @@ def position_is_powerup(board, position):
 
 
 def position_is_bomb(board, position):
-    return int(board[position]) == Item.Bomb.value
+    return board[position] == Item.Bomb.value
 
 
 def position_is_passage(board, position):
@@ -241,12 +241,16 @@ def position_is_agent(board, position):
     ]
 
 
+def position_is_enemy(board, position, enemies):
+    return Item(board[position]) in enemies
+
+
 def agent_value(id_):
     return getattr(Item, 'Agent%d' % id_).value
 
 
-def position_is_passable(board, position):
-    return any([position_is_agent(board, position), position_is_powerup(board, position), position_is_passage(board, position)])
+def position_is_passable(board, position, enemies):
+    return any([position_is_agent(board, position), position_is_powerup(board, position) or position_is_passage(board, position)]) and not position_is_enemy(board, position, enemies)
 
 
 def position_is_fog(board, position):
@@ -275,8 +279,23 @@ def get_direction(position, next_position):
             return Action.Left
     elif y == ny:
         if x < nx:
-            return Action.Up
-        else:
             return Action.Down
+        else:
+            return Action.Up
     raise InvalidAction("We did not receive a valid position transition.")
 
+
+# TODO: Refactor to use this more often.
+def get_next_position(position, direction):
+    x, y = position
+    if direction == Action.Right:
+        return (x, y+1)
+    elif direction == Action.Left:
+        return (x, y-1)
+    elif direction == Action.Down:
+        return (x+1, y)
+    elif direction == Action.Up:
+        return (x-1, y)
+    elif direction == Action.Stop:
+        return (x, y)
+    raise InvalidAction("We did not receive a valid direction.")

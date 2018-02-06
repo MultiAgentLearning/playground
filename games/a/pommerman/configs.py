@@ -13,6 +13,7 @@ def pommerman_testFFA():
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
+        'agent_view_size': envs.utility.AGENT_VIEW_SIZE,
         'num_rigid': envs.utility.NUM_RIGID,
         'num_wood': envs.utility.NUM_WOOD,
         'num_items': envs.utility.NUM_ITEMS,
