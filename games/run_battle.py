@@ -11,6 +11,7 @@ import a
 
 import atexit
 import functools
+import os
 
 import gym
 import tensorflow as tf
@@ -23,16 +24,18 @@ def clean_up_agents(agents):
     return [agent.shutdown() for agent in agents]
 
 if __name__ == "__main__":
-    print("YO")
     FLAGS = tf.app.flags.FLAGS
+    # TODO: Incoporate the resource requirements.
     tf.app.flags.DEFINE_string('config', 'pommerman_testFFA', 'Configuration to execute.')
     tf.app.flags.DEFINE_string(
         'agents',
         # 'random::null,random::null,random::null,docker::pommerman/test-agent',
         # 'player::arrows,random::null,random::null,random::null',
-        'player::arrows,test::a.pommerman.agents.TestAgent,random::null,random::null',
+        'player::arrows,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent',
         'Comma delineated list of agent types and docker locations to run the agents.')
-    # TODO: Incoporate the resource requirements.
+    tf.app.flags.DEFINE_string(
+        'record_dir', '/Users/cinjon/Code/playground/games/recordings/pommerman', "Directory to record the PNGs of the game. Doesn't record if None."
+    )
 
     config = a.utility.AttrDict(getattr(a.configs, FLAGS.config)())
     _agents = []
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         elif agent_type == 'test':
             agent = eval(agent_control)(agent)
         _agents.append(agent)
-                
+
     print(config.env_kwargs)
     gym.envs.registration.register(
         id=config.env_id,
@@ -68,6 +71,10 @@ if __name__ == "__main__":
     env.set_agents(_agents)
 
     atexit.register(functools.partial(clean_up_agents, _agents))
+    record_dir = FLAGS.record_dir
+    record_dir = None
+    if record_dir:
+        record_dir = os.path.join(record_dir, a.utility.random_string(8))
 
     print("Starting the Game.")
     obs = env.reset()
@@ -75,7 +82,7 @@ if __name__ == "__main__":
     done = False
     while not done:
         steps += 1
-        env.render()
+        env.render(record_dir=record_dir)
         actions = env.act(obs)
         obs, reward, done, info = env.step(actions)
 

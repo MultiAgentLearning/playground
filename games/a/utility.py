@@ -1,4 +1,6 @@
 from enum import Enum
+import random
+import string
 
 import ruamel.yaml as yaml
 # TODO: Remove the dependency on TF.
@@ -26,7 +28,7 @@ def get_key_control(ty):
                 key.LEFT: 3,
                 key.RIGHT: 4,
                 key.SPACE: 5,
-            }.get(k)
+            }.get(k, 0)
 
     def on_key_release(k, mod):
         global KEY_INPUT
@@ -124,3 +126,7 @@ class AttrDict(dict):
 
     def copy(self):
         return type(self)(super(AttrDict, self).copy())
+
+
+def random_string(num_chars):
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(num_chars))
