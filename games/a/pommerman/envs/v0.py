@@ -24,7 +24,6 @@ class Pomme(gym.Env):
                  num_rigid=None,
                  num_wood=None,
                  num_items=None,
-                 first_collapse=800,
                  max_steps=1000,
     ):
         self._agents = None
@@ -34,7 +33,6 @@ class Pomme(gym.Env):
         self._num_rigid = num_rigid
         self._num_wood = num_wood
         self._num_items = num_items
-        self._collapses = list(range(first_collapse, max_steps, int((max_steps - first_collapse)/board_size)))
         self._max_steps = max_steps
         self._viewer = None
 
@@ -120,46 +118,6 @@ class Pomme(gym.Env):
             return True
         else:
             return self._step_count >= self._max_steps
-
-    def _collapse_board(self, ring):
-        """Collapses the board at a certain ring radius.
-
-        For example, if the board is 13x13 and ring is 0, then the the ring of the first row, last row,
-        first column, and last column is all going to be turned into rigid walls. All agents in that ring
-        die and all bombs are removed without detonating.
-
-        For further rings, the values get closer to the center.
-
-        Args:
-          ring: Integer value of which cells to collapse.
-        """
-        board = self._board.copy()
-
-        def collapse(r, c):
-            if utility.position_is_agent(board, (r, c)):
-                # Agent. Kill it.
-                num_agent = board[r][c] - utility.Item.Agent1.value
-                agent = self._agents[num_agent]
-                agent.die()
-            elif utility.position_is_bomb(board, (r, c)):
-                # Bomb. Remove the bomb.
-                self._bombs = [b for b in self._bombs if b.position != (r, c)]
-            elif (r, c) in self._items:
-                # Item. Remove the item.
-                del self._items[(r, c)]
-            board[r][c] = utility.Item.Rigid.value
-
-        for cell in range(ring, self._board_size - ring):
-            collapse(ring, cell)
-            if ring != cell:
-                collapse(cell, ring)
-
-            end = self._board_size - ring - 1
-            collapse(end, cell)
-            if end != cell:
-                collapse(cell, end)
-
-        return board
 
     def _get_info(self):
         alive = [agent for agent in self._agents if agent.is_alive]
@@ -336,10 +294,11 @@ class Pomme(gym.Env):
         info = self._get_info()
         self._step_count += 1
 
-        for ring, collapse in enumerate(self._collapses):
-            if self._step_count == collapse:
-                self._board = self._collapse_board(ring)
-                break
+        if hasattr(self, 'collapses'):
+            for ring, collapse in enumerate(self.collapses):
+                if self._step_count == collapse:
+                    self._board = self._collapse_board(ring)
+                    break
 
         return obs, reward, done, info
 

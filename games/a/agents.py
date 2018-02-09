@@ -29,7 +29,7 @@ class PlayerAgent(Agent):
         self.on_key_press = on_key_press
         self.on_key_release = on_key_release
 
-    def act(self, obs, action_space, debug=False):
+    def act(self, obs, action_space):
         return self._key_input['curr']
 
     @staticmethod
@@ -38,7 +38,7 @@ class PlayerAgent(Agent):
 
 
 class RandomAgent(Agent):
-    def act(self, obs, action_space, debug=False):
+    def act(self, obs, action_space):
         return action_space.sample()
 
 
@@ -72,7 +72,7 @@ class DockerAgent(Agent):
         for line in self._container.logs(stream=True):
             print(line.decode("utf-8").strip())
 
-    def act(self, obs, action_space, debug=False):
+    def act(self, obs, action_space):
         obs_serialized = pickle.dumps(obs, protocol=0).decode("utf-8")
         request_url = "http://localhost:{}/action".format(self._port)
         req = requests.post(request_url, json={
