@@ -1,10 +1,15 @@
+"""The different Agent classes available as input to run_battle.py."""
+
 import requests
 import pickle
 import time
 import threading
 import os
 
+
 class Agent(object):
+    """Parent abstract Agent."""
+
     def __init__(self, agent):
         self._agent = agent
 
@@ -23,6 +28,7 @@ class Agent(object):
 
 
 class PlayerAgent(Agent):
+    """The Player Agent that lets the user control a character."""
     def __init__(self, agent, key_input, on_key_press, on_key_release):
         self._agent = agent
         self._key_input = key_input
@@ -38,18 +44,20 @@ class PlayerAgent(Agent):
 
 
 class RandomAgent(Agent):
+    """The Random Agent that returns random actions given an action_space."""
     def act(self, obs, action_space):
         return action_space.sample()
 
 
 class DockerAgent(Agent):
-    """Connects to an agent running in a Docker container"""
+    """The Docker Agent that Connects to a Docker container where the character runs."""
     def __init__(self, agent, docker_image, docker_client, port, **kwargs):
         self._agent = agent
         self._docker_image = docker_image
         self._docker_client = docker_client
         self._port = port
         self._container = None
+
         container_thread = threading.Thread(target=self._run_container, daemon=True)
         container_thread.start()
         # TODO: Should really wait until http endpoint available instead of sleeping

@@ -5,7 +5,7 @@ import gym
 
 # TODO: Remove the pommerman_ and make that prefix universal to the configs here.
 
-def pommerman_v0_testFFA():
+def pommerman_ffa_v0():
     env = envs.v0.Pomme
     game_type = envs.utility.GameType.FFA
     env_entry_point = 'envs:v0:Pomme'
@@ -23,7 +23,7 @@ def pommerman_v0_testFFA():
     return locals()
 
 
-def pommerman_v1_testFFA():
+def pommerman_ffa_v1():
     env = envs.v1.Pomme
     game_type = envs.utility.GameType.FFA
     env_entry_point = 'envs:v1:Pomme'

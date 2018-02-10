@@ -64,8 +64,7 @@ class Pomme(gym.Env):
 
         The agent gets to choose whether it wants to keep the fogged part in memory.
         """
-        attrs = ['position', 'ammo', 'blast_strength', 'can_kick', 'speed',
-                 'acceleration', 'max_speed', 'teammate', 'enemies']
+        attrs = ['position', 'ammo', 'blast_strength', 'can_kick', 'teammate', 'enemies']
         keys = ['board'] + attrs
 
         agent_view_size = self._agent_view_size

@@ -1,10 +1,11 @@
+import contextlib
 from enum import Enum
+import logging
+import os
 import random
 import string
 
 import ruamel.yaml as yaml
-# TODO: Remove the dependency on TF.
-import tensorflow as tf 
 
 
 class KeyInput(Enum):
@@ -17,6 +18,15 @@ class KeyInput(Enum):
 
 KEY_INPUT = {'curr': 0}
 def get_key_control(ty):
+    """Key Control for use with the player controlling the character.
+
+    Args:
+      ty: The string declaring which set of keys you want to use. Options: ["arrows"].
+
+    Returns:
+      on_key_press: The key press action.
+      on_key_release: The key release action.
+    """
     from pyglet.window import key
 
     def on_key_press(k, mod):
@@ -28,7 +38,7 @@ def get_key_control(ty):
                 key.LEFT: 3,
                 key.RIGHT: 4,
                 key.SPACE: 5,
-                key.A: 6
+                key.A: 6 # In Pommerman, this will freeze the game.
             }.get(k, 0)
 
     def on_key_release(k, mod):
@@ -36,6 +46,10 @@ def get_key_control(ty):
         KEY_INPUT['curr'] = 0
 
     return on_key_press, on_key_release
+
+
+def random_string(num_chars):
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(num_chars))
 
 
 def save_config(config, logdir=None):
@@ -55,16 +69,16 @@ def save_config(config, logdir=None):
         with config.unlocked:
             config.logdir = logdir
         message = 'Start a new run and write summaries and checkpoints to {}.'
-        tf.logging.info(message.format(config.logdir))
-        tf.gfile.MakeDirs(config.logdir)
+        logging.info(message.format(config.logdir))
+        os.makedirs(config.logdir)
         config_path = os.path.join(config.logdir, 'config.yaml')
-        with tf.gfile.FastGFile(config_path, 'w') as file_:
-            yaml.dump(config, file_, default_flow_style=False)
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
     else:
         message = (
             'Start a new run without storing summaries and checkpoints since no '
             'logging directory was specified.')
-        tf.logging.info(message)
+        logging.info(message)
     return config
 
 
@@ -81,19 +95,16 @@ def load_config(logdir):
       Configuration object.
     """
     config_path = logdir and os.path.join(logdir, 'config.yaml')
-    if not config_path or not tf.gfile.Exists(config_path):
+    if not config_path or not os.path.exists(config_path):
         message = (
             'Cannot resume an existing run since the logging directory does not '
             'contain a configuration file.')
         raise IOError(message)
-    with tf.gfile.FastGFile(config_path, 'r') as file_:
+    with open(config_path, 'r') as file_:
         config = yaml.load(file_)
     message = 'Resume run and write summaries and checkpoints to {}.'
-    tf.logging.info(message.format(config.logdir))
+    logging.info(message.format(config.logdir))
     return config
-
-
-import contextlib
 
 
 class AttrDict(dict):
@@ -129,5 +140,3 @@ class AttrDict(dict):
         return type(self)(super(AttrDict, self).copy())
 
 
-def random_string(num_chars):
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(num_chars))

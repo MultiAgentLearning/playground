@@ -1,17 +1,21 @@
+"""Agents that can be run without using a Docker container. These are examples.
+
+To use this with run_battle, include the following as an agent in the 'agents' flag, test::a.pommerman.agents.SimpleAgent. An example where all four agents use this SimpleAgent would be
+
+python.py run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=pommerman_ffa_v0
+"""
 from collections import defaultdict
 import random
 
-import a
+from a.agents import Agent
 from a.pommerman.envs import utility
 
-import numpy as np
+from numpy import inf
 
 
-class TestAgent(a.agents.Agent):
-    """This is a TestAgent. It is not meant to be submitted as playable.
+class SimpleAgent(Agent):
+    """This is a baseline agent. After you can beat it, submit your agent to compete."""
 
-    To do that, you would need to turn it into a DockerAgent. See the Docker folder for an example.
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Keep track of recently visited uninteresting positions so that we don't keep visiting the same places.
@@ -95,7 +99,7 @@ class TestAgent(a.agents.Agent):
             for c in range(len(board[0])):
                 position = (r, c)
                 if board[position] != utility.Item.Fog.value:
-                    dist[position] = np.inf
+                    dist[position] = inf
                     prev[position] = None
                     Q.append(position)
 
@@ -184,7 +188,7 @@ class TestAgent(a.agents.Agent):
                 next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies)
                 for passage_position in next_items.get(utility.Item.Passage):
                     position_dist = next_dist[passage_position]
-                    if position_dist == np.inf:
+                    if position_dist == inf:
                         continue
 
                     if position_dist > bomb_range:
@@ -258,7 +262,7 @@ class TestAgent(a.agents.Agent):
         # Will we be stuck?
         x, y = my_position
         for position in items.get(utility.Item.Passage):
-            if dist[position] == np.inf:
+            if dist[position] == inf:
                 continue
 
             # We can reach a passage that's outside of the bomb strength.
