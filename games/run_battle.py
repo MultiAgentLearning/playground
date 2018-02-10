@@ -26,12 +26,12 @@ def clean_up_agents(agents):
 if __name__ == "__main__":
     FLAGS = tf.app.flags.FLAGS
     # TODO: Incoporate the resource requirements.
-    tf.app.flags.DEFINE_string('config', 'pommerman_testFFA', 'Configuration to execute.')
+    tf.app.flags.DEFINE_string('config', 'pommerman_v0_testFFA', 'Configuration to execute.')
     tf.app.flags.DEFINE_string(
         'agents',
         # 'random::null,random::null,random::null,docker::pommerman/test-agent',
         # 'player::arrows,random::null,random::null,random::null',
-        'player::arrows,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent',
+        'test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent,test::a.pommerman.agents.TestAgent',
         'Comma delineated list of agent types and docker locations to run the agents.')
     tf.app.flags.DEFINE_string(
         'record_dir', '/Users/cinjon/Code/playground/games/recordings/pommerman', "Directory to record the PNGs of the game. Doesn't record if None."

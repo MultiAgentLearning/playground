@@ -9,6 +9,7 @@ from gym.utils import seeding
 import gym
 
 from . import utility
+from a.pommerman.characters import Flame
 
 
 class Pomme(gym.Env):
@@ -50,7 +51,7 @@ class Pomme(gym.Env):
         ret = []
         for agent in self._agents:
             if agent.is_alive:
-                action = agent.act(obs[agent.agent_id], action_space=self.action_space, debug=agent.agent_id != 0)
+                action = agent.act(obs[agent.agent_id], action_space=self.action_space)
                 if agent.agent_id == 0 and action == 6:
                     time.sleep(300)
                 ret.append(action)
@@ -144,6 +145,7 @@ class Pomme(gym.Env):
         self._board = utility.make_board(self._board_size, self._num_rigid, self._num_wood)
         self._items = utility.make_items(self._board, self._num_items)
         self._bombs = []
+        self._flames = []
         self._powerups = []
         for agent_id, agent in enumerate(self._agents):
             pos = np.where(self._board == utility.agent_value(agent_id+1))
@@ -161,15 +163,21 @@ class Pomme(gym.Env):
         return [seed]
 
     def step(self, actions):
-        # Replace the flames with passage. If there is an item there, then reveal that item.
-        flame_positions = np.where(self._board == utility.Item.Flames.value)
-        for r, c in zip(flame_positions[0], flame_positions[1]):
-            value = self._items.get((r, c))
-            if value:
-                del self._items[(r, c)]
+        # Tick the flames. Replace any dead ones with passages. If there is an item there, then reveal that item.
+        flames = []
+        for flame in self._flames:
+            position = flame.position
+            if flame.is_dead():
+                item_value = self._items.get(position)
+                if item_value:
+                    del self._items[position]
+                else:
+                    item_value = utility.Item.Passage.value
+                self._board[position] = item_value
             else:
-                value = utility.Item.Passage.value
-            self._board[(r, c)] = value
+                flame.tick()
+                flames.append(flame)
+        self._flames = flames
 
         # Step the living agents.
         # If two agents try to go to the same spot, they should bounce back to their previous spots.
@@ -286,7 +294,11 @@ class Pomme(gym.Env):
             if agent.is_alive:
                 self._board[agent.position] = utility.agent_value(agent.agent_id+1)
 
-        self._board[np.where(exploded_map == 1)] = utility.Item.Flames.value
+        flame_positions = np.where(exploded_map == 1)
+        for row, col in zip(flame_positions[0], flame_positions[1]):
+            self._flames.append(Flame((row, col)))
+        for flame in self._flames:
+            self._board[flame.position] = utility.Item.Flames.value
 
         done = self._get_done()
         obs = self._get_observations()

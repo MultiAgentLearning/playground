@@ -17,8 +17,10 @@ class TestAgent(a.agents.Agent):
         # Keep track of recently visited uninteresting positions so that we don't keep visiting the same places.
         self._recently_visited_positions = []
         self._recently_visited_length = 6
+        # Keep track of the previous direction to help with the enemy standoffs.
+        self._prev_direction = None
 
-    def act(self, obs, action_space, debug=True):
+    def act(self, obs, action_space):
         my_position = obs['position']
         board = obs['board']
         bombs = obs['bombs']
@@ -39,7 +41,8 @@ class TestAgent(a.agents.Agent):
 
         # Move towards an enemy if there is one in exactly three reachable spaces.
         direction = self._near_enemy(my_position, items, dist, prev, enemies, 3)
-        if direction is not None:
+        if direction is not None and (self._prev_direction != direction or random.random() < .5):
+            self._prev_direction = direction
             return direction.value
 
         # Move towards a good item if there is one within two reachable spaces.
@@ -123,7 +126,7 @@ class TestAgent(a.agents.Agent):
         return items, dist, prev
 
     def _directions_in_range_of_bomb(self, board, my_position, bombs, dist):
-        ret = []
+        ret = defaultdict(int)
 
         x, y = my_position
         for bomb in bombs:
@@ -138,39 +141,39 @@ class TestAgent(a.agents.Agent):
 
             if my_position == position:
                 # We are on a bomb. All directions are in range of bomb.
-                return [
+                for direction in [
                     utility.Action.Right,
                     utility.Action.Left,
                     utility.Action.Up,
                     utility.Action.Down,
-                ]
+                ]:
+                    ret[direction] = max(ret[direction], bomb['blast_strength'])
             elif x == position[0]:
                 if y < position[1]:
                     # Bomb is right.
-                    ret.append(utility.Action.Right)
+                    ret[utility.Action.Right] = max(ret[utility.Action.Right], bomb['blast_strength'])
                 else:
                     # Bomb is left.
-                    ret.append(utility.Action.Left)
+                    ret[utility.Action.Left] = max(ret[utility.Action.Left], bomb['blast_strength'])
             elif y == position[1]:
                 if x < position[0]:
                     # Bomb is down.
-                    ret.append(utility.Action.Down)
+                    ret[utility.Action.Down] = max(ret[utility.Action.Down], bomb['blast_strength'])
                 else:
                     # Bomb is down.
-                    ret.append(utility.Action.Up)
+                    ret[utility.Action.Up] = max(ret[utility.Action.Up], bomb['blast_strength'])
 
-        return list(set(ret))
+        return ret
 
     def _find_safe_directions(self, board, my_position, unsafe_directions, bombs, enemies):
         # All directions are unsafe. Return a position that won't leave us locked.
         safe = []
-        bomb_range = 3 # TODO: We have hte info to make this more exact...
 
         if len(unsafe_directions) == 4:
             next_board = board.copy()
             next_board[my_position] = utility.Item.Bomb.value
 
-            for direction in unsafe_directions:
+            for direction, bomb_range in unsafe_directions.items():
                 next_position = utility.get_next_position(my_position, direction)
                 nx, ny = next_position
                 if not utility.position_on_board(next_board, next_position) or \
@@ -198,7 +201,7 @@ class TestAgent(a.agents.Agent):
             if not safe:
                 safe = [utility.Action.Stop]
             return safe
-        
+
         x, y = my_position
         disallowed = [] # The directions that will go off the board.
 
@@ -270,22 +273,17 @@ class TestAgent(a.agents.Agent):
         return False
 
     @staticmethod
-    def _nearest_position(dist, objs, items, radius, exact=False):
+    def _nearest_position(dist, objs, items, radius):
         nearest = None
         dist_to = max(dist.values())
 
         for obj in objs:
             for position in items.get(obj, []):
                 d = dist[position]
-                if exact and d == radius:
-                    return position
-
                 if d <= radius and d <= dist_to:
                     nearest = position
                     dist_to = d
 
-        if exact and dist_to != radius:
-            nearest = None
         return nearest
 
     @staticmethod
@@ -301,7 +299,7 @@ class TestAgent(a.agents.Agent):
 
     @classmethod
     def _near_enemy(cls, my_position, items, dist, prev, enemies, radius):
-        nearest_enemy_position = cls._nearest_position(dist, enemies, items, radius, exact=True)
+        nearest_enemy_position = cls._nearest_position(dist, enemies, items, radius)
         return cls._get_direction_towards_position(my_position, nearest_enemy_position, prev)
 
     @classmethod

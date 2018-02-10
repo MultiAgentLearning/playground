@@ -267,7 +267,6 @@ def position_on_board(board, position):
     ])
 
 
-# TODO: Refactor to use this more often.
 def get_direction(position, next_position):
     """Gets the action value that goes from position --> next_position. Assumes that they are adjacent."""
     x, y = position
@@ -285,7 +284,6 @@ def get_direction(position, next_position):
     raise InvalidAction("We did not receive a valid position transition.")
 
 
-# TODO: Refactor to use this more often.
 def get_next_position(position, direction):
     x, y = position
     if direction == Action.Right:

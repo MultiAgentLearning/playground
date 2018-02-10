@@ -152,3 +152,15 @@ class Bomb(object):
         return self.moving_direction is not None
 
 
+class Flame(object):
+    """Container for Flame object."""
+    def __init__(self, position):
+        self.position = position
+        self._life = 2
+
+    def tick(self):
+        self._life -= 1
+
+    def is_dead(self):
+        return self._life == 0
+
