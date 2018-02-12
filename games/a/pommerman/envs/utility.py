@@ -5,7 +5,6 @@ import random
 
 import numpy as np
 
-
 RENDER_FPS = 15
 BOARD_SIZE = 13 # Square map with this size
 NUM_RIGID = 50
@@ -172,29 +171,37 @@ def make_items(board, num_items):
 
 
 def is_accessible(board, agent_positions):
-    """Return true if all of the agents can reach each other."""
+    """Return true if this board is accessible.
+
+    That means two thigns:
+    1. All of the agents can reach each other.
+    2. Every passage can be reached.
+    """
     seen = set()
     agent_position = agent_positions.pop()
+    passage_positions = np.where(board == Item.Passage.value)
+    passage_positions = list(zip(passage_positions[0], passage_positions[1]))
+    positions = agent_positions + passage_positions
+
     Q = [agent_position]
     while Q:
         row, col = Q.pop()
         for (i, j) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-            next_row = row+i
-            next_col = col+j
-            if (next_row, next_col) in seen:
+            next_position = (row+i, col+j)
+            if next_position in seen:
                 continue
-            if next_row < 0 or next_row >= len(board) or next_col < 0 or next_col >= len(board):
+            if not position_on_board(board, next_position):
                 continue
-            if board[next_row, next_col] == 1:
+            if position_is_rigid(board, next_position):
                 continue
 
-            if (next_row, next_col) in agent_positions:
-                agent_positions.pop(agent_positions.index((next_row, next_col)))
-                if not len(agent_positions):
+            if next_position in positions:
+                positions.pop(positions.index(next_position))
+                if not len(positions):
                     return True
 
-            seen.add((next_row, next_col))
-            Q.append((next_row, next_col))
+            seen.add(next_position)
+            Q.append(next_position)
     return False
     
 
@@ -230,6 +237,10 @@ def position_is_bomb(board, position):
 
 def position_is_passage(board, position):
     return board[position] == Item.Passage.value
+
+
+def position_is_rigid(board, position):
+    return board[position] == Item.Rigid.value
 
 
 def position_is_agent(board, position):
