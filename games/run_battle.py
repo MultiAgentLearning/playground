@@ -11,8 +11,6 @@ python run_battle.py --agents=player::arrows,test::a.pommerman.agents.SimpleAgen
 
 An example with a docker agent:
 python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=pommerman_ffa_v0
-
-TODO: Get rid of the TF dependency.
 """
 import a
 
@@ -20,10 +18,10 @@ import atexit
 import functools
 import os
 
-import gym
-import tensorflow as tf
-
+import argparse
 import docker
+import gym
+
 client = docker.from_env()
 
 def clean_up_agents(agents):
@@ -31,22 +29,22 @@ def clean_up_agents(agents):
     return [agent.shutdown() for agent in agents]
 
 if __name__ == "__main__":
-    FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_string("config", "pommerman_ffa_v0", "Configuration to execute.")
-    tf.app.flags.DEFINE_string(
-        "agents",
-        # "random::null,random::null,random::null,docker::pommerman/test-agent", 
+    parser = argparse.ArgumentParser(description='Playground Flags.')
+    parser.add_argument('--config',
+                        default='pommerman_ffa_v0',
+                        help='Configuration to execute.')
+    parser.add_argument('--agents',
+                        # default='random::null,random::null,random::null,docker::pommerman/test-agent', 
+                        # default='player::arrows,random::null,random::null,random::null',
+                        default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
+                        help='Comma delineated list of agent types and docker locations to run the agents.')
+    parser.add_argument('--record_dir',
+                        help="Directory to record the PNGs of the game. Doesn't record if None.")
+    args = parser.parse_args()
 
-        # "player::arrows,random::null,random::null,random::null",
-        "test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent",
-        "Comma delineated list of agent types and docker locations to run the agents.")
-    tf.app.flags.DEFINE_string(
-        "record_dir", None, "Directory to record the PNGs of the game. Doesn't record if None."
-    )
-
-    config = a.utility.AttrDict(getattr(a.configs, FLAGS.config)())
+    config = a.utility.AttrDict(getattr(a.configs, args.config)())
     _agents = []
-    for agent_id, agent_info in enumerate(FLAGS.agents.split(",")):
+    for agent_id, agent_info in enumerate(args.agents.split(",")):
         agent = config.agent(agent_id, config.game_type)
         agent_type, agent_control = agent_info.split("::")
         assert agent_type in ["player", "random", "docker", "test"]
@@ -77,7 +75,7 @@ if __name__ == "__main__":
     env.set_agents(_agents)
 
     atexit.register(functools.partial(clean_up_agents, _agents))
-    record_dir = FLAGS.record_dir
+    record_dir = args.record_dir
 
     print("Starting the Game.")
     obs = env.reset()
