@@ -30,8 +30,11 @@ def clean_up_agents(agents):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Playground Flags.')
+    parser.add_argument('--game',
+                        default='pommerman',
+                        help='Game to choose.')
     parser.add_argument('--config',
-                        default='pommerman_ffa_v0',
+                        default='ffa_v0',
                         help='Configuration to execute.')
     parser.add_argument('--agents',
                         # default='random::null,random::null,random::null,docker::pommerman/test-agent', 
@@ -42,7 +45,9 @@ if __name__ == "__main__":
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
     args = parser.parse_args()
 
-    config = a.utility.AttrDict(getattr(a.configs, args.config)())
+    game = getattr(a, args.game)
+    configs = getattr(game, 'configs')
+    config = a.utility.AttrDict(getattr(configs, args.config)())
     _agents = []
     for agent_id, agent_info in enumerate(args.agents.split(",")):
         agent = config.agent(agent_id, config.game_type)
