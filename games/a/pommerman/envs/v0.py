@@ -47,6 +47,12 @@ class Pomme(gym.Env):
     def set_agents(self, agents):
         self._agents = agents
 
+    def make_board(self):
+        self._board = utility.make_board(self._board_size, self._num_rigid, self._num_wood)
+
+    def make_items(self):
+        self._items = utility.make_items(self._board, self._num_items)
+
     def act(self, obs):
         ret = []
         for agent in self._agents:
@@ -141,8 +147,8 @@ class Pomme(gym.Env):
         assert(self._agents is not None)
 
         self._step_count = 0
-        self._board = utility.make_board(self._board_size, self._num_rigid, self._num_wood)
-        self._items = utility.make_items(self._board, self._num_items)
+        self.make_board()
+        self.make_items()
         self._bombs = []
         self._flames = []
         self._powerups = []

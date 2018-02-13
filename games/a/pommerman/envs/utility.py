@@ -146,7 +146,7 @@ def make_board(size, num_rigid=0, num_wood=0):
 
     # Make sure it's possible for the agents to reach each other.
     if not is_accessible(board, agents):
-        print('not accessible, rerunning')
+        print('This board has unreachable passages or agents. Re-making...')
         return make_board(size, _num_rigid, _num_wood)
 
     return board
