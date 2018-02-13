@@ -374,7 +374,7 @@ class Pomme(gym.Env):
         human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
         if mode == 'rgb_array':
-            return frames[0] # just return the first value in this case.
+            return frames[0]
 
         all_img = resize(frames[0], (self._board_size*human_factor, self._board_size*human_factor), interp='nearest')
         other_imgs = [

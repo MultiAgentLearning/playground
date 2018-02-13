@@ -6,21 +6,20 @@ import random
 import numpy as np
 
 RENDER_FPS = 15
-BOARD_SIZE = 13 # Square map with this size
+BOARD_SIZE = 13
 NUM_RIGID = 50
 NUM_WOOD = 50
 NUM_ITEMS = 16
-AGENT_VIEW_SIZE = 5 # How much of the map the agent sees not under fog of war.
+AGENT_VIEW_SIZE = 5
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
 DEFAULT_BOMB_LIFE = 25
 AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
 ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
-# NOTE: This is for the ExtraBomb, IncrRange, etc. 
-ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)]
-FIRST_COLLAPSE = 500 # The first step at which the board starts to collapse.
-MAX_STEPS = 2500
+ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)] # ExtraBomb, IncrRange, etc. 
+FIRST_COLLAPSE = 500 # If using V1, the first step at which the board starts to collapse.
+MAX_STEPS = 2000
 
 
 class Item(Enum):
