@@ -17,6 +17,7 @@ import a
 import atexit
 import functools
 import os
+import time
 
 import argparse
 import docker
@@ -93,5 +94,6 @@ if __name__ == "__main__":
         obs, reward, done, info = env.step(actions)
 
     print("Final Result: ", info)
+    time.sleep(3)
     env.render(close=True)
     env.close()
