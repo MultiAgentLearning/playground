@@ -56,3 +56,21 @@ def team_v0():
     }
     agent = characters.Agent
     return locals()
+
+
+def radio_v2():
+    env = envs.v2.Pomme
+    game_type = envs.utility.GameType.TeamRadio
+    env_entry_point = 'envs:v0:Pomme'
+    env_id = 'Pomme-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': envs.utility.BOARD_SIZE,
+        'agent_view_size': envs.utility.AGENT_VIEW_SIZE,
+        'num_rigid': envs.utility.NUM_RIGID,
+        'num_wood': envs.utility.NUM_WOOD,
+        'num_items': envs.utility.NUM_ITEMS,
+        'max_steps': envs.utility.MAX_STEPS
+    }
+    agent = characters.Agent
+    return locals()

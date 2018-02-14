@@ -26,6 +26,8 @@ class Pomme(gym.Env):
                  num_wood=None,
                  num_items=None,
                  max_steps=1000,
+                 radio_vocab_size=None,
+                 radio_num_words=None,
     ):
         self._agents = None
         self._game_type = game_type
@@ -37,12 +39,32 @@ class Pomme(gym.Env):
         self._max_steps = max_steps
         self._viewer = None
 
+        if (radio_vocab_size and not radio_num_words) or (not radio_vocab_size and radio_num_words):
+            assert("Please provide both radio_vocab_size and radio_num_words to use the Radio environment.")
+
         # Observation and Action Spaces. These are both geared towards a single agent even though the environment expects
         # actions and returns observations for all four agents. We do this so that it's clear what the actions and obs are
         # for a single agent. Wrt the observations, they are actually returned as a dict for easier understanding.
-        self.action_space = spaces.Discrete(6)
-        # Observations: This is geared towards a single agent.
-        self.observation_space = spaces.Box(low=0, high=len(utility.Item), shape=(self._board_size, self._board_size))
+
+        # The observations (total = board_size^2 + 9):
+        # - all of the board (board_size^2)
+        # - agent's position (2)
+        # - num ammo (1)
+        # - blast strength (1)
+        # - can_kick (0 or 1)
+        # - teammate (one of {0, Agent.values}). If 0, then empty.
+        # - enemies (three of {0, Agent.values}). If 0, then empty.
+        # - (with Radio) radio_vocab_size * radio_num_words.
+        num_observations = self._board_size**2 + 9
+        min_obs = [0]*num_observations
+        max_obs = [len(utility.Item)]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
+        if radio_vocab_size:
+            min_obs.extend([0]*radio_vocab_size*radio_num_words)
+            max_obs.extend([1]*radio_vocab_size*radio_num_words)
+            self.action_space = spaces.Tuple(tuple([spaces.Discrete(6)] + [spaces.Discrete(radio_vocab_size)]*radio_num_words))
+        else:
+            self.action_space = spaces.Discrete(6)
+        self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
         self._agents = agents
