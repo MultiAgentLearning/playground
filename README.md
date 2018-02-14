@@ -1,17 +1,14 @@
 # Playground
 
-Playground hosts Pommerman, a clone of Bomberman built for AI research. People from around the world submit agents that they've trained to play. We run regular competitions on our servers and report the results and replays.
+#### First time? check out our [website](www.pommerman.com) for more information and our [Discord](https://discordapp.com/invite/wjVJEDc) to join the community.
 
-#### If you are here for the first time, check out our [website](www.pommerman.com) for more information and our [discord](https://discordapp.com/invite/wjVJEDc) to join the community.
+Playground hosts Pommerman, a clone of Bomberman built for AI research. People from around the world submit agents that they've trained to play. We run regular competitions on our servers and report the results and replays.
 
 There are three variants for which you can enter your agents to compete:
 
-* FFA
-> This is a Free For All where four agents enter and one leaves. It tests planning, tactics, and cunning.
-* Team 
-> This is a 2v2 where two teams of agents enter and one team wins. It tests cooperation, planning, and tactics.
-* Team Radio
-> This is like Team but each agent has a radio that they can use to convey two words each step from a dictionary of size 8.
+* FFA: Free For All where four agents enter and one leaves. It tests planning, tactics, and cunning.
+* Team: 2v2 where two teams of agents enter and one team wins. It tests cooperation, planning, and tactics.
+* Team Radio: Like Team but each agent has a radio that they can use to convey 2 words each step from a dictionary of size 8.
 
 #### Why should I participate?
 
@@ -31,4 +28,4 @@ The setup for submitting agents will be live shortly. It involves making a [Dock
 
 #### Who is running this?
 
-[Cinjon Resnick](http://twitter.com/cinjoncin), [Denny Britz](https://twitter.com/dennybritz), and [David Ha](https://twitter.com/hardmaru) are the folks behind this. We are generously supported by a host of other people, including [Kyunghyun Cho](https://twitter.com/kchonyc), [Joan Bruna](https://twitter.com/joanbruna) and [Jason Weston](https://research.fb.com/people/weston-jason/). You can find us in the [discord](https://discordapp.com/invite/wjVJEDc).
+[Cinjon Resnick](http://twitter.com/cinjoncin), [Denny Britz](https://twitter.com/dennybritz), and [David Ha](https://twitter.com/hardmaru) are the folks behind this. We are generously supported by a host of other people, including [Kyunghyun Cho](https://twitter.com/kchonyc), [Joan Bruna](https://twitter.com/joanbruna) and [Jason Weston](https://research.fb.com/people/weston-jason/). You can find us in the [Discord](https://discordapp.com/invite/wjVJEDc).
