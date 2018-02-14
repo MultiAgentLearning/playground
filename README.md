@@ -23,7 +23,7 @@ There are three variants for which you can enter your agents to compete:
 
 #### How do I train agents?
 
-
+Most open-source research tools in this domain have been designed with single agents in mind. We will be developing resources towards standardizing multi-agent learning. In the meantime, we have provided an example training script in train_with_tensorforce.py. It demonstrates how to wrap the Pommerman environments such that they can be trained with popular libraries like TensorForce.
 
 #### How do I submit agents that I have trained?
 
