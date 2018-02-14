@@ -1,16 +1,9 @@
-"""Run a battle among agents.
+"""Train an agent with TensorForce.
 
-Call this with a config, a game, and a list of agents. The script will start separate threads to operate the agents
-and then report back the result.
+Call this with a config, a game, and a list of agents, one of which should be a tensorforce agent. The script will start separate threads to operate the agents and then report back the result.
 
-An example with all four test agents running ffa:
-python run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
-
-An example with one player, two random agents, and one test agent:
-python run_battle.py --agents=player::arrows,test::a.pommerman.agents.SimpleAgent,random::null,random::null --config=ffa_v0
-
-An example with a docker agent:
-python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=ffa_v0
+An example with all three simple agents running ffa:
+python run_battle.py --agents=tensorforce::ppo,a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
 """
 import a
 
@@ -21,15 +14,38 @@ import time
 
 import argparse
 import docker
+from tensorforce.execution import Runner
+from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
 
-
-client = docker.from_env()
 
 
 def clean_up_agents(agents):
     """Stops all agents"""
     return [agent.shutdown() for agent in agents]
+
+
+class WrappedEnv(OpenAIGym):    
+    def __init__(self, gym, visualize=False):
+        self.gym = gym
+        self.visualize = visualize
+
+    def execute(self, actions):
+        if self.visualize:
+            self.gym.render()
+
+        obs = self.gym.get_observations()
+        all_actions = self.gym.act(obs)
+        all_actions.insert(self.gym.training_agent, actions)
+        state, reward, terminal, _ = self.gym.step(all_actions)
+        agent_state = self.gym.featurize(state[self.gym.training_agent])
+        agent_reward = reward[self.gym.training_agent]
+        return agent_state, terminal, agent_reward
+
+    def reset(self):
+        obs = self.gym.reset()
+        agent_obs = self.gym.featurize(obs[3])
+        return agent_obs
 
 
 if __name__ == "__main__":
@@ -41,9 +57,7 @@ if __name__ == "__main__":
                         default='ffa_v0',
                         help='Configuration to execute.')
     parser.add_argument('--agents',
-                        # default='random::null,random::null,random::null,docker::pommerman/test-agent', 
-                        # default='player::arrows,random::null,random::null,random::null',
-                        default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
+                        default='tensorforce::ppo,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
     parser.add_argument('--record_dir',
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
@@ -56,7 +70,7 @@ if __name__ == "__main__":
     for agent_id, agent_info in enumerate(args.agents.split(",")):
         agent = config.agent(agent_id, config.game_type)
         agent_type, agent_control = agent_info.split("::")
-        assert agent_type in ["player", "random", "docker", "test"]
+        assert agent_type in ["player", "random", "docker", "test", "tensorforce"]
         if agent_type == "player":
             assert agent_control in ["arrows"]
             on_key_press, on_key_release = a.utility.get_key_control(agent_control)
@@ -72,6 +86,9 @@ if __name__ == "__main__":
                 port=agent_id+1000)
         elif agent_type == "test":
             agent = eval(agent_control)(agent)
+        elif agent_type == "tensorforce":
+            agent = a.agents.TensorForceAgent(agent, algorithm=agent_control)
+            training_agent = agent
         _agents.append(agent)
 
     gym.envs.registration.register(
@@ -80,23 +97,20 @@ if __name__ == "__main__":
         kwargs=config.env_kwargs
     )
     env = config.env(**config.env_kwargs)
-    env.seed(0)
     env.set_agents(_agents)
+    env.set_training_agent(training_agent.agent_id)
+    env.seed(0)
+
+    # Create a Proximal Policy Optimization agent
+    agent = training_agent.initialize(env)
 
     atexit.register(functools.partial(clean_up_agents, _agents))
-    record_dir = args.record_dir
+    wrapped_env = WrappedEnv(env, visualize=True)
+    runner = Runner(agent=agent, environment=wrapped_env)
+    runner.run(episodes=10, max_episode_timesteps=2000)
+    print("Stats: ", runner.episode_rewards, runner.episode_timesteps, runner.episode_times)
 
-    print("Starting the Game.")
-    obs = env.reset()
-    steps = 0
-    done = False
-    while not done:
-        steps += 1
-        env.render(record_dir=record_dir)
-        actions = env.act(obs)
-        obs, reward, done, info = env.step(actions)
-
-    print("Final Result: ", info)
-    time.sleep(3)
-    env.render(close=True)
-    env.close()
+    try:
+        runner.close()
+    except AttributeError as e:
+        pass

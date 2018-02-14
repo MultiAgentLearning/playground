@@ -6,6 +6,8 @@ import time
 import threading
 import os
 
+from tensorforce.agents import PPOAgent
+
 
 class Agent(object):
     """Parent abstract Agent."""
@@ -94,3 +96,30 @@ class DockerAgent(Agent):
         print("Stopping container..")
         if self._container:
             return self._container.remove(force=True)
+
+
+class TensorForceAgent(Agent):
+    """The TensorForceAgent. Acts through the algorith, not here."""
+    def __init__(self, agent, algorithm):
+        self._agent = agent
+        self.algorithm = algorithm
+
+    def act(self, obs, action_space):
+        pass
+
+    def initialize(self, env):
+        if self.algorithm == "ppo":
+            return PPOAgent(
+                states_spec=dict(type='float', shape=env.observation_space.shape),
+                actions_spec=dict(type='int', num_actions=env.action_space.n),
+                network_spec=[
+                    dict(type='dense', size=64),
+                    dict(type='dense', size=64)
+                ],
+                batch_size=128,
+                step_optimizer=dict(
+                    type='adam',
+                    learning_rate=1e-4
+                )
+            )
+        return None

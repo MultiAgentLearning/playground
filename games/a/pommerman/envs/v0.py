@@ -38,6 +38,7 @@ class Pomme(gym.Env):
         self._num_items = num_items
         self._max_steps = max_steps
         self._viewer = None
+        self.training_agent = None
 
         if (radio_vocab_size and not radio_num_words) or (not radio_vocab_size and radio_num_words):
             assert("Please provide both radio_vocab_size and radio_num_words to use the Radio environment.")
@@ -69,6 +70,12 @@ class Pomme(gym.Env):
     def set_agents(self, agents):
         self._agents = agents
 
+    def set_training_agent(self, agent_id):
+        self.training_agent = agent_id
+
+    def has_training_agent(self):
+        return self.training_agent is not None
+
     def make_board(self):
         self._board = utility.make_board(self._board_size, self._num_rigid, self._num_wood)
 
@@ -78,16 +85,18 @@ class Pomme(gym.Env):
     def act(self, obs):
         ret = []
         for agent in self._agents:
+            if agent.agent_id == self.training_agent:
+                continue
             if agent.is_alive:
                 action = agent.act(obs[agent.agent_id], action_space=self.action_space)
-                if agent.agent_id == 0 and action == 6:
+                if action == 6:
                     time.sleep(300)
                 ret.append(action)
             else:
                 ret.append(utility.Action.Stop)
         return ret
 
-    def _get_observations(self):
+    def get_observations(self):
         """Gets the observations as an np.array of the visible squares.
 
         The agent gets to choose whether it wants to keep the fogged part in memory.
@@ -111,6 +120,9 @@ class Pomme(gym.Env):
                 agent_obs[attr] = getattr(agent, attr)
             observations.append(agent_obs)
 
+        # We set these here so that we don't need to reevaluate them when using
+        # other libraries like TensorForce
+        self.observations = observations
         return observations
 
     def _get_rewards(self):
@@ -123,6 +135,8 @@ class Pomme(gym.Env):
             else:
                 for num in alive_agents:
                     ret[num] = 0
+                if self.has_training_agent() and self.training_agent not in alive_agents:
+                    ret[self.training_agent] = -1
             return ret
         elif alive_agents == [0, 2] or alive_agents == [0] or alive_agents == [2]:
             return [1, -1, 1, -1]
@@ -139,6 +153,8 @@ class Pomme(gym.Env):
         if self._step_count >= self._max_steps:
             return True
         elif self._game_type == utility.GameType.FFA:
+            if self.has_training_agent() and self.training_agent not in alive_ids:
+                return True
             return len(alive) <= 1
         elif any([
                 len(alive_ids) <= 1,
@@ -188,8 +204,7 @@ class Pomme(gym.Env):
             agent.set_start_position((row, col))
             agent.reset()
 
-        ret = self._get_observations()
-        return ret
+        return self.get_observations()
 
     def seed(self, seed=None):
         gym.spaces.prng.seed(seed)
@@ -335,7 +350,7 @@ class Pomme(gym.Env):
             self._board[flame.position] = utility.Item.Flames.value
 
         done = self._get_done()
-        obs = self._get_observations()
+        obs = self.get_observations()
         reward = self._get_rewards()
         info = self._get_info(done, reward)
         self._step_count += 1
@@ -434,3 +449,26 @@ class Pomme(gym.Env):
                 break
 
         time.sleep(1.0 / utility.RENDER_FPS)
+
+    @staticmethod
+    def featurize(obs):
+        board = obs["board"].reshape(-1).astype(np.float32)
+        position = utility.make_np_float(obs["position"])
+        ammo = utility.make_np_float([obs["ammo"]])
+        blast_strength = utility.make_np_float([obs["blast_strength"]])
+        can_kick = utility.make_np_float([obs["can_kick"]])
+
+        teammate = obs["teammate"]
+        if teammate is not None:
+            teammate = teammate.value
+        else:
+            teammate = 0
+        teammate = utility.make_np_float([teammate])
+
+        enemies = obs["enemies"]
+        enemies = [e.value for e in enemies]
+        if len(enemies) < 3:
+            enemies = [e.value for e in enemies] + [0]*(3 - len(enemies))
+        enemies = utility.make_np_float(enemies)
+
+        return np.concatenate((board, position, ammo, blast_strength, can_kick, teammate, enemies))

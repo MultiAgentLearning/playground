@@ -7,7 +7,7 @@ import numpy as np
 
 RENDER_FPS = 50
 BOARD_SIZE = 13
-NUM_RIGID = 54
+NUM_RIGID = 50
 NUM_WOOD = 50
 NUM_ITEMS = int(NUM_WOOD/2)
 AGENT_VIEW_SIZE = 5
@@ -146,7 +146,8 @@ def make_board(size, num_rigid=0, num_wood=0):
 
     # Make sure it's possible for the agents to reach each other.
     if not is_accessible(board, agents):
-        print('This board has unreachable passages or agents. Re-making...')
+        # TODO: This is excessive. Fix it.
+        # print('This board has unreachable passages or agents. Re-making...')
         return make_board(size, _num_rigid, _num_wood)
 
     return board
@@ -309,3 +310,7 @@ def get_next_position(position, direction):
     elif direction == Action.Stop:
         return (x, y)
     raise InvalidAction("We did not receive a valid direction.")
+
+
+def make_np_float(feature):
+    return np.array(feature).astype(np.float32)
