@@ -33,7 +33,7 @@ class Pomme(v0.Pomme):
         def collapse(r, c):
             if utility.position_is_agent(board, (r, c)):
                 # Agent. Kill it.
-                num_agent = board[r][c] - utility.Item.Agent1.value
+                num_agent = board[r][c] - utility.Item.Agent0.value
                 agent = self._agents[num_agent]
                 agent.die()
             elif utility.position_is_bomb(board, (r, c)):

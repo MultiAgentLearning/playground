@@ -5,11 +5,11 @@ import random
 
 import numpy as np
 
-RENDER_FPS = 15
+RENDER_FPS = 50
 BOARD_SIZE = 13
-NUM_RIGID = 50
+NUM_RIGID = 54
 NUM_WOOD = 50
-NUM_ITEMS = 16
+NUM_ITEMS = int(NUM_WOOD/2)
 AGENT_VIEW_SIZE = 5
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
@@ -19,7 +19,7 @@ AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color f
 ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
 ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)] # ExtraBomb, IncrRange, etc. 
 FIRST_COLLAPSE = 500 # If using V1, the first step at which the board starts to collapse.
-MAX_STEPS = 2000
+MAX_STEPS = 2500
 
 
 class Item(Enum):
@@ -33,10 +33,10 @@ class Item(Enum):
     IncrRange = 7 # increases the blast_strength
     Kick = 8 # can kick bombs by touching them.
     Skull = 9 # randomly either reduces ammo (capped at 1) or blast_strength (capped at 2)
-    Agent1 = 10
-    Agent2 = 11
-    Agent3 = 12
-    Agent4 = 13
+    Agent0 = 10
+    Agent1 = 11
+    Agent2 = 12
+    Agent3 = 13
 
 
 class GameType(Enum):
@@ -116,10 +116,10 @@ def make_board(size, num_rigid=0, num_wood=0):
     coordinates = set([(x, y) for x, y in itertools.product(range(size), range(size)) if x != y])
 
     # Set the players down. Exclude them from coordinates.
-    board[1, 1] = Item.Agent1.value
-    board[size-2, 1] = Item.Agent2.value
+    board[1, 1] = Item.Agent0.value
+    board[size-2, 1] = Item.Agent1.value
+    board[size-2, size-2] = Item.Agent2.value
     board[1, size-2] = Item.Agent3.value
-    board[size-2, size-2] = Item.Agent4.value
     agents = [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]
     for position in agents:
         if position in coordinates:
@@ -179,8 +179,10 @@ def is_accessible(board, agent_positions):
     seen = set()
     agent_position = agent_positions.pop()
     passage_positions = np.where(board == Item.Passage.value)
-    passage_positions = list(zip(passage_positions[0], passage_positions[1]))
-    positions = agent_positions + passage_positions
+    positions = agent_positions
+    positions.extend(list(zip(passage_positions[0], passage_positions[1])))
+    # wood_positions = np.where(board == Item.Wood.value)
+    # positions.extend(list(zip(wood_positions[0], wood_positions[1])))
 
     Q = [agent_position]
     while Q:
@@ -244,10 +246,10 @@ def position_is_rigid(board, position):
 
 def position_is_agent(board, position):
     return board[position] in [
+        Item.Agent0.value,
         Item.Agent1.value,
         Item.Agent2.value,
-        Item.Agent3.value,
-        Item.Agent4.value
+        Item.Agent3.value
     ]
 
 

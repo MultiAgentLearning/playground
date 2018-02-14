@@ -16,13 +16,14 @@ class Agent(object):
         self.can_kick = False
         if game_type == utility.GameType.FFA:
             self.teammate = None
-            self.enemies = [getattr(utility.Item, 'Agent%d' % (id_+1))
+            self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id]
         else:
             teammate_id = (agent_id + 2) % 4
-            self.teammate = getattr(utility.Item, 'Agent%d' % (teammate_id+1))
-            self.enemies = [getattr(utility.Item, 'Agent%d' % (id_+1))
+            self.teammate = getattr(utility.Item, 'Agent%d' % teammate_id)
+            self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id and id_ != teammate_id]
+            print("AGENT: ", self.agent_id, self.teammate, self.enemies)
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:

@@ -114,7 +114,9 @@ class Pomme(gym.Env):
     def _get_done(self):
         alive = [agent for agent in self._agents if agent.is_alive]
         alive_ids = sorted([agent.agent_id for agent in alive])
-        if self._game_type == utility.GameType.FFA:
+        if self._step_count >= self._max_steps:
+            return True
+        elif self._game_type == utility.GameType.FFA:
             return len(alive) <= 1
         elif any([
                 len(alive_ids) <= 1,
@@ -122,24 +124,29 @@ class Pomme(gym.Env):
                 alive_ids == [1, 3],
         ]):
             return True
-        else:
-            return self._step_count >= self._max_steps
+        return False
 
-    def _get_info(self):
+    def _get_info(self, done, rewards):
         alive = [agent for agent in self._agents if agent.is_alive]
-        if len(alive) == 0:
+        if done and not any(rewards):
             return {'result': utility.Result.Tie}
         elif self._game_type == utility.GameType.FFA:
-            if len(alive) == 1:
-                return {'result': utility.Result.Win, 'winner': [alive[0].agent_id]}
+            if done:
+                return {
+                    'result': utility.Result.Win,
+                    'winners': [num for num, reward in enumerate(rewards) if reward == 1]
+                }
             else:
                 return {'result': utility.Result.Incomplete}
         else:
-            alive_ids = sorted([agent.agent_id for agent in alive])
-            if any([alive_ids == [0], alive_ids == [2], alive_ids == [0, 2]]):
-                return {'result': utility.Result.Win, 'winner': [0, 2]}
-            elif any([alive_ids == [1], alive_ids == [3], alive_ids == [1, 3]]):
-                return {'result': utility.Result.Win, 'winner': [1, 3]}
+            if done:
+                if rewards == [1]*4:
+                    return {'result': utility.Result.Tie}
+                else:
+                    return {
+                        'result': utility.Result.Win,
+                        'winners': [num for num, reward in enumerate(rewards) if reward == 1]
+                    }
             else:
                 return {'result': utility.Result.Incomplete}
 
@@ -153,7 +160,7 @@ class Pomme(gym.Env):
         self._flames = []
         self._powerups = []
         for agent_id, agent in enumerate(self._agents):
-            pos = np.where(self._board == utility.agent_value(agent_id+1))
+            pos = np.where(self._board == utility.agent_value(agent_id))
             row = pos[0][0]
             col = pos[1][0]
             agent.set_start_position((row, col))
@@ -295,9 +302,9 @@ class Pomme(gym.Env):
             self._board[bomb.position] = utility.Item.Bomb.value
 
         for agent in self._agents:
-            self._board[np.where(self._board == utility.agent_value(agent.agent_id+1))] = utility.Item.Passage.value
+            self._board[np.where(self._board == utility.agent_value(agent.agent_id))] = utility.Item.Passage.value
             if agent.is_alive:
-                self._board[agent.position] = utility.agent_value(agent.agent_id+1)
+                self._board[agent.position] = utility.agent_value(agent.agent_id)
 
         flame_positions = np.where(exploded_map == 1)
         for row, col in zip(flame_positions[0], flame_positions[1]):
@@ -308,7 +315,7 @@ class Pomme(gym.Env):
         done = self._get_done()
         obs = self._get_observations()
         reward = self._get_rewards()
-        info = self._get_info()
+        info = self._get_info(done, reward)
         self._step_count += 1
 
         if hasattr(self, 'collapses'):
