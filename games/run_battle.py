@@ -97,6 +97,6 @@ if __name__ == "__main__":
         obs, reward, done, info = env.step(actions)
 
     print("Final Result: ", info)
-    time.sleep(3)
+    time.sleep(5)
     env.render(close=True)
     env.close()

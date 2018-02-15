@@ -165,28 +165,29 @@ class Pomme(gym.Env):
         return False
 
     def _get_info(self, done, rewards):
-        alive = [agent for agent in self._agents if agent.is_alive]
-        if done and not any(rewards):
-            return {'result': utility.Result.Tie}
-        elif self._game_type == utility.GameType.FFA:
-            if done:
+        if self._game_type == utility.GameType.FFA:
+            alive = [agent for agent in self._agents if agent.is_alive]
+            if done and len(alive) > 1:
+                return {
+                    'result': utility.Result.Tie,
+                }
+            elif done:
                 return {
                     'result': utility.Result.Win,
                     'winners': [num for num, reward in enumerate(rewards) if reward == 1]
                 }
             else:
                 return {'result': utility.Result.Incomplete}
-        else:
-            if done:
-                if rewards == [1]*4:
-                    return {'result': utility.Result.Tie}
-                else:
-                    return {
-                        'result': utility.Result.Win,
-                        'winners': [num for num, reward in enumerate(rewards) if reward == 1]
-                    }
+        elif done:
+            if rewards == [1]*4:
+                return {'result': utility.Result.Tie}
             else:
-                return {'result': utility.Result.Incomplete}
+                return {
+                    'result': utility.Result.Win,
+                    'winners': [num for num, reward in enumerate(rewards) if reward == 1]
+                }
+        else:
+            return {'result': utility.Result.Incomplete}
 
     def reset(self):
         assert(self._agents is not None)
@@ -452,6 +453,7 @@ class Pomme(gym.Env):
 
     @staticmethod
     def featurize(obs):
+        # TODO: Include the bomb positions and blast strength!
         board = obs["board"].reshape(-1).astype(np.float32)
         position = utility.make_np_float(obs["position"])
         ammo = utility.make_np_float([obs["ammo"]])
@@ -462,13 +464,13 @@ class Pomme(gym.Env):
         if teammate is not None:
             teammate = teammate.value
         else:
-            teammate = 0
+            teammate = -1
         teammate = utility.make_np_float([teammate])
 
         enemies = obs["enemies"]
         enemies = [e.value for e in enemies]
         if len(enemies) < 3:
-            enemies = [e.value for e in enemies] + [0]*(3 - len(enemies))
+            enemies = [e.value for e in enemies] + [-1]*(3 - len(enemies))
         enemies = utility.make_np_float(enemies)
 
         return np.concatenate((board, position, ammo, blast_strength, can_kick, teammate, enemies))

@@ -23,7 +23,6 @@ class Agent(object):
             self.teammate = getattr(utility.Item, 'Agent%d' % teammate_id)
             self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id and id_ != teammate_id]
-            print("AGENT: ", self.agent_id, self.teammate, self.enemies)
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
@@ -75,7 +74,7 @@ class Agent(object):
             elif rand < .66:
                 self.ammo = max(1, self.ammo - 1)
             else:
-                self.blast_strength += 1
+                self.blast_strength += 2
 
 
 class Bomb(object):
