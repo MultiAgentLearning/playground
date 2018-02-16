@@ -1,6 +1,6 @@
 # Playground
 
-#### First time? check out our [website](www.pommerman.com) for more information and our [Discord](https://discordapp.com/invite/wjVJEDc) to join the community.
+#### First time? check out our [website](https://www.pommerman.com) for more information and our [Discord](https://discordapp.com/invite/wjVJEDc) to join the community.
 
 Playground hosts Pommerman, a clone of Bomberman built for AI research. People from around the world submit agents that they've trained to play. We run regular competitions on our servers and report the results and replays.
 
