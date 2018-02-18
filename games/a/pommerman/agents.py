@@ -7,10 +7,11 @@ python.py run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.po
 from collections import defaultdict
 import random
 
+from gym import spaces
+from numpy import inf
+
 from a.agents import Agent
 from a.pommerman.envs import utility
-
-from numpy import inf
 
 
 class SimpleAgent(Agent):
@@ -31,7 +32,7 @@ class SimpleAgent(Agent):
         enemies = obs['enemies']
         ammo = obs['ammo']
         blast_strength = obs['blast_strength']
-        items, dist, prev = self._djikstra(board, my_position, bombs, enemies)
+        items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=10)
 
         # Move if we are in an unsafe place.
         unsafe_directions = self._directions_in_range_of_bomb(board, my_position, bombs, dist)
@@ -89,7 +90,12 @@ class SimpleAgent(Agent):
         return random.choice(directions).value
 
     @staticmethod
-    def _djikstra(board, my_position, bombs, enemies):
+    def _djikstra(board, my_position, bombs, enemies, depth=None):
+        def out_of_range(p1, p2):
+            x1, y1 = p1
+            x2, y2 = p2
+            return depth is not None and abs(y2 - y1) + abs(x2 - x1) > depth
+
         items = defaultdict(list)
         dist = {}
         prev = {}
@@ -98,7 +104,7 @@ class SimpleAgent(Agent):
         for r in range(len(board)):
             for c in range(len(board[0])):
                 position = (r, c)
-                if board[position] != utility.Item.Fog.value:
+                if not utility.position_is_fog(board, position):
                     dist[position] = inf
                     prev[position] = None
                     Q.append(position)
@@ -118,6 +124,8 @@ class SimpleAgent(Agent):
                 for row, col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     new_position = (row + x, col + y)
                     if not utility.position_on_board(board, new_position) or utility.position_is_fog(board, new_position):
+                        continue
+                    if out_of_range(my_position, new_position):
                         continue
 
                     if val < dist[new_position]:
@@ -185,7 +193,7 @@ class SimpleAgent(Agent):
                     continue
 
                 is_stuck = True
-                next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies)
+                next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies, depth=10)
                 for passage_position in next_items.get(utility.Item.Passage):
                     position_dist = next_dist[passage_position]
                     if position_dist == inf:

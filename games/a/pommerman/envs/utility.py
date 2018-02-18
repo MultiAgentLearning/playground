@@ -10,7 +10,7 @@ BOARD_SIZE = 13
 NUM_RIGID = 50
 NUM_WOOD = 50
 NUM_ITEMS = int(NUM_WOOD/2)
-AGENT_VIEW_SIZE = 3
+AGENT_VIEW_SIZE = 4
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
@@ -20,6 +20,8 @@ ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241
 ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)] # ExtraBomb, IncrRange, etc. 
 FIRST_COLLAPSE = 500 # If using V1, the first step at which the board starts to collapse.
 MAX_STEPS = 2500
+RADIO_VOCAB_SIZE = 8
+RADIO_NUM_WORDS = 2
 
 
 class Item(Enum):
@@ -42,12 +44,12 @@ class Item(Enum):
 class GameType(Enum):
     # 1v1v1v1. You submit an agent and it competes against other single agents.
     FFA = 1 
-    # 2v2: You submit two agents and they compete together against other teams.
+    # 2v2: You submit one agent. It is matched up randomly with another agent and together take on two other similarly matched agents.
     Team = 2
-    # 2v2: Same as `Team` but additionally the agents pass discrete communications to each other.
+    # 2v2: You submit two agents. They are matched up against two other agents. Each team passes discrete communications to each other.
     TeamRadio = 3
 
-    
+
 class Action(Enum):
     Stop = 0
     Up = 1

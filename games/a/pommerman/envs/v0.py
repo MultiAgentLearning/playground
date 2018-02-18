@@ -1,3 +1,7 @@
+"""The baseline Pommerman environment.
+
+This evironment acts as game manager for Pommerman. Further environments, such as in v1.py, will inherit from this.
+"""
 from collections import defaultdict
 import os
 
@@ -26,8 +30,8 @@ class Pomme(gym.Env):
                  num_wood=None,
                  num_items=None,
                  max_steps=1000,
-                 radio_vocab_size=None,
-                 radio_num_words=None,
+                 is_partially_observable=False,
+                 **kwargs,
     ):
         self._agents = None
         self._game_type = game_type
@@ -38,15 +42,21 @@ class Pomme(gym.Env):
         self._num_items = num_items
         self._max_steps = max_steps
         self._viewer = None
-        self.training_agent = None
+        self._is_partially_observable = is_partially_observable
 
-        if (radio_vocab_size and not radio_num_words) or (not radio_vocab_size and radio_num_words):
-            assert("Please provide both radio_vocab_size and radio_num_words to use the Radio environment.")
+        self.training_agent = None
 
         # Observation and Action Spaces. These are both geared towards a single agent even though the environment expects
         # actions and returns observations for all four agents. We do this so that it's clear what the actions and obs are
         # for a single agent. Wrt the observations, they are actually returned as a dict for easier understanding.
 
+        self._set_action_space()
+        self._set_observation_space()
+
+    def _set_action_space(self):
+        self.action_space = spaces.Discrete(6)
+
+    def _set_observation_space(self):
         # The observations (total = board_size^2 + 9):
         # - all of the board (board_size^2)
         # - agent's position (2)
@@ -55,16 +65,8 @@ class Pomme(gym.Env):
         # - can_kick (0 or 1)
         # - teammate (one of {0, Agent.values}). If 0, then empty.
         # - enemies (three of {0, Agent.values}). If 0, then empty.
-        # - (with Radio) radio_vocab_size * radio_num_words.
-        num_observations = self._board_size**2 + 9
-        min_obs = [0]*num_observations
+        min_obs = [0]*(self._board_size**2 + 9)
         max_obs = [len(utility.Item)]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
-        if radio_vocab_size:
-            min_obs.extend([0]*radio_vocab_size*radio_num_words)
-            max_obs.extend([1]*radio_vocab_size*radio_num_words)
-            self.action_space = spaces.Tuple(tuple([spaces.Discrete(6)] + [spaces.Discrete(radio_vocab_size)]*radio_num_words))
-        else:
-            self.action_space = spaces.Discrete(6)
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
@@ -93,7 +95,7 @@ class Pomme(gym.Env):
                     time.sleep(300)
                 ret.append(action)
             else:
-                ret.append(utility.Action.Stop)
+                ret.append(utility.Action.Stop.value)
         return ret
 
     def get_observations(self):
@@ -108,11 +110,13 @@ class Pomme(gym.Env):
         observations = []
         for agent in self._agents:
             agent_obs = {}
-            board = self._board.copy()
-            for row in range(self._board_size):
-                for col in range(self._board_size):
-                    if not self._in_view_range(agent.position, row, col):
-                        board[row, col] = utility.Item.Fog.value
+            board = self._board
+            if self._is_partially_observable:
+                board = board.copy()
+                for row in range(self._board_size):
+                    for col in range(self._board_size):
+                        if not self._in_view_range(agent.position, row, col):
+                            board[row, col] = utility.Item.Fog.value
             agent_obs['board'] = board
             agent_obs['bombs'] = self._get_bombs_in_range(agent.position)
             for attr in attrs:
@@ -120,8 +124,7 @@ class Pomme(gym.Env):
                 agent_obs[attr] = getattr(agent, attr)
             observations.append(agent_obs)
 
-        # We set these here so that we don't need to reevaluate them when using
-        # other libraries like TensorForce
+        # We set these here so that we don't need to reevaluate them when using other libraries like TensorForce.
         self.observations = observations
         return observations
 
@@ -403,8 +406,10 @@ class Pomme(gym.Env):
             my_frame = all_frame.copy()
             for r in range(self._board_size):
                 for c in range(self._board_size):
-                    if not all([row >= r - agent_view_size, row < r + agent_view_size,
-                                col >= c - agent_view_size, col < c + agent_view_size]):
+                    if self._is_partially_observable and not all([
+                            row >= r - agent_view_size, row < r + agent_view_size,
+                            col >= c - agent_view_size, col < c + agent_view_size
+                    ]):
                         my_frame[r, c] = utility.ITEM_COLORS[utility.Item.Fog.value]
             frames.append(my_frame)
 
@@ -432,7 +437,7 @@ class Pomme(gym.Env):
             resize(frame, (int(self._board_size*human_factor/4), int(self._board_size*human_factor/4)), interp='nearest')
             for frame in frames[1:]
         ]
-
+        
         other_imgs = np.concatenate(other_imgs, 0)
         img = np.concatenate([all_img, other_imgs], 1)
 
@@ -470,7 +475,7 @@ class Pomme(gym.Env):
         enemies = obs["enemies"]
         enemies = [e.value for e in enemies]
         if len(enemies) < 3:
-            enemies = [e.value for e in enemies] + [-1]*(3 - len(enemies))
+            enemies = enemies + [-1]*(3 - len(enemies))
         enemies = utility.make_np_float(enemies)
 
         return np.concatenate((board, position, ammo, blast_strength, can_kick, teammate, enemies))
