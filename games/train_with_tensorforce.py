@@ -19,6 +19,8 @@ from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
 
 
+client = docker.from_env()
+
 
 def clean_up_agents(agents):
     """Stops all agents"""
