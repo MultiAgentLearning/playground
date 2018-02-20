@@ -3,6 +3,7 @@
 from collections import defaultdict
 import random
 
+from gym import spaces
 from np import inf
 
 from a.docker.common import DockerAgent
@@ -19,6 +20,7 @@ class Agent(DockerAgent):
 
 class PommermanTestAgent(object):
     """This is a TestAgent. It is not meant to be submitted as playable."""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Keep track of recently visited uninteresting positions so that we don't keep visiting the same places.
@@ -34,7 +36,7 @@ class PommermanTestAgent(object):
         enemies = obs['enemies']
         ammo = obs['ammo']
         blast_strength = obs['blast_strength']
-        items, dist, prev = self._djikstra(board, my_position, bombs, enemies)
+        items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=10)
 
         # Move if we are in an unsafe place.
         unsafe_directions = self._directions_in_range_of_bomb(board, my_position, bombs, dist)
@@ -92,7 +94,12 @@ class PommermanTestAgent(object):
         return random.choice(directions).value
 
     @staticmethod
-    def _djikstra(board, my_position, bombs, enemies):
+    def _djikstra(board, my_position, bombs, enemies, depth=None):
+        def out_of_range(p1, p2):
+            x1, y1 = p1
+            x2, y2 = p2
+            return depth is not None and abs(y2 - y1) + abs(x2 - x1) > depth
+
         items = defaultdict(list)
         dist = {}
         prev = {}
@@ -101,7 +108,7 @@ class PommermanTestAgent(object):
         for r in range(len(board)):
             for c in range(len(board[0])):
                 position = (r, c)
-                if board[position] != utility.Item.Fog.value:
+                if not utility.position_is_fog(board, position):
                     dist[position] = inf
                     prev[position] = None
                     Q.append(position)
@@ -121,6 +128,8 @@ class PommermanTestAgent(object):
                 for row, col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     new_position = (row + x, col + y)
                     if not utility.position_on_board(board, new_position) or utility.position_is_fog(board, new_position):
+                        continue
+                    if out_of_range(my_position, new_position):
                         continue
 
                     if val < dist[new_position]:
@@ -188,7 +197,7 @@ class PommermanTestAgent(object):
                     continue
 
                 is_stuck = True
-                next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies)
+                next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies, depth=10)
                 for passage_position in next_items.get(utility.Item.Passage):
                     position_dist = next_dist[passage_position]
                     if position_dist == inf:
@@ -362,4 +371,3 @@ class PommermanTestAgent(object):
         if not ret:
             ret = directions
         return ret
-
