@@ -41,7 +41,7 @@
   * Can Kick: Whether this agent can kick bombs. This ability is gained by stepping on the can kick power-up.
   * Teammate: One Int in [-1, 3].  Which agent is this agent's teammate. In the FFA game, this is -1.
   * Enemies: A list of three Ints, each in [-1, 3]. Which agents are this agent's enemies. There are three here to be amenable to all variants of the game. When there are only two enemies like in the team competitions, the last Int will be -1 to reflect the fact that there are only two enemies.
-  * Bombs: A list of Ints specifying the bombs in the agent's purview. Each list looks like (X int, Y int, BlastStrength int).
+  * Bombs: A 13x13 numpy int array representing the bombs in the agent's view. Each non-bomb position is a 0. Each bomb-position has an Int representing the blast strength of that bomb. If the agent has a restricted view (like in the 2v2 Radio game), then everything outside of its view will be 0.
   * Message: (Team Radio only) A list of two Ints, each in [0, 8]. The message being relayed from the teammate. Both ints are zero when a teammate is dead or it's the first step. Otherwise they are in [1, 8].
 
 ### Agent Actions:

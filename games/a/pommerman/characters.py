@@ -62,9 +62,9 @@ class Agent(object):
 
     def pick_up(self, item):
         if item == utility.Item.ExtraBomb:
-            self.ammo += 1
+            self.ammo = min(self.ammo + 1, 10)
         elif item == utility.Item.IncrRange:
-            self.blast_strength += 1
+            self.blast_strength = min(self.blast_strength + 1, 10)
         elif item == utility.Item.Kick:
             self.can_kick = True
         elif item == utility.Item.Skull:
@@ -75,6 +75,7 @@ class Agent(object):
                 self.ammo = max(1, self.ammo - 1)
             else:
                 self.blast_strength += 2
+                self.blast_strength = min(self.blast_strength, 10)
 
 
 class Bomb(object):

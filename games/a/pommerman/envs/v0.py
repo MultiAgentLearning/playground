@@ -57,16 +57,17 @@ class Pomme(gym.Env):
         self.action_space = spaces.Discrete(6)
 
     def _set_observation_space(self):
-        # The observations (total = board_size^2 + 9):
+        # The observations (total = 2*board_size^2 + 9):
         # - all of the board (board_size^2)
+        # - bomb blast strength (board_size^2).
         # - agent's position (2)
         # - num ammo (1)
         # - blast strength (1)
         # - can_kick (0 or 1)
         # - teammate (one of {0, Agent.values}). If 0, then empty.
         # - enemies (three of {0, Agent.values}). If 0, then empty.
-        min_obs = [0]*(self._board_size**2 + 9)
-        max_obs = [len(utility.Item)]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
+        min_obs = [0]*(2*self._board_size**2 + 9)
+        max_obs = [len(utility.Item)]*self._board_size**2 + [10]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
@@ -118,7 +119,7 @@ class Pomme(gym.Env):
                         if not self._in_view_range(agent.position, row, col):
                             board[row, col] = utility.Item.Fog.value
             agent_obs['board'] = board
-            agent_obs['bombs'] = self._get_bombs_in_range(agent.position)
+            agent_obs['bombs'] = self._make_bomb_map(agent.position)
             for attr in attrs:
                 assert hasattr(agent, attr)
                 agent_obs[attr] = getattr(agent, attr)
@@ -373,14 +374,13 @@ class Pomme(gym.Env):
         return all([row >= vrow - agent_view_size, row < vrow + agent_view_size,
                     col >= vcol - agent_view_size, col < vcol + agent_view_size])
 
-    def _get_bombs_in_range(self, position):
-        bombs = []
-        agent_view_size = self._agent_view_size
+    def _make_bomb_map(self, position):
+        ret = np.zeros((self._board_size, self._board_size))
         for bomb in self._bombs:
-            vrow, vcol = bomb.position
-            if self._in_view_range(position, vrow, vcol):
-                bombs.append({'position': bomb.position, 'blast_strength': bomb.blast_strength})
-        return bombs
+            x, y = bomb.position
+            if not self._is_partially_observable or self._in_view_range(position, x, y):
+                ret[(x, y)] = bomb.blast_strength
+        return ret
 
     def _render_frames(self):
         agent_view_size = utility.AGENT_VIEW_SIZE
@@ -437,7 +437,7 @@ class Pomme(gym.Env):
             resize(frame, (int(self._board_size*human_factor/4), int(self._board_size*human_factor/4)), interp='nearest')
             for frame in frames[1:]
         ]
-        
+
         other_imgs = np.concatenate(other_imgs, 0)
         img = np.concatenate([all_img, other_imgs], 1)
 
@@ -458,8 +458,8 @@ class Pomme(gym.Env):
 
     @staticmethod
     def featurize(obs):
-        # TODO: Include the bomb positions and blast strength!
         board = obs["board"].reshape(-1).astype(np.float32)
+        bombs = obs["bombs"].reshape(-1).astype(np.float32)
         position = utility.make_np_float(obs["position"])
         ammo = utility.make_np_float([obs["ammo"]])
         blast_strength = utility.make_np_float([obs["blast_strength"]])
@@ -478,4 +478,4 @@ class Pomme(gym.Env):
             enemies = enemies + [-1]*(3 - len(enemies))
         enemies = utility.make_np_float(enemies)
 
-        return np.concatenate((board, position, ammo, blast_strength, can_kick, teammate, enemies))
+        return np.concatenate((board, bombs, position, ammo, blast_strength, can_kick, teammate, enemies))
