@@ -34,7 +34,7 @@ class Item(Enum):
     ExtraBomb = 6 # adds ammo.
     IncrRange = 7 # increases the blast_strength
     Kick = 8 # can kick bombs by touching them.
-    Skull = 9 # randomly either reduces ammo (capped at 1) or blast_strength (capped at 2)
+    Skull = 9 # randomly either reduces ammo, (capped at 1), reduces blast_strength (capped at 2), or increases blast_strength by 2.
     Agent0 = 10
     Agent1 = 11
     Agent2 = 12

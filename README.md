@@ -6,9 +6,9 @@ Playground hosts Pommerman, a clone of Bomberman built for AI research. People f
 
 There are three variants for which you can enter your agents to compete:
 
-* FFA: Free For All where four agents enter and one leaves. It tests planning, tactics, and cunning.
-* Team: 2v2 where two teams of agents enter and one team wins. It tests cooperation, planning, and tactics.
-* Team Radio: Like Team but each agent has a radio that they can use to convey 2 words each step from a dictionary of size 8.
+* FFA: Free For All where four agents enter and one leaves. It tests planning, tactics, and cunning. The board is fully observable.
+* Team: 2v2 where two teams of agents enter and one team wins. It tests cooperation, planning, and tactics. The board is fully observable. The agents on each team were submitted by different creators and randomly paired.
+* Team Radio: Like team in that a it's a 2v2 game. Differences are that the agents on each team were both submitted by the same creator, they each have a radio that they can use to convey 2 words from a dictionary of size 8 each step, and the board is partially observed.
 
 #### Why should I participate?
 
