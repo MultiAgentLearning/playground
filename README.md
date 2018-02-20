@@ -28,7 +28,7 @@ The setup for submitting agents will be live shortly. It involves making a [Dock
 
 #### Who is running this?
 
-[Cinjon Resnick](http://twitter.com/cinjoncin), [Denny Britz](https://twitter.com/dennybritz), and [David Ha](https://twitter.com/hardmaru) are the folks behind this. We are generously supported by a host of other people, including [Kyunghyun Cho](https://twitter.com/kchonyc), [Joan Bruna](https://twitter.com/joanbruna) and [Jason Weston](https://research.fb.com/people/weston-jason/). You can find us in the [Discord](https://discordapp.com/invite/wjVJEDc).
+[Cinjon Resnick](http://twitter.com/cinjoncin), [Denny Britz](https://twitter.com/dennybritz), [David Ha](https://twitter.com/hardmaru), and [Jakob Foerster](https://www.linkedin.com/in/jakobfoerster/) are the folks behind this. We are generously supported by a host of other people, including [Kyunghyun Cho](https://twitter.com/kchonyc), [Joan Bruna](https://twitter.com/joanbruna), [Julian Togelius](http://julian.togelius.com/) and [Jason Weston](https://research.fb.com/people/weston-jason/). You can find us in the [Discord](https://discordapp.com/invite/wjVJEDc).
 
 #### How can I help?
 
