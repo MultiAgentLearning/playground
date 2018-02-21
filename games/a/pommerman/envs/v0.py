@@ -31,7 +31,7 @@ class Pomme(gym.Env):
                  num_items=None,
                  max_steps=1000,
                  is_partially_observable=False,
-                 **kwargs,
+                 **kwargs
     ):
         self._agents = None
         self._game_type = game_type
