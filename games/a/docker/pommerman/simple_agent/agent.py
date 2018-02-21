@@ -4,7 +4,7 @@ from collections import defaultdict
 import random
 
 from gym import spaces
-from np import inf
+import numpy as np
 
 from a.docker.common import DockerAgent
 from a.pommerman.envs import utility
@@ -30,9 +30,16 @@ class PommermanTestAgent(object):
         self._prev_direction = None
 
     def act(self, obs, action_space):
+        def convert_bombs(bomb_map):
+            ret = []
+            locations = np.where(bomb_map > 0)
+            for r, c in zip(locations[0], locations[1]):
+                ret.append({'position': (r, c), 'blast_strength': int(bomb_map[(r, c)])})
+            return ret
+
         my_position = obs['position']
         board = obs['board']
-        bombs = obs['bombs']
+        bombs = convert_bombs(obs['bombs'])
         enemies = obs['enemies']
         ammo = obs['ammo']
         blast_strength = obs['blast_strength']
@@ -109,7 +116,7 @@ class PommermanTestAgent(object):
             for c in range(len(board[0])):
                 position = (r, c)
                 if not utility.position_is_fog(board, position):
-                    dist[position] = inf
+                    dist[position] = np.inf
                     prev[position] = None
                     Q.append(position)
 
@@ -200,7 +207,7 @@ class PommermanTestAgent(object):
                 next_items, next_dist, next_prev = self._djikstra(next_board, next_position, bombs, enemies, depth=10)
                 for passage_position in next_items.get(utility.Item.Passage):
                     position_dist = next_dist[passage_position]
-                    if position_dist == inf:
+                    if position_dist == np.inf:
                         continue
 
                     if position_dist > bomb_range:
@@ -274,7 +281,7 @@ class PommermanTestAgent(object):
         # Will we be stuck?
         x, y = my_position
         for position in items.get(utility.Item.Passage):
-            if dist[position] == inf:
+            if dist[position] == np.inf:
                 continue
 
             # We can reach a passage that's outside of the bomb strength.
