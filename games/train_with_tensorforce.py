@@ -3,7 +3,7 @@
 Call this with a config, a game, and a list of agents, one of which should be a tensorforce agent. The script will start separate threads to operate the agents and then report back the result.
 
 An example with all three simple agents running ffa:
-python run_battle.py --agents=tensorforce::ppo,a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
+python train_with_tensorforce.py --agents=tensorforce::ppo,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
 """
 import a
 
