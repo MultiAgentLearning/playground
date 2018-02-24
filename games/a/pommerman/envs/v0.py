@@ -276,7 +276,7 @@ class Pomme(gym.Env):
                     # The agent made an invalid direction.
                     agent.stop()
             else:
-                next_positions.append(None)
+                next_positions[agent.agent_id] = None
 
         counter = make_counter(next_positions)
         while has_position_conflict(counter):
