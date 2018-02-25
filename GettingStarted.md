@@ -2,7 +2,7 @@
 
 ## Research
 
-Comparing Hecke eigenvalues of newforms [https://arxiv.org/abs/1707.06347](https://arxiv.org/abs/1707.06347)
+Proximal Policy Optimization (PPO) [https://arxiv.org/abs/1707.06347](https://arxiv.org/abs/1707.06347)
 
 Multi-Agent DDPG [https://github.com/openai/maddpg](https://github.com/openai/maddpg)
 
