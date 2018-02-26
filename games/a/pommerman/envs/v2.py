@@ -87,3 +87,10 @@ class Pomme(v0.Pomme):
             else:
                 ret.append([utility.Action.Stop.value, 0, 0])
         return ret
+
+    @staticmethod
+    def featurize(obs):
+        ret = super().featurize(obs)
+        message = obs['message']
+        message = utility.make_np_float(message)
+        return np.concatenate((ret, message))
