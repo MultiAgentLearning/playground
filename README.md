@@ -32,8 +32,4 @@ The setup for submitting agents will be live shortly. It involves making a [Dock
 
 #### How can I help?
 
-While in general we are open to all kinds of improvements, here's a list that we see as priorities from the community:
-
-1. Better graphics: We want Pommerman to have a more welcoming feel. Right now, it's just pixels. Even replacing the squares with sprites would be really nice.
-2. Better (and more) baselines: We released the SimpleAgent as a first baseline to beat before submitting agents to compete. We would like to see more there, each with a degree of difficulty and geared towards the different competitions.
-3. Make tutorials: We plan to make a tutorial for each of the learned Agents that we enter. However, it would be awesome if others did as well. This extends from well-documented algorithms like DQN all the way to less considered ones like Evolutionary Learning.
+To see the ways you can get invovled with the project head over to our [Contributing Guide](https://github.com/MultiAgentLearning/playground/blob/master/CONTRIBUTING.md) and checkout our current [issues](https://github.com/MultiAgentLearning/playground/issues).
