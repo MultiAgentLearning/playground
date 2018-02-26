@@ -1,18 +1,22 @@
 # Contributor Guide
 
-There are plenty of ways to give something back to the open source community. Following you find a couple of them for MultiAgentLearning and no matter which you choose, we appreciate every help.
+We are excited to have your help building Pommerman. There are many ways to contribute to Pommerman. You can contribute code, write documentation and tutorials, or answer questions in our Discord community. Below is a general overview of contributing. We really look forward to your help!
+
+## Code of Conduct
+
+We strive to foster an open community. Please read our [Code of Conduct](https://github.com/MultiAgentLearning/playground/blob/master/CODE_OF_CONDUCT.md).
 
 ## How to contribute
 
 Below is a list of different ways for you to contribute.
 
 * Bugfixes
-* New feature develop
+* New features
 * Documentation
 * Design
 * Tutorials
 
-This list isn't restrictive. If you have a big idea that isn't in the above list come talk to use in [Discord](https://discord.gg/wjVJEDc).
+This list isn't complete. We very much welcome other ideas. Please come talk to us in our [Discord](https://discord.gg/wjVJEDc) chat.
 
 Here's a list that we see as priorities from the community:
 
