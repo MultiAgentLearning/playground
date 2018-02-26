@@ -3,7 +3,6 @@
 from collections import defaultdict
 import random
 
-from gym import spaces
 import numpy as np
 
 from a.docker.common import DockerAgent

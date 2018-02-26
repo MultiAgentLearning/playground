@@ -7,7 +7,6 @@ python.py run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.po
 from collections import defaultdict
 import random
 
-from gym import spaces
 import numpy as np
 
 from a.agents import Agent
