@@ -104,7 +104,7 @@ class DockerAgent(Agent):
                 request_url = '%s:%s/ping' % (server, port) # 'http://localhost', 83
                 req = requests.get(request_url)
                 return True
-            except request.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError as e:
                 print("ConnectionError: ", e)
                 backoff = min(max_backoff, backoff*2)
                 time.sleep(backoff)
@@ -123,7 +123,7 @@ class DockerAgent(Agent):
             "obs": obs_serialized,
             "action_space": pickle.dumps(action_space, protocol=0).decode("utf-8")
         })
-        return req.json()
+        return req.json()['action']
 
     def shutdown(self):
         print("Stopping container..")
