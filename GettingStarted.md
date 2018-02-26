@@ -3,7 +3,7 @@
 This project has a few system dependencies.
 
 * Python 3
-* Pip
+* pip
 * Docker
 
 
@@ -13,7 +13,7 @@ To start clone the repository to your local working enviornment. Once the repo i
 pip install -r requirements.txt
 ```
 
-Once complete you can run a couple different game types.
+After completing that step, you can play the game by running any of the following examples.
 
 Free-For-All (FFA)
 
