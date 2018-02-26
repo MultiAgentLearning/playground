@@ -1,5 +1,33 @@
 # Getting Started
 
+This project has a few system dependencies.
+
+* Python 3
+* Pip
+* Docker
+
+
+To start clone the repository to your local working enviornment. Once the repo is done cloning you need to install the dependencies for the project using pip.
+
+```
+pip install -r requirements.txt
+```
+
+Once complete you can run a couple different game types.
+
+Free-For-All (FFA)
+
+```
+python games/run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
+```
+
+An example with one player, two random agents, and one test agent:
+
+```
+python run_battle.py --agents=player::arrows,test::a.pommerman.agents.SimpleAgent,random::null,random::null --config=ffa_v0
+```
+
+
 ## Research
 
 Proximal Policy Optimization (PPO) [https://arxiv.org/abs/1707.06347](https://arxiv.org/abs/1707.06347)
