@@ -25,6 +25,7 @@ import gym
 
 
 client = docker.from_env()
+servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
 
 
 def clean_up_agents(agents):
@@ -69,6 +70,7 @@ if __name__ == "__main__":
                 agent,
                 docker_image=agent_control,
                 docker_client=client,
+                server=servers[agent_id],
                 port=agent_id+1000)
         elif agent_type == "test":
             agent = eval(agent_control)(agent)

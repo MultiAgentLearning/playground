@@ -22,9 +22,9 @@ class DockerAgent(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def run(self, host="0.0.0.0", port=10080):
-        """Runs the agent. This creates a webserver that handles incoming action
-        requests"""
+        """Runs the agent by creating a webserver that handles action requests."""
         app = Flask(self.__class__.__name__)
+
         @app.route("/action", methods=["POST"])
         def action(): #pylint: disable=W0612
             data = request.get_json()
@@ -34,12 +34,10 @@ class DockerAgent(metaclass=abc.ABCMeta):
             action_space = pickle.loads(action_space.encode("utf-8"))            
             action = self.act(observation, action_space)
             return jsonify({"action": action})
-        
+
+        @app.route("/ping", methods=["GET"])
+        def ping(): #pylint: disable=W0612
+            return jsonify(success=True)
+
         logger.info("Starting agent server on port %d", port)
         app.run(host=host, port=port)
-
-
-
-    
-
-

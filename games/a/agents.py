@@ -51,17 +51,17 @@ class RandomAgent(Agent):
 
 class DockerAgent(Agent):
     """The Docker Agent that Connects to a Docker container where the character runs."""
-    def __init__(self, agent, docker_image, docker_client, port, **kwargs):
+    def __init__(self, agent, docker_image, docker_client, server, port, **kwargs):
         self._agent = agent
         self._docker_image = docker_image
         self._docker_client = docker_client
+        self._server = server
         self._port = port
         self._container = None
 
         container_thread = threading.Thread(target=self._run_container, daemon=True)
         container_thread.start()
-        # TODO: Should really wait until http endpoint available instead of sleeping
-        time.sleep(2)
+        self._wait_for_docker(self._server, self._port, 32)
 
     def _run_container(self):
         print("Starting container...")
@@ -80,6 +80,42 @@ class DockerAgent(Agent):
         for line in self._container.logs(stream=True):
             print(line.decode("utf-8").strip())
 
+    @staticmethod
+    def _wait_for_docker(server, port, timeout=None):
+        """Wait for network service to appear.
+
+        Args:
+          port: Integer port.
+          timeout: Seconds to wait. 0 waits forever.
+        """
+        backoff = .25
+        max_backoff = min(timeout, 16)
+
+        if timeout:
+            # time module is needed to calc timeout shared between two exceptions
+            end = time.time() + timeout
+
+        while True:
+            try:
+                now = time.time()
+                if timeout and end < now:
+                    return False
+
+                request_url = '%s:%s/ping' % (server, port) # 'http://localhost', 83
+                req = requests.get(request_url)
+                return True
+            except request.exceptions.ConnectionError as e:
+                print("ConnectionError: ", e)
+                backoff = min(max_backoff, backoff*2)
+                time.sleep(backoff)
+            except requests.exceptions.HTTPError as e:
+                print("HTTPError: ", e)
+                backoff = min(max_backoff, backoff*2)
+                time.sleep(backoff)
+            except docker.errors.APIError as e:
+                print("This is a Docker error. Please fix: ", e)
+                raise
+
     def act(self, obs, action_space):
         obs_serialized = pickle.dumps(obs, protocol=0).decode("utf-8")
         request_url = "http://localhost:{}/action".format(self._port)
@@ -87,8 +123,7 @@ class DockerAgent(Agent):
             "obs": obs_serialized,
             "action_space": pickle.dumps(action_space, protocol=0).decode("utf-8")
         })
-        res = req.json()
-        return res["action"]
+        return req.json()
 
     def shutdown(self):
         print("Stopping container..")
