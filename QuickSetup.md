@@ -1,14 +1,5 @@
 # Mac setup
 
-### Cloning the project
-First, you'll need to clone the project on your machine.  
-
-Pommerman project is hosted on GitHub.  
-GitHub is a web-based hosting service for version control using git. You can create a free  
-account on GitHub, and clone the project to your local machine.
-
-GitHub url : https://github.com/MultiAgentLearning/playground
-
 ### Setup virtual environment
 You'll need a virtual python environment to run the project.  
 
