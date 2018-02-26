@@ -6,10 +6,11 @@ There are plenty of ways to give something back to the open source community. Fo
 
 Below is a list of different ways for you to contribute.
 
-* Bugfix
+* Bugfixes
 * New feature develop
 * Documentation
 * Design
+* Tutorials
 
 This list isn't restrictive. If you have a big idea that isn't in the above list come talk to use in [Discord](https://discord.gg/wjVJEDc).
 
