@@ -3,10 +3,9 @@
 ### Setup virtual environment
 You'll need a virtual python environment to run the project.  
 
-You can follow this guide to do so http://sourabhbajaj.com/mac-setup/Python/virtualenv.html
-
-Note that you probably want to install virtual environment as root user using sudo command
-```$ sudo -H pip3 install virtualenv```
+You can follow one of theses guides to install virtualenv :
+ https://virtualenv.pypa.io/en/stable/installation/
+ http://sourabhbajaj.com/mac-setup/Python/virtualenv.html
 
 Once installed, using command line go to the cloned repository folder  
 ```$ cd myFolder/playground```  
