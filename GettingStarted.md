@@ -9,6 +9,9 @@ This project has a few system dependencies.
 * Docker
 
 ## Setup
+  ### Install Python
+  Install latest version of python from https://www.python.org/downloads/
+
   ### Setup virtual environment
   You'll need a virtual python environment to run the project.  
 
