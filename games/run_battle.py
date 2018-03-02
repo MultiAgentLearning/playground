@@ -44,10 +44,14 @@ if __name__ == "__main__":
     parser.add_argument('--agents',
                         # default='random::null,random::null,random::null,docker::pommerman/test-agent', 
                         # default='player::arrows,random::null,random::null,random::null',
-                        default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
+                        # default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
+                        default='player::arrows,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
     parser.add_argument('--record_dir',
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
+    parser.add_argument('--render',
+                        default=True,
+                        help="Whether to render or not. Defaults to True.")
     args = parser.parse_args()
 
     game = getattr(a, args.game)
@@ -94,11 +98,13 @@ if __name__ == "__main__":
     done = False
     while not done:
         steps += 1
-        env.render(record_dir=record_dir)
+        if args.render:
+            env.render(record_dir=record_dir)
         actions = env.act(obs)
         obs, reward, done, info = env.step(actions)
 
     print("Final Result: ", info)
-    time.sleep(5)
-    env.render(close=True)
+    if args.render:
+        time.sleep(5)
+        env.render(close=True)
     env.close()
