@@ -94,3 +94,10 @@ class Pomme(v0.Pomme):
         message = obs['message']
         message = utility.make_np_float(message)
         return np.concatenate((ret, message))
+
+    def get_json_info(self):
+        ret = super().get_json_info()
+        ret['attrs']['radio_vocab_size'] = self._radio_vocab_size
+        ret['attrs']['radio_num_words'] = self._radio_num_words
+        ret['_radio_from_agent'] = self._radio_from_agent
+        return ret

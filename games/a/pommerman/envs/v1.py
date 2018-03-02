@@ -66,3 +66,8 @@ class Pomme(v0.Pomme):
                 collapse(cell, end)
 
         return board
+
+    def get_json_info(self):
+        ret = super().get_json_info()
+        ret['collapses'] = self.collapses
+        return ret

@@ -61,8 +61,9 @@ if __name__ == "__main__":
     parser.add_argument('--agents',
                         default='tensorforce::ppo,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
-    parser.add_argument('--record_dir',
-                        help="Directory to record the PNGs of the game. Doesn't record if None.")
+    parser.add_argument('--game_state_file',
+                        default=None,
+                        help="File from which to load game state. Defaults to None.")
     args = parser.parse_args()
 
     game = getattr(a, args.game)
@@ -101,6 +102,7 @@ if __name__ == "__main__":
     env = config.env(**config.env_kwargs)
     env.set_agents(_agents)
     env.set_training_agent(training_agent.agent_id)
+    env.set_init_game_state(args.game_state_file)
     env.seed(0)
 
     # Create a Proximal Policy Optimization agent

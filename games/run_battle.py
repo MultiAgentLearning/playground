@@ -47,11 +47,16 @@ if __name__ == "__main__":
                         # default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
                         default='player::arrows,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
-    parser.add_argument('--record_dir',
+    parser.add_argument('--record_pngs_dir',
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
+    parser.add_argument('--record_json_dir',
+                        help="Directory to record the JSON representations of the game. Doesn't record if None.")
     parser.add_argument('--render',
                         default=True,
                         help="Whether to render or not. Defaults to True.")
+    parser.add_argument('--game_state_file',
+                        default=None,
+                        help="File from which to load game state. Defaults to None.")
     args = parser.parse_args()
 
     game = getattr(a, args.game)
@@ -88,9 +93,9 @@ if __name__ == "__main__":
     env = config.env(**config.env_kwargs)
     env.seed(0)
     env.set_agents(_agents)
+    env.set_init_game_state(args.game_state_file)
 
     atexit.register(functools.partial(clean_up_agents, _agents))
-    record_dir = args.record_dir
 
     print("Starting the Game.")
     obs = env.reset()
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     while not done:
         steps += 1
         if args.render:
-            env.render(record_dir=record_dir)
+            env.render(record_pngs_dir=args.record_pngs_dir, record_json_dir=args.record_json_dir)
         actions = env.act(obs)
         obs, reward, done, info = env.step(actions)
 

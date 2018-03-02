@@ -316,3 +316,13 @@ def get_next_position(position, direction):
 
 def make_np_float(feature):
     return np.array(feature).astype(np.float32)
+
+
+def to_json(obj):
+    """Converts the given object into a json representable structure."""
+    try:
+        return json.dumps(obj)
+    except TypeError:
+        # TODO
+        return None
+

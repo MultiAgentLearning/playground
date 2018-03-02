@@ -138,5 +138,3 @@ class AttrDict(dict):
 
     def copy(self):
         return type(self)(super(AttrDict, self).copy())
-
-

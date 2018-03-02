@@ -3,6 +3,7 @@
 This evironment acts as game manager for Pommerman. Further environments, such as in v1.py, will inherit from this.
 """
 from collections import defaultdict
+import json
 import os
 
 import numpy as np
@@ -75,6 +76,12 @@ class Pomme(gym.Env):
 
     def set_training_agent(self, agent_id):
         self.training_agent = agent_id
+
+    def set_init_game_state(self, game_state_file):
+        self._init_game_state = None
+        if game_state_file:
+            with open(game_state_file, 'r') as f:
+                self._init_game_state = json.loads(f.read())
 
     def has_training_agent(self):
         return self.training_agent is not None
@@ -196,18 +203,20 @@ class Pomme(gym.Env):
     def reset(self):
         assert(self._agents is not None)
 
-        self._step_count = 0
-        self.make_board()
-        self.make_items()
-        self._bombs = []
-        self._flames = []
-        self._powerups = []
-        for agent_id, agent in enumerate(self._agents):
-            pos = np.where(self._board == utility.agent_value(agent_id))
-            row = pos[0][0]
-            col = pos[1][0]
-            agent.set_start_position((row, col))
-            agent.reset()
+        if self._init_game_state is not None:
+            self.set_json_info()
+        else:
+            self._step_count = 0
+            self.make_board()
+            self.make_items()
+            self._bombs = []
+            self._flames = []
+            for agent_id, agent in enumerate(self._agents):
+                pos = np.where(self._board == utility.agent_value(agent_id))
+                row = pos[0][0]
+                col = pos[1][0]
+                agent.set_start_position((row, col))
+                agent.reset()
 
         return self.get_observations()
 
@@ -415,7 +424,7 @@ class Pomme(gym.Env):
 
         return frames
 
-    def render(self, mode='human', close=False, record_dir=None):
+    def render(self, mode='human', close=False, record_pngs_dir=None, record_json_dir=None):
         from PIL import Image
 
         if close:
@@ -424,8 +433,12 @@ class Pomme(gym.Env):
                 self._viewer = None
             return
 
-        if record_dir and not os.path.isdir(record_dir):
-            os.makedirs(record_dir)
+        if record_pngs_dir:
+            assert not os.path.isdir(record_pngs_dir)
+            os.makedirs(record_pngs_dir)
+        if record_json_dir:
+            assert not os.path.isdir(record_json_dir)
+            os.makedirs(record_json_dir)
 
         human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
@@ -445,8 +458,13 @@ class Pomme(gym.Env):
             from gym.envs.classic_control import rendering
             self._viewer = rendering.SimpleImageViewer()
         self._viewer.imshow(img)
-        if record_dir:
-            Image.fromarray(img).save(os.path.join(record_dir, '%d.png' % self._step_count))
+
+        if record_pngs_dir:
+            Image.fromarray(img).save(os.path.join(record_pngs_dir, '%d.png' % self._step_count))
+        if record_json_dir:
+            info = self.get_json_info()
+            with open(os.path.join(record_json_dir, '%d.png' % self._step_count), 'w') as f:
+                f.write(json.dumps(info))
 
         for agent in self._agents:
             if agent.has_key_input():
@@ -479,3 +497,24 @@ class Pomme(gym.Env):
         enemies = utility.make_np_float(enemies)
 
         return np.concatenate((board, bombs, position, ammo, blast_strength, can_kick, teammate, enemies))
+
+    def get_json_info(self):
+        """Returns a json snapshot of the current game state."""
+        ret = {
+            'attrs': {
+                'game_type': self._game_type,
+                'board_size': self._board_size,
+                'agent_view_size': self._agent_view_size,
+                'max_steps': self._max_steps,
+                'is_partially_observable': self._is_partially_observable,
+            },
+        }
+
+        for attr in ['training_agent', '_board', '_agents', '_bombs', '_flames', '_items', '_step_count']:
+            ret[attr] = utility.to_json(getattr(self, attr))
+        return ret
+
+    def set_json_info(self):
+        """Sets the game state as the init_game_state."""
+        # TODO
+        pass
