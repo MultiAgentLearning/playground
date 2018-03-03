@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 
-RENDER_FPS = 50
+RENDER_FPS = 10
 BOARD_SIZE = 13
 NUM_RIGID = 50
 NUM_WOOD = 50
@@ -213,6 +213,9 @@ def is_valid_direction(board, position, direction, invalid_values=None):
     row, col = position
     invalid_values = invalid_values or [item.value for item in [Item.Rigid, Item.Wood]]
 
+    if Action(direction) == Action.Stop:
+        return True
+
     if Action(direction) == Action.Up:
         return row - 1 >= 0 and board[row-1][col] not in invalid_values
     
@@ -225,7 +228,7 @@ def is_valid_direction(board, position, direction, invalid_values=None):
     if Action(direction) == Action.Right:
         return col + 1 < len(board[0]) and board[row][col+1] not in invalid_values
 
-    raise InvalidAction("We did not receive a valid direction.")
+    raise InvalidAction("We did not receive a valid direction: ", direction)
 
 
 def position_is_powerup(board, position):

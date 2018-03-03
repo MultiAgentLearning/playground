@@ -19,10 +19,10 @@ from a.pommerman.characters import Flame
 class Pomme(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second' : utility.RENDER_FPS
     }
 
     def __init__(self,
+                 render_fps=None,
                  game_type=None,
                  board_size=None,
                  agent_view_size=None,
@@ -33,6 +33,7 @@ class Pomme(gym.Env):
                  is_partially_observable=False,
                  **kwargs
     ):
+        self._render_fps = render_fps
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
@@ -287,6 +288,9 @@ class Pomme(gym.Env):
             counter = make_counter(next_positions)
 
         for agent, curr_position, next_position, direction in zip(self._agents, curr_positions, next_positions, actions):
+            if not agent.is_alive:
+                continue
+
             if curr_position != next_position:
                 agent.move(direction)
                 if agent.can_kick:
@@ -454,7 +458,7 @@ class Pomme(gym.Env):
                 self._viewer.window.on_key_release = agent.on_key_release
                 break
 
-        time.sleep(1.0 / utility.RENDER_FPS)
+        time.sleep(1.0 / self._render_fps)
 
     @staticmethod
     def featurize(obs):
