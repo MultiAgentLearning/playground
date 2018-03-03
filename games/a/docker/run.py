@@ -13,7 +13,7 @@ def create_instance_from_path(path):
     return class_()
 
 def main():
-    agent_class_path = os.environ["AGENT_CLASS"]
+    agent_class_path = os.environ.get("AGENT_CLASS", "a.docker.pommerman.simple_agent.agent.Agent")
     agent = create_instance_from_path(agent_class_path)
     agent.run()
 
