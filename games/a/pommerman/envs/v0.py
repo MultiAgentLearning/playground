@@ -93,7 +93,7 @@ class Pomme(gym.Env):
                 continue
             if agent.is_alive:
                 action = agent.act(obs[agent.agent_id], action_space=self.action_space)
-                if action == 6:
+                if action == utility.Action.Pause.value:
                     time.sleep(300)
                 ret.append(action)
             else:
