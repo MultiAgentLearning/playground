@@ -134,7 +134,7 @@ if __name__ == "__main__":
                         help='Comma delineated list of agent types and docker locations to run the agents.')
     parser.add_argument('--agent_env_vars',
                         help="Comma delineated list of agent environment vars to pass to Docker. This is only for the Docker Agent. An example is '0:foo=bar:baz=lar,3:foo=lam', which would send two arguments to Docker Agent 0 and one to Docker Agent 3.",
-                        default=",")
+                        default="")
     parser.add_argument('--record_dir',
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
     parser.add_argument('--render',

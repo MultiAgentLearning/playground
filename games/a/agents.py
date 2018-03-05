@@ -147,7 +147,8 @@ class TensorForceAgent(Agent):
         self.algorithm = algorithm
 
     def act(self, obs, action_space):
-        pass
+        """This agent has its own way of inducing actions. See train_with_tensorforce."""
+        return None
 
     def initialize(self, env):
         from gym import spaces
