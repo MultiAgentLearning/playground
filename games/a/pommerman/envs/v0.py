@@ -15,7 +15,7 @@ import gym
 
 from . import utility
 from a.pommerman.characters import Flame
-
+from a.pommerman.characters import Bomb
 
 class Pomme(gym.Env):
     metadata = {
@@ -433,11 +433,9 @@ class Pomme(gym.Env):
                 self._viewer = None
             return
 
-        if record_pngs_dir:
-            assert not os.path.isdir(record_pngs_dir)
+        if record_pngs_dir and not os.path.isdir(record_pngs_dir):
             os.makedirs(record_pngs_dir)
-        if record_json_dir:
-            assert not os.path.isdir(record_json_dir)
+        if record_json_dir and not os.path.isdir(record_json_dir):
             os.makedirs(record_json_dir)
 
         human_factor = utility.HUMAN_FACTOR
@@ -463,8 +461,8 @@ class Pomme(gym.Env):
             Image.fromarray(img).save(os.path.join(record_pngs_dir, '%d.png' % self._step_count))
         if record_json_dir:
             info = self.get_json_info()
-            with open(os.path.join(record_json_dir, '%d.png' % self._step_count), 'w') as f:
-                f.write(json.dumps(info))
+            with open(os.path.join(record_json_dir, '%d.json' % self._step_count), 'w') as f:
+                f.write(json.dumps(info, sort_keys=True, indent=4))
 
         for agent in self._agents:
             if agent.has_key_input():
@@ -501,20 +499,44 @@ class Pomme(gym.Env):
     def get_json_info(self):
         """Returns a json snapshot of the current game state."""
         ret = {
-            'attrs': {
-                'game_type': self._game_type,
                 'board_size': self._board_size,
-                'agent_view_size': self._agent_view_size,
-                'max_steps': self._max_steps,
-                'is_partially_observable': self._is_partially_observable,
-            },
-        }
+                'step_count': self._step_count,
+                'board': utility.to_json(self._board),
+                'agents': utility.to_json(self._agents),
+                'bombs': utility.to_json(self._bombs),
+                'flames': utility.to_json(self._flames),
+                'items': utility.to_json(str(self._items))
+            }
 
-        for attr in ['training_agent', '_board', '_agents', '_bombs', '_flames', '_items', '_step_count']:
-            ret[attr] = utility.to_json(getattr(self, attr))
         return ret
 
     def set_json_info(self):
         """Sets the game state as the init_game_state."""
-        # TODO
-        pass
+        self._step_count = self._init_game_state['step_count']
+        self._board_size = self._init_game_state['board_size']
+
+        boardArray = json.loads(self._init_game_state['board'])
+        self._board = np.ones((self._board_size, self._board_size)).astype(np.uint8) * utility.Item.Passage.value
+        for x in range(self._board_size):
+            for y in range(self._board_size):
+                self._board[x,y] = boardArray[x][y]
+
+        self._items = eval(json.loads(self._init_game_state['items']))
+
+        agentArray = json.loads(self._init_game_state['agents'])
+        for a in agentArray:
+            agent = next(x for x in self._agents if x.agent_id == a['agent_id'])
+            agent.set_start_position((a['position'][0], a['position'][1]))
+            agent.reset(a['ammo'], a['is_alive'], a['blast_strength'], a['can_kick'])
+            
+        self._bombs = []
+        bombArray = json.loads(self._init_game_state['bombs'])
+        for b in bombArray:
+            bomber = next(x for x in self._agents if x.agent_id == b['bomber_id'])
+            self._bombs.append(Bomb(bomber, (b['position'][0], b['position'][1]), b['life'], b['blast_strength'], b['moving_direction']))
+
+        self._flames = []
+        flameArray = json.loads(self._init_game_state['flames'])
+        for f in flameArray:
+            self._flames.append(Flame((f['position'][0], f['position'][1]), f['life']))
+        

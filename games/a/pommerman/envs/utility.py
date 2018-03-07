@@ -2,6 +2,8 @@ from collections import defaultdict
 from enum import Enum
 import itertools
 import random
+import numpy
+import json
 
 import numpy as np
 
@@ -317,12 +319,18 @@ def get_next_position(position, direction):
 def make_np_float(feature):
     return np.array(feature).astype(np.float32)
 
-
 def to_json(obj):
-    """Converts the given object into a json representable structure."""
-    try:
-        return json.dumps(obj)
-    except TypeError:
-        # TODO
-        return None
+    return json.dumps(obj, default=serializer)
+
+def serializer(obj):
+    if isinstance(obj, numpy.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, numpy.int64):
+        return int(obj)
+    elif hasattr(obj, 'to_json'):
+        return obj.to_json()
+    elif hasattr(obj, '__dict__'):
+        return obj.__dict__
+
+    return obj
 
