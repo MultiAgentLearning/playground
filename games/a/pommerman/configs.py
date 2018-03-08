@@ -16,7 +16,28 @@ def ffa_v0():
         'num_rigid': envs.utility.NUM_RIGID,
         'num_wood': envs.utility.NUM_WOOD,
         'num_items': envs.utility.NUM_ITEMS,
-        'max_steps': envs.utility.MAX_STEPS
+        'max_steps': envs.utility.MAX_STEPS,
+        'render_fps': envs.utility.RENDER_FPS,
+    }
+    agent = characters.Agent
+    return locals()
+
+
+def ffa_v0_fast():
+    """Start up a FFA config with the default settings."""
+    env = envs.v0.Pomme
+    game_type = envs.utility.GameType.FFA
+    env_entry_point = 'envs:v0:Pomme'
+    env_id = 'Pomme-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': envs.utility.BOARD_SIZE,
+        'agent_view_size': envs.utility.AGENT_VIEW_SIZE,
+        'num_rigid': envs.utility.NUM_RIGID,
+        'num_wood': envs.utility.NUM_WOOD,
+        'num_items': envs.utility.NUM_ITEMS,
+        'max_steps': envs.utility.MAX_STEPS,
+        'render_fps': 1000,
     }
     agent = characters.Agent
     return locals()
@@ -36,7 +57,8 @@ def ffa_v1():
         'num_wood': envs.utility.NUM_WOOD,
         'num_items': envs.utility.NUM_ITEMS,
         'first_collapse': envs.utility.FIRST_COLLAPSE,
-        'max_steps': envs.utility.MAX_STEPS
+        'max_steps': envs.utility.MAX_STEPS,
+        'render_fps': envs.utility.RENDER_FPS,
     }
     agent = characters.Agent
     return locals()
@@ -55,7 +77,8 @@ def team_v0():
         'num_rigid': envs.utility.NUM_RIGID,
         'num_wood': envs.utility.NUM_WOOD,
         'num_items': envs.utility.NUM_ITEMS,
-        'max_steps': envs.utility.MAX_STEPS
+        'max_steps': envs.utility.MAX_STEPS,
+        'render_fps': envs.utility.RENDER_FPS,
     }
     agent = characters.Agent
     return locals()
@@ -78,6 +101,7 @@ def radio_v2():
         'is_partially_observable': True,
         'radio_vocab_size': envs.utility.RADIO_VOCAB_SIZE,
         'radio_num_words': envs.utility.RADIO_NUM_WORDS,
+        'render_fps': envs.utility.RENDER_FPS,
     }
     agent = characters.Agent
     return locals()

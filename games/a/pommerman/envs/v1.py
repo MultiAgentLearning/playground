@@ -71,3 +71,13 @@ class Pomme(v0.Pomme):
         ret = super().get_json_info()
         ret['collapses'] = self.collapses
         return ret
+
+    def step(self, actions):
+        obs, reward, done, info = super().step(actions)
+
+        for ring, collapse in enumerate(self.collapses):
+            if self._step_count == collapse:
+                self._board = self._collapse_board(ring)
+                break
+
+        return obs, reward, done, info

@@ -69,25 +69,6 @@ class Pomme(v0.Pomme):
 
         return super().step(personal_actions)
 
-    def act(self, obs):
-        ret = []
-        for agent in self._agents:
-            if agent.agent_id == self.training_agent:
-                continue
-            if agent.is_alive:
-                action = agent.act(obs[agent.agent_id], action_space=self.action_space)
-                if type(action) == int:
-                    action = [action] + [0, 0]
-                assert(type(action) == list)
-
-                # So humans can stop the game.
-                if action[0] == 6:
-                    time.sleep(300)
-                ret.append(action)
-            else:
-                ret.append([utility.Action.Stop.value, 0, 0])
-        return ret
-
     @staticmethod
     def featurize(obs):
         ret = super().featurize(obs)

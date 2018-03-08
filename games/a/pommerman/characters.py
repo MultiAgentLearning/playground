@@ -53,7 +53,7 @@ class Agent(object):
     def set_start_position(self, start_position):
         self.start_position = start_position
 
-    def reset(self, ammo=1, is_alive=True, blast_strength=utility.DEFAULT_BLAST_STRENGTH, can_kick=False):
+    def reset(self, ammo=1, is_alive=True, blast_strength=3, can_kick=False):
         self.position = self.start_position
         self.ammo = ammo
         self.is_alive = is_alive
