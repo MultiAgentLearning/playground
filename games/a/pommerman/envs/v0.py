@@ -78,6 +78,14 @@ class Pomme(gym.Env):
         self.training_agent = agent_id
 
     def set_init_game_state(self, game_state_file):
+        # game_state_file JSON format expected:
+        # - list of agents serialized (agent_id, is_alive, position, ammo, blast_strength, can_kick)
+        # - board matrix topology (board_size^2)
+        # - board size
+        # - list of bombs serialized (position, bomber_id, life, blast_strength, moving_direction)
+        # - list of flames serialized (position, life)
+        # - list of item by position
+        # - step count
         self._init_game_state = None
         if game_state_file:
             with open(game_state_file, 'r') as f:
