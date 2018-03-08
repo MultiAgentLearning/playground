@@ -433,11 +433,6 @@ class Pomme(gym.Env):
                 self._viewer = None
             return
 
-        if record_pngs_dir and not os.path.isdir(record_pngs_dir):
-            os.makedirs(record_pngs_dir)
-        if record_json_dir and not os.path.isdir(record_json_dir):
-            os.makedirs(record_json_dir)
-
         human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
         if mode == 'rgb_array':
@@ -505,7 +500,7 @@ class Pomme(gym.Env):
                 'agents': utility.to_json(self._agents),
                 'bombs': utility.to_json(self._bombs),
                 'flames': utility.to_json(self._flames),
-                'items': utility.to_json(str(self._items))
+                'items': utility.to_json([[k, i] for k,i in self._items.items()])
             }
 
         return ret
@@ -521,7 +516,10 @@ class Pomme(gym.Env):
             for y in range(self._board_size):
                 self._board[x,y] = boardArray[x][y]
 
-        self._items = eval(json.loads(self._init_game_state['items']))
+        self._items = {}
+        itemArray = json.loads(self._init_game_state['items'])
+        for i in itemArray:
+            self._items[tuple(i[0])] = i[1]
 
         agentArray = json.loads(self._init_game_state['agents'])
         for a in agentArray:
@@ -533,10 +531,10 @@ class Pomme(gym.Env):
         bombArray = json.loads(self._init_game_state['bombs'])
         for b in bombArray:
             bomber = next(x for x in self._agents if x.agent_id == b['bomber_id'])
-            self._bombs.append(Bomb(bomber, (b['position'][0], b['position'][1]), b['life'], b['blast_strength'], b['moving_direction']))
+            self._bombs.append(Bomb(bomber, tuple(b['position']), b['life'], b['blast_strength'], b['moving_direction']))
 
         self._flames = []
         flameArray = json.loads(self._init_game_state['flames'])
         for f in flameArray:
-            self._flames.append(Flame((f['position'][0], f['position'][1]), f['life']))
+            self._flames.append(Flame(tuple(f['position']), f['life']))
         
