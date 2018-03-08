@@ -97,6 +97,13 @@ if __name__ == "__main__":
 
     atexit.register(functools.partial(clean_up_agents, _agents))
 
+    if args.record_pngs_dir:
+        assert not os.path.isdir(args.record_pngs_dir)
+        os.makedirs(args.record_pngs_dir)
+    if args.record_json_dir:
+        assert not os.path.isdir(args.record_json_dir)
+        os.makedirs(args.record_json_dir)
+
     print("Starting the Game.")
     obs = env.reset()
     steps = 0
