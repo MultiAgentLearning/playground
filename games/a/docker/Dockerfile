@@ -4,11 +4,14 @@ FROM python:3.6.4
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-ADD . /app
+# Add the requirements.txt to the WORKDIR's top level.
+ADD ./games/a/docker/requirements.txt /app/requirements.txt
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r /app/games/a/docker/requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Copy the current directory contents into the container at /app
+ADD . /app
 
 # Make port 80 available to the world outside this container
 EXPOSE 10080

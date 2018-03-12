@@ -52,13 +52,14 @@ class RandomAgent(Agent):
 
 class DockerAgent(Agent):
     """The Docker Agent that Connects to a Docker container where the character runs."""
-    def __init__(self, agent, docker_image, docker_client, server, port, **kwargs):
+    def __init__(self, agent, docker_image, docker_client, server, port, env_vars=None, **kwargs):
         self._agent = agent
         self._docker_image = docker_image
         self._docker_client = docker_client
         self._server = server
         self._port = port
         self._container = None
+        self._env_vars = env_vars or {}
 
         container_thread = threading.Thread(target=self._run_container, daemon=True)
         container_thread.start()
@@ -68,7 +69,7 @@ class DockerAgent(Agent):
         print("Starting container...")
 
         # Any environment variables that start with DOCKER_AGENT are passed to the container
-        env_vars = {}
+        env_vars = self._env_vars
         for key, value in os.environ.items():
             if not key.startswith("DOCKER_AGENT_"):
                 continue
@@ -120,11 +121,20 @@ class DockerAgent(Agent):
     def act(self, obs, action_space):
         obs_serialized = json.dumps(obs)
         request_url = "http://localhost:{}/action".format(self._port)
-        req = requests.post(request_url, json={
-            "obs": obs_serialized,
-            "action_space": json.dumps(action_space)
-        })
-        return req.json()['action']
+        
+        try:
+            req = requests.post(request_url, timeout=0.25, json={
+                "obs": obs_serialized,
+                "action_space": pickle.dumps(action_space, protocol=0).decode("utf-8")
+            })
+            action = req.json()['action']
+        except requests.exceptions.Timeout as e:
+            print('Timeout!')
+            # TODO: Fix this. It's ugly.
+            action = [0]*len(action_space.shape)
+            if len(action) == 1:
+                action = action[0]
+        return action
 
     def shutdown(self):
         print("Stopping container..")
@@ -139,7 +149,8 @@ class TensorForceAgent(Agent):
         self.algorithm = algorithm
 
     def act(self, obs, action_space):
-        pass
+        """This agent has its own way of inducing actions. See train_with_tensorforce."""
+        return None
 
     def initialize(self, env):
         from gym import spaces
