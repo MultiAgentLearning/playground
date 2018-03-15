@@ -14,7 +14,7 @@ from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
 
-from pommerman import configs, utility, agent_classes, agents
+from .. import configs, utility, agent_classes, agents
 
 
 client = docker.from_env()
@@ -48,7 +48,7 @@ class WrappedEnv(OpenAIGym):
         return agent_obs
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description='Playground Flags.')
     parser.add_argument('--game',
                         default='pommerman',
@@ -112,3 +112,7 @@ if __name__ == "__main__":
         runner.close()
     except AttributeError as e:
         pass
+
+
+if __name__ == "__main__":
+    main()

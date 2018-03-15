@@ -24,7 +24,7 @@ import gym
 import numpy as np
 
 
-from pommerman import configs, utility, agent_classes, agents
+from .. import configs, utility, agent_classes, agents
 
 client = docker.from_env()
 servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
@@ -35,7 +35,12 @@ def clean_up_agents(agents):
     return [agent.shutdown() for agent in agents]
 
 
-def run(_game, config, agents_string, record_dir, agent_env_vars="", num_times=1, seed=None):
+def run(args, num_times=1, seed=None):
+    config = args.config
+    agents_string = args.agents
+    record_dir = args.record_dir
+    agent_env_vars = args.agent_env_vars
+
     config = utility.AttrDict(getattr(configs, config)())
     env_vars = {}
     if "," in agent_env_vars:
@@ -118,7 +123,7 @@ def run(_game, config, agents_string, record_dir, agent_env_vars="", num_times=1
     return infos
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description='Playground Flags.')
     parser.add_argument('--game',
                         default='pommerman',
@@ -140,4 +145,8 @@ if __name__ == "__main__":
                         default=True,
                         help="Whether to render or not. Defaults to True.")
     args = parser.parse_args()
-    run(args.game, args.config, args.agents, args.record_dir, args.agent_env_vars)
+    run(args)
+
+
+if __name__ == "__main__":
+    main()
