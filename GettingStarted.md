@@ -1,6 +1,6 @@
 # Getting Started
 
-To start clone the repository to your local working enviornment.
+To start clone the repository to your local working environment.
 
 This project has a few system dependencies.
 
@@ -23,31 +23,28 @@ This project has a few system dependencies.
   ```$ cd myFolder/playground```  
     
   Setup the virtual environment for this specific project  
-  ```$ virtualenv venv```  
+  ```$ virtualenv venv```
     
   Activate the virtual environment  
   ```$ source venv/bin/activate```  
 
   Now you want to install project dependancies, before doing so make sure the virtual environment is started  
   you should see a (venv) at the beginning of terminal prompt.
-  ```$ pip install -r requirements.txt```
-
-  Once everything is installed, move to games folder using this command :y
-  ```$ cd games```
+  ```$ pip install .```
 
   Then you can play the game by running any of the following examples.
 
     Free-For-All (FFA)
     ```
-    $ python games/run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
+    $ pom-battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
     ```
 
     An example with one player, two random agents, and one test agent:
     ```
-    $ python run_battle.py --agents=player::arrows,test::a.pommerman.agents.SimpleAgent,random::null,random::null --config=ffa_v0
+    $ pom-battle --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=ffa_v0
     ```
 
-  ### Closing the environement
+  ### Closing the environment
   You can close the virtual environment using this command
   ```$ deactivate```
 
