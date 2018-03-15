@@ -71,7 +71,7 @@ class Pomme(gym.Env):
         - enemies (three of {0, Agent.values}). If 0, then empty.
         """
         min_obs = [0]*(2*self._board_size**2 + 9)
-        max_obs = [len(utility.Item)]*self._board_size**2 + [10]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
+        max_obs = [len(utility.Item)] * self._board_size ** 2 + [10] * self._board_size ** 2 + [self._board_size] * 2 + [10, 10, 1] + [3] * 4
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):

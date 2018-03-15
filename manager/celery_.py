@@ -112,7 +112,7 @@ def battle(name, user, num_times, config):
     try:
         agents = "test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent".split(",")
         agent_id = random.randint(0, len(agents))
-        agents.insert(agent_id, "docker::%s/%s" % (user, name))
+        agents.insert(agent_id, "docker-agent::%s/%s" % (user, name))
 
         infos = []
         infos = run_battle.run(game='pommerman', config=config, agents=",".join(agents), record_dir=None, num_times=num_times)

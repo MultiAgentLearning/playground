@@ -43,7 +43,7 @@ class Pomme(v0.Pomme):
         # - enemies (three of {0, Agent.values}). If 0, then empty.
         # - radio (radio_vocab_size * radio_num_words)
         min_obs = [0]*(2*self._board_size**2 + 9)
-        max_obs = [len(utility.Item)]*self._board_size**2 + [10]*self._board_size**2 + [self._board_size]*2 + [10, 10, 1] + [3]*4
+        max_obs = [len(utility.Item)] * self._board_size ** 2 + [10] * self._board_size ** 2 + [self._board_size] * 2 + [10, 10, 1] + [3] * 4
         min_obs.extend([0]*self._radio_vocab_size*self._radio_num_words)
         max_obs.extend([1]*self._radio_vocab_size*self._radio_num_words)
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
