@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 
-from a.docker.common import DockerAgent
+from common import DockerAgent
 from pommerman.envs import utility
 
 

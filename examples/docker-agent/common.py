@@ -4,13 +4,13 @@
 import abc
 import logging
 import json
-from flask import jsonify
-
-from flask import Flask, request
+from flask import Flask, jsonify, request
 
 logger = logging.getLogger(__name__)
 
+
 class DockerAgent(metaclass=abc.ABCMeta):
+
     """Abstract base class to implement Docker-based agent"""
 
     def __init__(self):
