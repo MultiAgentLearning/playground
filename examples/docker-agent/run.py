@@ -3,7 +3,8 @@
 import os
 import importlib
 
-from a.docker.common import DockerAgent
+from common import DockerAgent
+
 
 def create_instance_from_path(path):
     """Creates an instance of an agent from an absolute path, like myagent.Agent"""
@@ -12,10 +13,12 @@ def create_instance_from_path(path):
     assert issubclass(class_, DockerAgent), "Agent must subclass DockerAgent"
     return class_()
 
+
 def main():
-    agent_class_path = os.environ.get("AGENT_CLASS", "a.docker-agent.pommerman.simple_agent.agent.Agent")
+    agent_class_path = os.environ.get("AGENT_CLASS", "agent.Agent")
     agent = create_instance_from_path(agent_class_path)
     agent.run()
+
 
 if __name__ == "__main__":
     main()
