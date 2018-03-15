@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 
-from a.pommerman.characters import Flame
+from ..characters import Flame
 
 RENDER_FPS = 15
 BOARD_SIZE = 13

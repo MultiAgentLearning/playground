@@ -1,16 +1,10 @@
-"""Agents that can be run without using a Docker container. These are examples.
-
-To use this with run_battle, include the following as an agent in the 'agents' flag, test::a.pommerman.agents.SimpleAgent. An example where all four agents use this SimpleAgent would be
-
-python.py run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=pommerman_ffa_v0
-"""
 from collections import defaultdict
 import random
 
 import numpy as np
 
-from a.agents import Agent
-from a.pommerman.envs import utility
+from ..agent_classes import Agent
+from ..envs import utility
 
 
 class SimpleAgent(Agent):

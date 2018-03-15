@@ -1,8 +1,6 @@
 from . import envs
 from . import characters
 
-import gym
-
 def ffa_v0():
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme

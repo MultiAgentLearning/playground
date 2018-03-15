@@ -4,16 +4,14 @@ Call this with a config, a game, and a list of agents. The script will start sep
 and then report back the result.
 
 An example with all four test agents running ffa:
-python run_battle.py --agents=test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
+python run_battle.py --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
 
 An example with one player, two random agents, and one test agent:
-python run_battle.py --agents=player::arrows,test::a.pommerman.agents.SimpleAgent,random::null,random::null --config=ffa_v0
+python run_battle.py --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=ffa_v0
 
 An example with a docker agent:
 python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=ffa_v0
 """
-import a
-
 import atexit
 import functools
 import os
@@ -26,6 +24,8 @@ import gym
 import numpy as np
 
 
+from pommerman import configs, utility, agent_classes, agents
+
 client = docker.from_env()
 servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
 
@@ -35,10 +35,8 @@ def clean_up_agents(agents):
     return [agent.shutdown() for agent in agents]
 
 
-def run(game, config, agents, record_dir, agent_env_vars="", num_times=1, seed=None):
-    game = getattr(a, game)
-    configs = getattr(game, 'configs')
-    config = a.utility.AttrDict(getattr(configs, config)())
+def run(_game, config, agents_string, record_dir, agent_env_vars="", num_times=1, seed=None):
+    config = utility.AttrDict(getattr(configs, config)())
     env_vars = {}
     if "," in agent_env_vars:
         for agent in agent_env_vars.split(","):
@@ -49,19 +47,19 @@ def run(game, config, agents, record_dir, agent_env_vars="", num_times=1, seed=N
                 env_vars[agent_id][key] = value
 
     _agents = []
-    for agent_id, agent_info in enumerate(agents.split(",")):
+    for agent_id, agent_info in enumerate(agents_string.split(",")):
         agent = config.agent(agent_id, config.game_type)
         agent_type, agent_control = agent_info.split("::")
         assert agent_type in ["player", "random", "docker", "test"]
         if agent_type == "player":
             assert agent_control in ["arrows"]
-            on_key_press, on_key_release = a.utility.get_key_control(agent_control)
-            agent = a.agents.PlayerAgent(
-                agent, a.utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
+            on_key_press, on_key_release = utility.get_key_control(agent_control)
+            agent = agent_classes.PlayerAgent(
+                agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
         elif agent_type == "random":
-            agent = a.agents.RandomAgent(agent)
+            agent = agent_classes.RandomAgent(agent)
         elif agent_type == "docker":
-            agent = a.agents.DockerAgent(
+            agent = agent_classes.DockerAgent(
                 agent,
                 docker_image=agent_control,
                 docker_client=client,
@@ -119,6 +117,7 @@ def run(game, config, agents, record_dir, agent_env_vars="", num_times=1, seed=N
     atexit.register(functools.partial(clean_up_agents, _agents))
     return infos
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Playground Flags.')
     parser.add_argument('--game',
@@ -129,8 +128,8 @@ if __name__ == "__main__":
                         help='Configuration to execute.')
     parser.add_argument('--agents',
                         # default='random::null,random::null,random::null,docker::pommerman/test-agent', 
-                        # default='test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
-                        default='player::arrows,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
+                        # default='test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
+                        default='player::arrows,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
     parser.add_argument('--agent_env_vars',
                         help="Comma delineated list of agent environment vars to pass to Docker. This is only for the Docker Agent. An example is '0:foo=bar:baz=lar,3:foo=lam', which would send two arguments to Docker Agent 0 and one to Docker Agent 3.",

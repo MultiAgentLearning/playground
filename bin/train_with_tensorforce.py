@@ -3,20 +3,18 @@
 Call this with a config, a game, and a list of agents, one of which should be a tensorforce agent. The script will start separate threads to operate the agents and then report back the result.
 
 An example with all three simple agents running ffa:
-python train_with_tensorforce.py --agents=tensorforce::ppo,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent --config=ffa_v0
+python train_with_tensorforce.py --agents=tensorforce::ppo,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
 """
-import a
-
 import atexit
 import functools
-import os
-import time
 
 import argparse
 import docker
 from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
+
+from pommerman import configs, utility, agent_classes, agents
 
 
 client = docker.from_env()
@@ -59,29 +57,27 @@ if __name__ == "__main__":
                         default='ffa_v0',
                         help='Configuration to execute.')
     parser.add_argument('--agents',
-                        default='tensorforce::ppo,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent,test::a.pommerman.agents.SimpleAgent',
-                        help='Comma delineated list of agent types and docker locations to run the agents.')
+                        default='tensorforce::ppo,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
+                        help='Comma delineated list of agent types and docker-agent locations to run the agents.')
     parser.add_argument('--record_dir',
                         help="Directory to record the PNGs of the game. Doesn't record if None.")
     args = parser.parse_args()
 
-    game = getattr(a, args.game)
-    configs = getattr(game, 'configs')
-    config = a.utility.AttrDict(getattr(configs, args.config)())
+    config = utility.AttrDict(getattr(configs, args.config)())
     _agents = []
     for agent_id, agent_info in enumerate(args.agents.split(",")):
         agent = config.agent(agent_id, config.game_type)
         agent_type, agent_control = agent_info.split("::")
-        assert agent_type in ["player", "random", "docker", "test", "tensorforce"]
+        assert agent_type in ["player", "random", "docker-agent", "test", "tensorforce"]
         if agent_type == "player":
             assert agent_control in ["arrows"]
-            on_key_press, on_key_release = a.utility.get_key_control(agent_control)
-            agent = a.agents.PlayerAgent(
-                agent, a.utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
+            on_key_press, on_key_release = utility.get_key_control(agent_control)
+            agent = agent_classes.PlayerAgent(
+                agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
         elif agent_type == "random":
-            agent = a.agents.RandomAgent(agent)
-        elif agent_type == "docker":
-            agent = a.agents.DockerAgent(
+            agent = agent_classes.RandomAgent(agent)
+        elif agent_type == "docker-agent":
+            agent = agent_classes.DockerAgent(
                 agent,
                 docker_image=agent_control,
                 docker_client=client,
@@ -89,7 +85,7 @@ if __name__ == "__main__":
         elif agent_type == "test":
             agent = eval(agent_control)(agent)
         elif agent_type == "tensorforce":
-            agent = a.agents.TensorForceAgent(agent, algorithm=agent_control)
+            agent = agent_classes.TensorForceAgent(agent, algorithm=agent_control)
             training_agent = agent
         _agents.append(agent)
 
