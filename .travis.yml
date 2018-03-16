@@ -1,0 +1,15 @@
+language: python
+python:
+  - "3.6"
+
+script:
+  - # @TODO run tests here
+  - pip install .
+
+# @TODO deploy to PyPI
+#deploy:
+#  provider: pypi
+#  user: ...
+#  password: ...
+#  on:
+#    tags: true
