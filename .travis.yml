@@ -6,10 +6,9 @@ script:
   - # @TODO run tests here
   - pip install .
 
-# @TODO deploy to PyPI
-#deploy:
-#  provider: pypi
-#  user: ...
-#  password: ...
-#  on:
-#    tags: true
+deploy:
+  provider: pypi
+  user: $PYPI_USERNAME
+  password: $PYPI_PASSWORD
+  on:
+    tags: true
