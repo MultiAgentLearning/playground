@@ -3,5 +3,5 @@ gym~=0.10
 scipy~=1.0
 Pillow~=5.0
 ruamel.yaml~=0.15
-tensorforce~=0.3
+tensorforce~=0.4.0
 tensorflow~=1.6
