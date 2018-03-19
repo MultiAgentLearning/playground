@@ -1,7 +1,7 @@
 """The different Agent classes available as input to run_battle.py."""
 
 import requests
-import pickle
+import json
 import time
 import threading
 import os
@@ -118,12 +118,12 @@ class DockerAgent(Agent):
                 raise
 
     def act(self, obs, action_space):
-        obs_serialized = pickle.dumps(obs, protocol=0).decode("utf-8")
+        obs_serialized = json.dumps(obs)
         request_url = "http://localhost:{}/action".format(self._port)
         try:
             req = requests.post(request_url, timeout=0.25, json={
                 "obs": obs_serialized,
-                "action_space": pickle.dumps(action_space, protocol=0).decode("utf-8")
+                "action_space": json.dumps(action_space)
             })
             action = req.json()['action']
         except requests.exceptions.Timeout as e:

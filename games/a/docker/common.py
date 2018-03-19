@@ -3,7 +3,7 @@
 
 import abc
 import logging
-import pickle
+import json
 from flask import jsonify
 
 from flask import Flask, request
@@ -29,9 +29,9 @@ class DockerAgent(metaclass=abc.ABCMeta):
         def action(): #pylint: disable=W0612
             data = request.get_json()
             observation = data.get("obs")
-            observation = pickle.loads(observation.encode("utf-8"))
+            observation = json.dumps(observation)
             action_space = data.get("action_space")
-            action_space = pickle.loads(action_space.encode("utf-8"))            
+            action_space = json.dumps(action_space)
             action = self.act(observation, action_space)
             return jsonify({"action": action})
 
