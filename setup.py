@@ -14,8 +14,8 @@ setup(name='pommerman',
       install_requires=install_requires,
       entry_points={
         'console_scripts': [
-            'pom-battle=pommerman.cli.run_battle:main',
-            'pom-tf-battle=pommerman.cli.train_with_tensorforce:main',
+            'pom_battle=pommerman.cli.run_battle:main',
+            'pom_tf_battle=pommerman.cli.train_with_tensorforce:main',
         ],
       },
       zip_safe=False)

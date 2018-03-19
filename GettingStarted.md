@@ -29,19 +29,19 @@ This project has a few system dependencies.
   ```$ source venv/bin/activate```  
 
   Now you want to install project dependancies, before doing so make sure the virtual environment is started  
-  you should see a (venv) at the beginning of terminal prompt.
+  you should see a (venv) at the beginning of terminal prompt. In the project root run,
   ```$ pip install .```
 
   Then you can play the game by running any of the following examples.
 
     Free-For-All (FFA)
     ```
-    $ pom-battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
+    $ pom_battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
     ```
 
     An example with one player, two random agents, and one test agent:
     ```
-    $ pom-battle --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=ffa_v0
+    $ pom_battle --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=ffa_v0
     ```
 
   ### Closing the environment
