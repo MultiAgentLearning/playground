@@ -9,6 +9,39 @@ client = docker.from_env()
 servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
 
 
+def make_agent(config_string, agent_string, agent_id=-1, docker_env_dict=None):
+    config = utility.AttrDict(getattr(configs, config_string)())
+
+    agent = config.agent(agent_id, config.game_type)
+    agent_type, agent_control = agent_string.split("::")
+
+    assert agent_type in ["player", "random", "docker", "test"]
+
+    ##
+    # @NOTE: These could be abstracted into a `make_agent` function
+    # but the current logic is simple enough to keep here
+    #
+    if agent_type == "player":
+        assert agent_control in ["arrows"]
+        on_key_press, on_key_release = utility.get_key_control(agent_control)
+        agent_instance = agent_classes.PlayerAgent(
+            agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
+    elif agent_type == "random":
+        agent_instance = agent_classes.RandomAgent(agent)
+    elif agent_type == "docker":
+        agent_instance = agent_classes.DockerAgent(
+            agent,
+            docker_image=agent_control,
+            docker_client=client,
+            server=servers[agent_id],
+            port=agent_id + 1000,
+            env_vars=docker_env_dict)
+    elif agent_type == "test":
+        agent_instance = eval(agent_control)(agent)
+
+    return agent_instance
+
+
 def make(config_string, agent_string, docker_env_string=''):
     config = utility.AttrDict(getattr(configs, config_string)())
     env = config.env(**config.env_kwargs)
@@ -23,34 +56,8 @@ def make(config_string, agent_string, docker_env_string=''):
                 env_vars[agent_id][key] = value
 
     _agents = []
-    for agent_id, agent_info in enumerate(agent_string.split(',')):
-        agent = config.agent(agent_id, config.game_type)
-        agent_type, agent_control = agent_info.split("::")
-
-        assert agent_type in ["player", "random", "docker", "test"]
-
-        ##
-        # @NOTE: These could be abstracted into a `make_agent` function
-        # but the current logic is simple enough to keep here
-        #
-        if agent_type == "player":
-            assert agent_control in ["arrows"]
-            on_key_press, on_key_release = utility.get_key_control(agent_control)
-            agent_instance = agent_classes.PlayerAgent(
-                agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
-        elif agent_type == "random":
-            agent_instance = agent_classes.RandomAgent(agent)
-        elif agent_type == "docker":
-            agent_instance = agent_classes.DockerAgent(
-                agent,
-                docker_image=agent_control,
-                docker_client=client,
-                server=servers[agent_id],
-                port=agent_id+1000,
-                env_vars=env_vars.get(agent_id))
-        elif agent_type == "test":
-            agent_instance = eval(agent_control)(agent)
-
+    for agent_id, agent_string in enumerate(agent_string.split(',')):
+        agent_instance = make_agent(config_string, agent_string, agent_id, env_vars.get(agent_id))
         _agents.append(agent_instance)
 
     env.set_agents(_agents)

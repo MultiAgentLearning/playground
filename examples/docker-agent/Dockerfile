@@ -1,7 +1,5 @@
 FROM python:3.6
 
-RUN pip install --trusted-host pypi.python.org Flask~=0.12
-
 ADD ./examples/docker-agent /agent
 
 # @TODO to be replaced with `pip install pommerman`
