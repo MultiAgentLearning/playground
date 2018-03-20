@@ -14,20 +14,13 @@ python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random
 """
 import atexit
 import functools
-import os
 import random
 import time
 
 import argparse
-import docker
-import gym
 import numpy as np
 
-
-from .. import configs, utility, agent_classes, agents
-
-client = docker.from_env()
-servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
+from .. import make
 
 
 def clean_up_agents(agents):
@@ -41,47 +34,7 @@ def run(args, num_times=1, seed=None):
     record_dir = args.record_dir
     agent_env_vars = args.agent_env_vars
 
-    config = utility.AttrDict(getattr(configs, config)())
-    env_vars = {}
-    if "," in agent_env_vars:
-        for agent in agent_env_vars.split(","):
-            agent_id = int(agent.split(':')[0])
-            env_vars[agent_id] = {}
-            for pair in agent.split(':')[1:]:
-                key, value = pair.split('=')
-                env_vars[agent_id][key] = value
-
-    _agents = []
-    for agent_id, agent_info in enumerate(agents_string.split(",")):
-        agent = config.agent(agent_id, config.game_type)
-        agent_type, agent_control = agent_info.split("::")
-        assert agent_type in ["player", "random", "docker", "test"]
-        if agent_type == "player":
-            assert agent_control in ["arrows"]
-            on_key_press, on_key_release = utility.get_key_control(agent_control)
-            agent = agent_classes.PlayerAgent(
-                agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
-        elif agent_type == "random":
-            agent = agent_classes.RandomAgent(agent)
-        elif agent_type == "docker":
-            agent = agent_classes.DockerAgent(
-                agent,
-                docker_image=agent_control,
-                docker_client=client,
-                server=servers[agent_id],
-                port=agent_id+1000,
-                env_vars=env_vars.get(agent_id))
-        elif agent_type == "test":
-            agent = eval(agent_control)(agent)
-        _agents.append(agent)
-
-    gym.envs.registration.register(
-        id=config.env_id,
-        entry_point=config.env_entry_point,
-        kwargs=config.env_kwargs
-    )
-    env = config.env(**config.env_kwargs)
-    env.set_agents(_agents)
+    env = make(config, agents_string, agent_env_vars)
 
     def _run(seed, record_dir=None):
         env.seed(seed)
@@ -119,7 +72,7 @@ def run(args, num_times=1, seed=None):
         print("Game Time: ", times[-1])
 
     env.close()
-    atexit.register(functools.partial(clean_up_agents, _agents))
+    atexit.register(functools.partial(clean_up_agents, env._agents))
     return infos
 
 
