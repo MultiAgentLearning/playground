@@ -3,14 +3,14 @@
 import os
 import importlib
 
-from common import DockerAgent
+from pommerman.runner import DockerAgentRunner
 
 
 def create_instance_from_path(path):
     """Creates an instance of an agent from an absolute path, like myagent.Agent"""
     module_name, class_name = path.rsplit(".", 1)
     class_ = getattr(importlib.import_module(module_name), class_name)
-    assert issubclass(class_, DockerAgent), "Agent must subclass DockerAgent"
+    assert issubclass(class_, DockerAgentRunner), "Agent must subclass DockerAgentRunner"
     return class_()
 
 
