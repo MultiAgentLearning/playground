@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 with open('requirements.txt', 'r') as f:
     install_requires = f.readlines()
 
+with open('requirements_extra.txt', 'r') as f:
+    extras_require = f.readlines()
+
 setup(name='pommerman',
       version='0.1.0',
       description='PlayGround: AI Research into Multi-Agent Learning',
@@ -12,6 +15,9 @@ setup(name='pommerman',
       license='Apache 2.0',
       packages=find_packages(),
       install_requires=install_requires,
+      extras_require={
+        'extras': extras_require # @TODO this might need refinement
+      },
       entry_points={
         'console_scripts': [
             'pom_battle=pommerman.cli.run_battle:main',
