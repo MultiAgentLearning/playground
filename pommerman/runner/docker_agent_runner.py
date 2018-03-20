@@ -1,6 +1,3 @@
-"""Base classes and utilities to build Docker agents
-"""
-
 import abc
 import logging
 import json
@@ -9,11 +6,11 @@ from flask import Flask, jsonify, request
 logger = logging.getLogger(__name__)
 
 
-class DockerAgent(metaclass=abc.ABCMeta):
+class DockerAgentRunner(metaclass=abc.ABCMeta):
 
     """Abstract base class to implement Docker-based agent"""
 
-    def __init__(self):
+    def __init__(self, _agent):
         pass
 
     @abc.abstractmethod
