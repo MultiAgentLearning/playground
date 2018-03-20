@@ -29,6 +29,10 @@ def make(config_string, agent_string, docker_env_string=''):
 
         assert agent_type in ["player", "random", "docker", "test"]
 
+        ##
+        # @NOTE: These could be abstracted into a `make_agent` function
+        # but the current logic is simple enough to keep here
+        #
         if agent_type == "player":
             assert agent_control in ["arrows"]
             on_key_press, on_key_release = utility.get_key_control(agent_control)
