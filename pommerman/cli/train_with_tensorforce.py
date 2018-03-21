@@ -14,7 +14,7 @@ from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
 
-from .. import configs, utility, agent_classes, agents
+from .. import configs, utility, agents
 
 
 client = docker.from_env()
@@ -72,12 +72,12 @@ def main():
         if agent_type == "player":
             assert agent_control in ["arrows"]
             on_key_press, on_key_release = utility.get_key_control(agent_control)
-            agent = agent_classes.PlayerAgent(
+            agent = agents.PlayerAgent(
                 agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
         elif agent_type == "random":
-            agent = agent_classes.RandomAgent(agent)
+            agent = agents.RandomAgent(agent)
         elif agent_type == "docker":
-            agent = agent_classes.DockerAgent(
+            agent = agents.DockerAgent(
                 agent,
                 docker_image=agent_control,
                 docker_client=client,
@@ -85,7 +85,7 @@ def main():
         elif agent_type == "test":
             agent = eval(agent_control)(agent)
         elif agent_type == "tensorforce":
-            agent = agent_classes.TensorForceAgent(agent, algorithm=agent_control)
+            agent = agents.TensorForceAgent(agent, algorithm=agent_control)
             training_agent = agent
         _agents.append(agent)
 
