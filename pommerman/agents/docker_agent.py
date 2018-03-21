@@ -1,57 +1,14 @@
-"""The different Agent classes available as input to run_battle.py."""
-
 import json
-import os
 import time
+import os
 import threading
-
-from gym import spaces
 import requests
+import docker
 import numpy as np
+from gym import spaces
 
-from .envs import utility
-
-
-class Agent(object):
-    """Parent abstract Agent."""
-
-    def __init__(self, agent):
-        self._agent = agent
-
-    def __getattr__(self, attr):
-        return getattr(self._agent, attr)
-
-    def act(self, obs, action_space):
-        raise NotImplemented
-
-    @staticmethod
-    def has_key_input():
-        return False
-
-    def shutdown(self):
-        pass
-
-
-class PlayerAgent(Agent):
-    """The Player Agent that lets the user control a character."""
-    def __init__(self, agent, key_input, on_key_press, on_key_release):
-        self._agent = agent
-        self._key_input = key_input
-        self.on_key_press = on_key_press
-        self.on_key_release = on_key_release
-
-    def act(self, obs, action_space):
-        return self._key_input['curr']
-
-    @staticmethod
-    def has_key_input():
-        return True
-
-
-class RandomAgent(Agent):
-    """The Random Agent that returns random actions given an action_space."""
-    def act(self, obs, action_space):
-        return action_space.sample()
+from . import BaseAgent
+from ..envs import utility
 
 
 class DockerJSONEncoder(json.JSONEncoder):
@@ -68,7 +25,8 @@ class DockerJSONEncoder(json.JSONEncoder):
             return [space.n for space in obj.spaces]
         return json.JSONEncoder.default(self, obj)
 
-class DockerAgent(Agent):
+
+class DockerAgent(BaseAgent):
     """The Docker Agent that Connects to a Docker container where the character runs."""
     def __init__(self, agent, docker_image, docker_client, server, port, env_vars=None, **kwargs):
         self._agent = agent
@@ -155,40 +113,3 @@ class DockerAgent(Agent):
         print("Stopping container..")
         if self._container:
             return self._container.remove(force=True)
-
-
-class TensorForceAgent(Agent):
-    """The TensorForceAgent. Acts through the algorith, not here."""
-    def __init__(self, agent, algorithm):
-        self._agent = agent
-        self.algorithm = algorithm
-
-    def act(self, obs, action_space):
-        """This agent has its own way of inducing actions. See train_with_tensorforce."""
-        return None
-
-    def initialize(self, env):
-        from gym import spaces
-        from tensorforce.agents import PPOAgent
-
-        if self.algorithm == "ppo":
-            if type(env.action_space) == spaces.Tuple:
-                actions_spec = {str(num): {'type': int, 'num_actions': space.n}
-                                for num, space in enumerate(env.action_space.spaces)}
-            else:
-                actions_spec = dict(type='int', num_actions=env.action_space.n)
-
-            return PPOAgent(
-                states_spec=dict(type='float', shape=env.observation_space.shape),
-                actions_spec=actions_spec,
-                network_spec=[
-                    dict(type='dense', size=64),
-                    dict(type='dense', size=64)
-                ],
-                batch_size=128,
-                step_optimizer=dict(
-                    type='adam',
-                    learning_rate=1e-4
-                )
-            )
-        return None

@@ -3,11 +3,11 @@ import random
 
 import numpy as np
 
-from ..agent_classes import Agent
+from . import BaseAgent
 from ..envs import utility
 
 
-class SimpleAgent(Agent):
+class SimpleAgent(BaseAgent):
     """This is a baseline agent. After you can beat it, submit your agent to compete."""
 
     def __init__(self, *args, **kwargs):
