@@ -1,10 +1,15 @@
 """The different Agent classes available as input to run_battle.py."""
 
-import requests
 import json
+import os
 import time
 import threading
-import os
+
+from gym import spaces
+import requests
+import numpy as np
+
+from .envs import utility
 
 
 class Agent(object):
@@ -49,6 +54,20 @@ class RandomAgent(Agent):
         return action_space.sample()
 
 
+class DockerJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, utility.Item):
+            return obj.value
+        elif isinstance(obj, np.int64):
+            return int(obj)
+        elif isinstance(obj, spaces.Discrete):
+            return obj.n
+        elif isinstance(obj, spaces.Tuple):
+            return [space.n for space in obj.spaces]
+        return json.JSONEncoder.default(self, obj)
+
 class DockerAgent(Agent):
     """The Docker Agent that Connects to a Docker container where the character runs."""
     def __init__(self, agent, docker_image, docker_client, server, port, env_vars=None, **kwargs):
@@ -78,8 +97,6 @@ class DockerAgent(Agent):
         self._container = self._docker_client.containers.run(
             self._docker_image, detach=True, auto_remove=True,
             ports={10080: self._port}, environment=env_vars)
-        for line in self._container.logs(stream=True):
-            print(line.decode("utf-8").strip())
 
     @staticmethod
     def _wait_for_docker(server, port, timeout=None):
@@ -118,12 +135,12 @@ class DockerAgent(Agent):
                 raise
 
     def act(self, obs, action_space):
-        obs_serialized = json.dumps(obs)
+        obs_serialized = json.dumps(obs, cls=DockerJSONEncoder)
         request_url = "http://localhost:{}/action".format(self._port)
         try:
             req = requests.post(request_url, timeout=0.25, json={
                 "obs": obs_serialized,
-                "action_space": json.dumps(action_space)
+                "action_space": json.dumps(action_space, cls=DockerJSONEncoder)
             })
             action = req.json()['action']
         except requests.exceptions.Timeout as e:
