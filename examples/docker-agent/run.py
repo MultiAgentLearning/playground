@@ -1,22 +1,19 @@
-"""Generic runner for docker agents"""
+"""Implementation of a simple deterministic agent using Docker."""
 
-import os
-import importlib
-
+import pommerman
 from pommerman.runner import DockerAgentRunner
 
 
-def create_instance_from_path(path):
-    """Creates an instance of an agent from an absolute path, like myagent.Agent"""
-    module_name, class_name = path.rsplit(".", 1)
-    class_ = getattr(importlib.import_module(module_name), class_name)
-    assert issubclass(class_, DockerAgentRunner), "Agent must subclass DockerAgentRunner"
-    return class_()
+class MyAgent(DockerAgentRunner):
+    def __init__(self):
+        self._agent = pommerman.make_agent('ffa_v0', 'test::agents.SimpleAgent')
+
+    def act(self, observation, action_space):
+        return self._agent.act(observation, action_space)
 
 
 def main():
-    agent_class_path = os.environ.get("AGENT_CLASS", "agent.Agent")
-    agent = create_instance_from_path(agent_class_path)
+    agent = MyAgent()
     agent.run()
 
 
