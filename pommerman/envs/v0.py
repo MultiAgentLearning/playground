@@ -2,7 +2,6 @@
 
 This evironment acts as game manager for Pommerman. Further environments, such as in v1.py, will inherit from this.
 """
-from collections import defaultdict
 import os
 
 import numpy as np
