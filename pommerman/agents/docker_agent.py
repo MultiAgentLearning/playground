@@ -8,22 +8,7 @@ import numpy as np
 from gym import spaces
 
 from . import BaseAgent
-from ..envs import utility
-
-
-class DockerJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, utility.Item):
-            return obj.value
-        elif isinstance(obj, np.int64):
-            return int(obj)
-        elif isinstance(obj, spaces.Discrete):
-            return obj.n
-        elif isinstance(obj, spaces.Tuple):
-            return [space.n for space in obj.spaces]
-        return json.JSONEncoder.default(self, obj)
+from .. import utility
 
 
 class DockerAgent(BaseAgent):
@@ -93,12 +78,12 @@ class DockerAgent(BaseAgent):
                 raise
 
     def act(self, obs, action_space):
-        obs_serialized = json.dumps(obs, cls=DockerJSONEncoder)
+        obs_serialized = json.dumps(obs, cls=utility.PommermanJSONEncoder)
         request_url = "http://localhost:{}/action".format(self._port)
         try:
             req = requests.post(request_url, timeout=0.25, json={
                 "obs": obs_serialized,
-                "action_space": json.dumps(action_space, cls=DockerJSONEncoder)
+                "action_space": json.dumps(action_space, cls=utility.PommermanJSONEncoder)
             })
             action = req.json()['action']
         except requests.exceptions.Timeout as e:
@@ -112,4 +97,7 @@ class DockerAgent(BaseAgent):
     def shutdown(self):
         print("Stopping container..")
         if self._container:
-            return self._container.remove(force=True)
+            try:
+                return self._container.remove(force=True)
+            except docker.errors.NotFound as e:
+                return True

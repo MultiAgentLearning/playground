@@ -1,11 +1,16 @@
 import contextlib
 from enum import Enum
+import json
 import logging
 import os
 import random
 import string
 
+from gym import spaces
+import numpy as np
 import ruamel.yaml as yaml
+
+from .envs import utility
 
 
 class KeyInput(Enum):
@@ -140,3 +145,20 @@ class AttrDict(dict):
         return type(self)(super(AttrDict, self).copy())
 
 
+class PommermanJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, utility.Item):
+            return obj.value
+        elif isinstance(obj, utility.Action):
+            return obj.value
+        elif isinstance(obj, np.int64):
+            return int(obj)
+        elif hasattr(obj, 'to_json'):
+            return obj.to_json()
+        elif isinstance(obj, spaces.Discrete):
+            return obj.n
+        elif isinstance(obj, spaces.Tuple):
+            return [space.n for space in obj.spaces]
+        return json.JSONEncoder.default(self, obj)
