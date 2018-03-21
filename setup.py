@@ -6,8 +6,11 @@ with open('requirements.txt', 'r') as f:
 with open('requirements_extra.txt', 'r') as f:
     extras_require = f.readlines()
 
+with open('VERSION') as f:
+    version = f.read().strip()
+
 setup(name='pommerman',
-      version='0.1.0',
+      version=version,
       description='PlayGround: AI Research into Multi-Agent Learning',
       url='https://www.pommerman.com',
       author='Pommerman',
