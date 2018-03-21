@@ -49,7 +49,7 @@ def make_agent(config_string, agent_string, agent_id=-1, docker_env_dict=None):
     return agent_instance
 
 
-def make(config_string, agent_string, docker_env_string=''):
+def make(config_string, agent_string, docker_env_string='', game_state_file=None):
     config = utility.AttrDict(getattr(configs, config_string)())
     env = config.env(**config.env_kwargs)
 
@@ -68,6 +68,7 @@ def make(config_string, agent_string, docker_env_string=''):
         _agents.append(agent_instance)
 
     env.set_agents(_agents)
+    env.set_init_game_state(game_state_file)
     return env
 
 

@@ -53,12 +53,12 @@ class Agent(object):
     def set_start_position(self, start_position):
         self.start_position = start_position
 
-    def reset(self):
+    def reset(self, ammo=1, is_alive=True, blast_strength=None, can_kick=False):
         self.position = self.start_position
-        self.ammo = 1
-        self.is_alive = True
-        self.blast_strength = utility.DEFAULT_BLAST_STRENGTH
-        self.can_kick = False
+        self.ammo = ammo
+        self.is_alive = is_alive
+        self.blast_strength = blast_strength or utility.DEFAULT_BLAST_STRENGTH
+        self.can_kick = can_kick
 
     def pick_up(self, item):
         if item == utility.Item.ExtraBomb:
@@ -77,16 +77,26 @@ class Agent(object):
                 self.blast_strength += 2
                 self.blast_strength = min(self.blast_strength, 10)
 
+    def to_json(self):
+        return {
+            "agent_id": self.agent_id,
+            "is_alive": self.is_alive,
+            "position": self.position,
+            "ammo": self.ammo,
+            "blast_strength": self.blast_strength,
+            "can_kick": self.can_kick
+        }
+
 
 class Bomb(object):
     """Container for the Bomb object."""
 
-    def __init__(self, bomber, position, life, blast_strength):
+    def __init__(self, bomber, position, life, blast_strength, moving_direction=None):
         self.bomber = bomber
         self.position = position
         self._life = life
         self.blast_strength = blast_strength
-        self.moving_direction = None
+        self.moving_direction = moving_direction
 
     def tick(self):
         self._life -= 1
@@ -118,17 +128,32 @@ class Bomb(object):
     def is_moving(self):
         return self.moving_direction is not None
 
+    def to_json(self):
+        return {
+            "position": self.position,
+            "bomber_id": self.bomber.agent_id,
+            "life": self._life,
+            "blast_strength": self.blast_strength,
+            "moving_direction": self.moving_direction
+        }
+
 
 class Flame(object):
     """Container for Flame object."""
 
-    def __init__(self, position):
+    def __init__(self, position, life=2):
         self.position = position
-        self._life = 2
+        self._life = life
 
     def tick(self):
         self._life -= 1
 
     def is_dead(self):
         return self._life == 0
+
+    def to_json(self):
+        return {
+            "position": self.position,
+            "life": self._life
+        }
 

@@ -10,9 +10,9 @@ The collapsing works in the following manner:
 3. When we are at a step in the collapsing schedule, we take the matching ring and turn it into rigid walls.
    This has the effect of destroying any items, bombs (which don't go off), and agents in those squares.
 """
+from ..utility import PommermanJSONEncoder as json_encoder
 from . import utility
 from . import v0
-
 
 class Pomme(v0.Pomme):
     metadata = {
@@ -66,6 +66,15 @@ class Pomme(v0.Pomme):
                 collapse(cell, end)
 
         return board
+
+    def get_json_info(self):
+        ret = super().get_json_info()
+        ret['collapses'] = json.dumps(self.collapses, cls=json_encoder)
+        return ret
+
+    def set_json_info(self):
+        super().set_json_info()
+        self.collapses = json.loads(self._init_game_state['collapses'])
 
     def step(self, actions):
         obs, reward, done, info = super().step(actions)

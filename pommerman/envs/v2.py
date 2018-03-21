@@ -7,6 +7,7 @@ stream for each agent.
 from gym import spaces
 import numpy as np
 
+from ..utility import PommermanJSONEncoder as json_encoder
 from . import utility
 from . import v0
 
@@ -75,3 +76,16 @@ class Pomme(v0.Pomme):
         message = obs['message']
         message = utility.make_np_float(message)
         return np.concatenate((ret, message))
+
+    def get_json_info(self):
+        ret = super().get_json_info()
+        ret['radio_vocab_size'] = json.dumps(self._radio_vocab_size, cls=json_encoder)
+        ret['radio_num_words'] = json.dumps(self._radio_num_words, cls=json_encoder)
+        ret['_radio_from_agent'] = json.dumps(self._radio_from_agent, cls=json_encoder)
+        return ret
+
+    def set_json_info(self):
+        super().set_json_info()
+        self.radio_vocab_size = json.loads(self._init_game_state['radio_vocab_size'])
+        self.radio_num_words = json.loads(self._init_game_state['radio_num_words'])
+        self._radio_from_agent = json.loads(self._init_game_state['_radio_from_agent'])
