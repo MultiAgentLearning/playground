@@ -62,18 +62,20 @@ class Pomme(gym.Env):
     def _set_observation_space(self):
         """The Observation Space for each agent.
 
-        There are a total of 2*board_size^2+9 observations:
+        There are a total of 3*board_size^2+12 observations:
         - all of the board (board_size^2)
         - bomb blast strength (board_size^2).
+        - bomb life (board_size^2)
         - agent's position (2)
-        - num ammo (1)
+        - player ammo counts (4)
         - blast strength (1)
-        - can_kick (0 or 1)
-        - teammate (one of {0, Agent.values}). If 0, then empty.
-        - enemies (three of {0, Agent.values}). If 0, then empty.
+        - can_kick (1)
+        - teammate (one of {AgentDummy.value, Agent3.value}).
+        - enemies (three of {AgentDummy.value, Agent3.value}).
         """
-        min_obs = [0]*(2*self._board_size**2 + 9)
-        max_obs = [len(utility.Item)] * self._board_size ** 2 + [10] * self._board_size ** 2 + [self._board_size] * 2 + [10, 10, 1] + [3] * 4
+        bss = self._board_size**2
+        min_obs = [0]*3*bss + [0]*8 + [utility.Item.AgentDummy.value]*4
+        max_obs = [len(utility.Item)]*bss + [self._board_size]*bss + [25]*bss + [self._board_size]*2 + [self._num_items]*4 + [self._num_items] + [1] + [utility.Item.Agent3.value]*4
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
@@ -249,26 +251,16 @@ class Pomme(gym.Env):
     @staticmethod
     def featurize(obs):
         board = obs["board"].reshape(-1).astype(np.float32)
-        bombs = obs["bombs"].reshape(-1).astype(np.float32)
+        bomb_blast_strength = obs["bomb_blast_strength"].reshape(-1).astype(np.float32)
+        bomb_life = obs["bomb_life"].reshape(-1).astype(np.float32)
         position = utility.make_np_float(obs["position"])
         ammo = utility.make_np_float([obs["ammo"]])
         blast_strength = utility.make_np_float([obs["blast_strength"]])
         can_kick = utility.make_np_float([obs["can_kick"]])
 
-        teammate = obs["teammate"]
-        if teammate is not None:
-            teammate = teammate.value
-        else:
-            teammate = -1
-        teammate = utility.make_np_float([teammate])
-
-        enemies = obs["enemies"]
-        enemies = [e.value for e in enemies]
-        if len(enemies) < 3:
-            enemies = enemies + [-1]*(3 - len(enemies))
-        enemies = utility.make_np_float(enemies)
-
-        return np.concatenate((board, bombs, position, ammo, blast_strength, can_kick, teammate, enemies))
+        teammate = utility.make_np_float([obs["teammate"].value])
+        enemies = utility.make_np_float([e.value for e in obs["enemies"]])
+        return np.concatenate((board, bomb_blast_strength, bomb_life, position, ammo, blast_strength, can_kick, teammate, enemies))
 
     def get_json_info(self):
         """Returns a json snapshot of the current game state."""

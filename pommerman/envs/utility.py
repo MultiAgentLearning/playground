@@ -36,11 +36,12 @@ class Item(Enum):
     ExtraBomb = 6 # adds ammo.
     IncrRange = 7 # increases the blast_strength
     Kick = 8 # can kick bombs by touching them.
-    Skull = 9 # randomly either reduces ammo, (capped at 1), reduces blast_strength (capped at 2), or increases blast_strength by 2.
-    Agent0 = 10
-    Agent1 = 11
-    Agent2 = 12
-    Agent3 = 13
+    Skull = 9 # randomly reduces ammo (bounded by 1), reduces blast_strength (bounded by 2), or increases blast_strength by 2.
+    AgentDummy = 10 # used by team games to denote the third enemy and by ffa to denote the teammate.
+    Agent0 = 11
+    Agent1 = 12
+    Agent2 = 13
+    Agent3 = 14
 
 
 class GameType(Enum):
@@ -572,13 +573,16 @@ class ForwardModel(object):
         """
         board_size = len(curr_board)
 
-        def make_bomb_map(position):
-            ret = np.zeros((board_size, board_size))
+        def make_bomb_maps(position):
+            blast_strengths = np.zeros((board_size, board_size))
+            life = np.zeros((board_size, board_size))
+
             for bomb in bombs:
                 x, y = bomb.position
                 if not is_partially_observable or in_view_range(position, x, y):
-                    ret[(x, y)] = bomb.blast_strength
-            return ret
+                    blast_strengths[(x, y)] = bomb.blast_strength
+                    life[(x, y)] = bomb.life
+            return blast_strengths, life
 
         def _in_view_range(self, position, vrow, vcol):
             row, col = position
@@ -599,7 +603,11 @@ class ForwardModel(object):
                         if not in_view_range(agent.position, row, col):
                             board[row, col] = Item.Fog.value
             agent_obs['board'] = board
-            agent_obs['bombs'] = make_bomb_map(agent.position)
+
+            bomb_blast_strengths, bomb_life = make_bomb_maps(agent.position)
+            agent_obs['bomb_blast_strength'] = bomb_blast_strengths
+            agent_obs['bomb_life'] = bomb_life
+
             for attr in attrs:
                 assert hasattr(agent, attr)
                 agent_obs[attr] = getattr(agent, attr)

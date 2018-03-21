@@ -28,10 +28,10 @@ class SimpleAgent(BaseAgent):
 
         my_position = tuple(obs['position'])
         board = np.array(obs['board'])
-        bombs = convert_bombs(np.array(obs['bombs']))
+        bombs = convert_bombs(np.array(obs['bomb_blast_strength']))
         enemies = [utility.Item(e) for e in obs['enemies']]
-        ammo = obs['ammo']
-        blast_strength = obs['blast_strength']
+        ammo = int(obs['ammo'])
+        blast_strength = int(obs['blast_strength'])
         items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=10)
 
         # Move if we are in an unsafe place.
