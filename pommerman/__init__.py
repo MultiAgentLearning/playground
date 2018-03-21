@@ -1,3 +1,5 @@
+import gym
+import inspect
 import os
 import docker
 from . import configs
@@ -7,6 +9,16 @@ from . import agent_classes
 
 client = docker.from_env()
 servers = os.environ.get('PLAYGROUND_BATTLE_SERVERS', ','.join(['http://localhost']*4)).split(',')
+
+
+def register():
+    for name, f in inspect.getmembers(configs, inspect.isfunction):
+        config = f()
+        gym.envs.registration.register(
+            id=config['env_id'],
+            entry_point=config['env_entry_point'],
+            kwargs=config['env_kwargs']
+        )
 
 
 def make_agent(config_string, agent_string, agent_id=-1, docker_env_dict=None):
@@ -57,12 +69,8 @@ def make(config_string, agent_string, docker_env_string=''):
         _agents.append(agent_instance)
 
     env.set_agents(_agents)
-
-    # @TODO fix this to be compatible with `gym.make`
-    # gym.envs.registration.register(
-    #     id=config.env_id,
-    #     entry_point=config.env_entry_point,
-    #     kwargs=config.env_kwargs
-    # )
-
     return env
+
+
+# Register environments with gym
+register()

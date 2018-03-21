@@ -1,12 +1,13 @@
 from . import envs
 from . import characters
 
+
 def ffa_v0():
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme
     game_type = envs.utility.GameType.FFA
-    env_entry_point = 'envs:v0:Pomme'
-    env_id = 'Pomme-v0'
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'PommeFFA-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
@@ -25,8 +26,8 @@ def ffa_v0_fast():
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme
     game_type = envs.utility.GameType.FFA
-    env_entry_point = 'envs:v0:Pomme'
-    env_id = 'Pomme-v0'
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'PommeFFAFast-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
@@ -45,8 +46,8 @@ def ffa_v1():
     """Start up a collapsing FFA config with the default settings."""
     env = envs.v1.Pomme
     game_type = envs.utility.GameType.FFA
-    env_entry_point = 'envs:v1:Pomme'
-    env_id = 'Pomme-v1'
+    env_entry_point = 'pommerman.envs.v1:Pomme'
+    env_id = 'PommeFFA-v1'
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
@@ -66,8 +67,8 @@ def team_v0():
     """Start up a team config with the default settings."""
     env = envs.v0.Pomme
     game_type = envs.utility.GameType.Team
-    env_entry_point = 'envs:v0:Pomme'
-    env_id = 'Pomme-v0'
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'PommeTeam-v0'
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
@@ -86,8 +87,8 @@ def radio_v2():
     """Start up a team radio config with the default settings."""
     env = envs.v2.Pomme
     game_type = envs.utility.GameType.TeamRadio
-    env_entry_point = 'envs:v2:Pomme'
-    env_id = 'Pomme-v2'
+    env_entry_point = 'pommerman.envs.v2:Pomme'
+    env_id = 'PommeRadio-v2'
     env_kwargs = {
         'game_type': game_type,
         'board_size': envs.utility.BOARD_SIZE,
