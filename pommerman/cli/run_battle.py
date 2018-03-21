@@ -13,7 +13,6 @@ An example with a docker agent:
 python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=ffa_v0
 """
 import atexit
-import functools
 import random
 import time
 
@@ -21,11 +20,6 @@ import argparse
 import numpy as np
 
 from .. import make
-
-
-def clean_up_agents(agents):
-    """Stops all agents"""
-    return [agent.shutdown() for agent in agents]
 
 
 def run(args, num_times=1, seed=None):
@@ -71,8 +65,7 @@ def run(args, num_times=1, seed=None):
         times.append(time.time() - start)
         print("Game Time: ", times[-1])
 
-    env.close()
-    atexit.register(functools.partial(clean_up_agents, env._agents))
+    atexit.register(env.close)
     return infos
 
 

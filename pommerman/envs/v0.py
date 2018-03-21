@@ -175,9 +175,7 @@ class Pomme(gym.Env):
         from PIL import Image
 
         if close:
-            if self._viewer is not None:
-                self._viewer.close()
-                self._viewer = None
+            self.close()
             return
 
         if record_dir and not os.path.isdir(record_dir):
@@ -211,6 +209,14 @@ class Pomme(gym.Env):
                 break
 
         time.sleep(1.0 / self._render_fps)
+
+    def close(self):
+        if self._viewer is not None:
+            self._viewer.close()
+            self._viewer = None
+
+        for agent in self._agents:
+            agent.shutdown()
 
     @staticmethod
     def featurize(obs):
