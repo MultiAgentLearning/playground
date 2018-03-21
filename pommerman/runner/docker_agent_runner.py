@@ -10,7 +10,7 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
 
     """Abstract base class to implement Docker-based agent"""
 
-    def __init__(self, _agent):
+    def __init__(self):
         pass
 
     @abc.abstractmethod
