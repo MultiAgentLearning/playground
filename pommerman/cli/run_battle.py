@@ -87,7 +87,7 @@ def main():
     parser.add_argument('--agents',
                         # default='test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
                         # default='player::arrows,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
-                        default='docker::pommerman/test-agent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
+                        default='docker::pommerman/simple-agent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent',
                         help='Comma delineated list of agent types and docker locations to run the agents.')
     parser.add_argument('--agent_env_vars',
                         help="Comma delineated list of agent environment vars to pass to Docker. This is only for the Docker Agent. An example is '0:foo=bar:baz=lar,3:foo=lam', which would send two arguments to Docker Agent 0 and one to Docker Agent 3.",

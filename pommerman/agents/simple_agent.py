@@ -26,10 +26,10 @@ class SimpleAgent(Agent):
                 ret.append({'position': (r, c), 'blast_strength': int(bomb_map[(r, c)])})
             return ret
 
-        my_position = obs['position']
-        board = obs['board']
-        bombs = convert_bombs(obs['bombs'])
-        enemies = obs['enemies']
+        my_position = tuple(obs['position'])
+        board = np.array(obs['board'])
+        bombs = convert_bombs(np.array(obs['bombs']))
+        enemies = [utility.Item(e) for e in obs['enemies']]
         ammo = obs['ammo']
         blast_strength = obs['blast_strength']
         items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=10)
