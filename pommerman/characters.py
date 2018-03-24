@@ -15,7 +15,7 @@ class Agent(object):
         self.blast_strength = utility.DEFAULT_BLAST_STRENGTH
         self.can_kick = False
         if game_type == utility.GameType.FFA:
-            self.teammate = utility.Item.AgentDummy
+            self.teammate = None
             self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id]
         else:
@@ -23,7 +23,6 @@ class Agent(object):
             self.teammate = getattr(utility.Item, 'Agent%d' % teammate_id)
             self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id and id_ != teammate_id]
-            self.enemies.append(utility.Item.AgentDummy)
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
@@ -133,7 +132,7 @@ class Bomb(object):
         return {
             "position": self.position,
             "bomber_id": self.bomber.agent_id,
-            "life": self._life,
+            "life": self.life,
             "blast_strength": self.blast_strength,
             "moving_direction": self.moving_direction
         }
