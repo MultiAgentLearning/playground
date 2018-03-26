@@ -8,13 +8,18 @@ from .envs import utility
 class Agent(object):
     """Container to keep the agent state."""
 
-    def __init__(self, agent_id, game_type):
-        self.agent_id = agent_id
+    def __init__(self, agent_id=None, game_type=None):
+        self._game_type = game_type
         self.ammo = 1
         self.is_alive = True
         self.blast_strength = utility.DEFAULT_BLAST_STRENGTH
         self.can_kick = False
-        if game_type == utility.GameType.FFA:
+        if agent_id is not None:
+            self.set_agent_id(agent_id)
+
+    def set_agent_id(self, agent_id):
+        self.agent_id = agent_id
+        if self._game_type == utility.GameType.FFA:
             self.teammate = utility.Item.AgentDummy
             self.enemies = [getattr(utility.Item, 'Agent%d' % id_)
                             for id_ in range(4) if id_ != agent_id]
