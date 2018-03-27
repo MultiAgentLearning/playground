@@ -25,7 +25,7 @@ def clean_up_agents(agents):
     return [agent.shutdown() for agent in agents]
 
 
-class WrappedEnv(OpenAIGym):    
+class WrappedEnv(OpenAIGym):
     def __init__(self, gym, visualize=False):
         self.gym = gym
         self.visualize = visualize
@@ -70,10 +70,7 @@ def main():
         agent_type, agent_control = agent_info.split("::")
         assert agent_type in ["player", "random", "docker", "test", "tensorforce"]
         if agent_type == "player":
-            assert agent_control in ["arrows"]
-            on_key_press, on_key_release = utility.get_key_control(agent_control)
-            agent = agents.PlayerAgent(
-                agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
+            agent = agents.PlayerAgent(agent, agent_control)
         elif agent_type == "random":
             agent = agents.RandomAgent(agent)
         elif agent_type == "docker":
