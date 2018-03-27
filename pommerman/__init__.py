@@ -28,6 +28,7 @@ def make(config_id, agent_list, game_state_file=None):
 
     for idx, _agent in enumerate(agent_list):
         assert isinstance(_agent, agents.BaseAgent)
+        # @NOTE: This is IMPORTANT so that the agent character is initialized
         _agent.init_agent(idx, env.spec._kwargs['game_type'])
 
     env.set_agents(agent_list)
