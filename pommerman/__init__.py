@@ -29,10 +29,7 @@ def make_agent(config_string, agent_string, agent_id=-1, docker_env_dict=None):
     assert agent_type in ["player", "random", "docker", "test"]
 
     if agent_type == "player":
-        assert agent_control in ["arrows"]
-        on_key_press, on_key_release = utility.get_key_control(agent_control)
-        agent_instance = agents.PlayerAgent(
-            agent, utility.KEY_INPUT, on_key_press=on_key_press, on_key_release=on_key_release)
+        agent_instance = agents.PlayerAgent(agent, agent_control)
     elif agent_type == "random":
         agent_instance = agents.RandomAgent(agent)
     elif agent_type == "docker":
