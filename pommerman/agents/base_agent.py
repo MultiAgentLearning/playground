@@ -12,7 +12,7 @@ class BaseAgent:
         raise NotImplementedError()
 
     @staticmethod
-    def has_key_input():
+    def has_user_input():
         return False
 
     def shutdown(self):
