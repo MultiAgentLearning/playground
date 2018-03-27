@@ -1,8 +1,10 @@
+from .. import characters
+
 
 class BaseAgent:
     """Parent abstract Agent."""
 
-    def __init__(self, agent):
+    def __init__(self, agent=characters.Agent):
         self._agent = agent
 
     def __getattr__(self, attr):
@@ -10,6 +12,9 @@ class BaseAgent:
 
     def act(self, obs, action_space):
         raise NotImplementedError()
+
+    def init_agent(self, id, game_type):
+        self._agent = self._agent(id, game_type)
 
     @staticmethod
     def has_user_input():
