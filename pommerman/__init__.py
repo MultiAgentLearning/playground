@@ -1,6 +1,5 @@
 import gym
 import inspect
-import os
 from . import configs
 from . import utility
 from . import agents
