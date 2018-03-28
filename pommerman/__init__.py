@@ -25,7 +25,8 @@ _register()
 
 
 def make(config_id, agent_list, game_state_file=None):
-    assert config_id in registry
+    assert config_id in registry, "Unknown configuration '{}'. " \
+        "Possible values: {}".format(config_id, registry)
     env = gym.make(config_id)
 
     for id, agent in enumerate(agent_list):
