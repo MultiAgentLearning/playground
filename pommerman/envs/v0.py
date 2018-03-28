@@ -79,7 +79,8 @@ class Pomme(gym.Env):
         self.observation_space = spaces.Box(np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
-        self._agents = agents
+        # sort by agent_ids so indexing works out properly 
+        self._agents = sorted(agents, key=lambda x: x.agent_id)
 
     def set_training_agent(self, agent_id):
         self.training_agent = agent_id
