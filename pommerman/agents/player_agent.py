@@ -5,13 +5,13 @@ from .. import characters
 class PlayerAgent(BaseAgent):
     """The Player Agent that lets the user control a character."""
 
-    def __init__(self, agent=characters.Bomber, agent_control='arrows'):
-        super(PlayerAgent, self).__init__(agent)
+    def __init__(self, character=characters.Bomber, agent_control='arrows'):
+        super(PlayerAgent, self).__init__(character)
 
         ##
-        # @NOTE: DONOT move this import outside the constructor. It will
+        # @NOTE: DO NOT move this import outside the constructor. It will
         # not work in headless environments like a Docker container
-        # and prevents Pommerman from running
+        # and prevents Pommerman from running.
         #
         from pyglet.window import key
         self._controls = {
