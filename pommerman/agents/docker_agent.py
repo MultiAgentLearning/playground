@@ -16,7 +16,7 @@ class DockerAgent(BaseAgent):
                  docker_image,
                  port,
                  server='http://localhost',
-                 agent=characters.Agent,
+                 agent=characters.Bomber,
                  docker_client=None,
                  env_vars=None):
         super(DockerAgent, self).__init__(agent)

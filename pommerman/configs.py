@@ -18,7 +18,7 @@ def ffa_v0():
         'max_steps': envs.utility.MAX_STEPS,
         'render_fps': envs.utility.RENDER_FPS,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
 
 
@@ -38,7 +38,7 @@ def ffa_v0_fast():
         'max_steps': envs.utility.MAX_STEPS,
         'render_fps': 1000,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
 
 
@@ -59,7 +59,7 @@ def ffa_v1():
         'max_steps': envs.utility.MAX_STEPS,
         'render_fps': envs.utility.RENDER_FPS,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
 
 
@@ -79,7 +79,7 @@ def team_v0():
         'max_steps': envs.utility.MAX_STEPS,
         'render_fps': envs.utility.RENDER_FPS,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
 
 
@@ -99,7 +99,7 @@ def team_v0_fast():
         'max_steps': envs.utility.MAX_STEPS,
         'render_fps': 2000,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
 
 
@@ -122,5 +122,5 @@ def radio_v2():
         'radio_num_words': envs.utility.RADIO_NUM_WORDS,
         'render_fps': envs.utility.RENDER_FPS,
     }
-    agent = characters.Agent
+    agent = characters.Bomber
     return locals()
