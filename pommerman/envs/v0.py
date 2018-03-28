@@ -200,16 +200,16 @@ class Pomme(gym.Env):
         return frames
 
     def render(self, mode='human', close=False, record_pngs_dir=None, record_json_dir=None):
-        from PIL import Image
-
         if close:
             self.close()
             return
 
-        human_factor = utility.HUMAN_FACTOR
         frames = self._render_frames()
         if mode == 'rgb_array':
             return frames[0]
+
+        from PIL import Image
+        human_factor = utility.HUMAN_FACTOR
 
         all_img = resize(frames[0], (self._board_size*human_factor, self._board_size*human_factor), interp='nearest')
         other_imgs = [
