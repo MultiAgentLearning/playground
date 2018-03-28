@@ -27,7 +27,7 @@ CONTROLS = {
 class PlayerAgent(BaseAgent):
     """The Player Agent that lets the user control a character."""
 
-    def __init__(self, agent=characters.Agent, key_control='arrows'):
+    def __init__(self, agent=characters.Bomber, key_control='arrows'):
         super(PlayerAgent, self).__init__(agent)
 
         assert key_control in CONTROLS.keys()

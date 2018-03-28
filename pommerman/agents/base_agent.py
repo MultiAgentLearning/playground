@@ -4,7 +4,7 @@ from .. import characters
 class BaseAgent:
     """Parent abstract Agent."""
 
-    def __init__(self, agent=characters.Agent):
+    def __init__(self, agent=characters.Bomber):
         self._agent = agent
 
     def __getattr__(self, attr):
