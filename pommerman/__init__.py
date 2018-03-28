@@ -10,7 +10,8 @@ registry = None
 
 
 def _register():
-    local_registry = []
+    global registry
+    registry = []
     for name, f in inspect.getmembers(configs, inspect.isfunction):
         config = f()
         gym.envs.registration.register(
@@ -18,8 +19,7 @@ def _register():
             entry_point=config['env_entry_point'],
             kwargs=config['env_kwargs']
         )
-        local_registry.append(config['env_id'])
-    return local_registry
+        registry.append(config['env_id'])
 
 
 def make(config_id, agent_list, game_state_file=None):
@@ -37,4 +37,4 @@ def make(config_id, agent_list, game_state_file=None):
 
 
 # Register environments with gym
-registry = _register()
+_register()
