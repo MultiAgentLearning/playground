@@ -68,7 +68,6 @@ class WrappedEnv(OpenAIGym):
         all_actions.insert(self.gym.training_agent, actions)
         state, reward, terminal, _ = self.gym.step(all_actions)
         agent_state = featurize(state[self.gym.training_agent])
-
         agent_reward = reward[self.gym.training_agent]
         return agent_state, terminal, agent_reward
 
