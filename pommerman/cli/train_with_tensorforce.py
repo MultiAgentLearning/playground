@@ -14,6 +14,7 @@ import docker
 from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
+import numpy as np
 
 from .. import helpers, make
 from ..agents import TensorForceAgent
@@ -26,6 +27,32 @@ def clean_up_agents(agents):
     """Stops all agents"""
     return [agent.shutdown() for agent in agents]
 
+
+def make_np_float(feature):
+    return np.array(feature).astype(np.float32)
+
+def featurize(obs):
+    board = obs["board"].reshape(-1).astype(np.float32)
+    bomb_blast_strength = obs["bomb_blast_strength"].reshape(-1).astype(np.float32)
+    bomb_life = obs["bomb_life"].reshape(-1).astype(np.float32)
+    position = make_np_float(obs["position"])
+    ammo = make_np_float([obs["ammo"], obs["ammo"], obs["ammo"], obs["ammo"]]) # hack for missing observations
+    blast_strength = make_np_float([obs["blast_strength"]])
+    can_kick = make_np_float([obs["can_kick"]])
+
+    teammate = obs["teammate"]
+    if teammate is not None:
+        teammate = teammate.value
+    else:
+        teammate = -1
+    teammate = make_np_float([teammate])
+
+    enemies = obs["enemies"]
+    enemies = [e.value for e in enemies]
+    if len(enemies) < 3:
+        enemies = enemies + [-1]*(3 - len(enemies))
+    enemies = make_np_float(enemies)
+    return np.concatenate((board, bomb_blast_strength, bomb_life, position, ammo, blast_strength, can_kick, teammate, enemies))
 
 class WrappedEnv(OpenAIGym):
     def __init__(self, gym, visualize=False):
@@ -40,13 +67,14 @@ class WrappedEnv(OpenAIGym):
         all_actions = self.gym.act(obs)
         all_actions.insert(self.gym.training_agent, actions)
         state, reward, terminal, _ = self.gym.step(all_actions)
-        agent_state = self.gym.featurize(state[self.gym.training_agent])
+        agent_state = featurize(state[self.gym.training_agent])
+
         agent_reward = reward[self.gym.training_agent]
         return agent_state, terminal, agent_reward
 
     def reset(self):
         obs = self.gym.reset()
-        agent_obs = self.gym.featurize(obs[3])
+        agent_obs = featurize(obs[3])
         return agent_obs
 
 
@@ -99,7 +127,7 @@ def main():
         print(type(agent))
         if type(agent) == TensorForceAgent:
             training_agent = agent
-            env.set_training_agent(agent)
+            env.set_training_agent(agent.agent_id)
             break
 
     if args.record_pngs_dir:
