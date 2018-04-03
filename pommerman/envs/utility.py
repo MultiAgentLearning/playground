@@ -263,6 +263,10 @@ def is_valid_direction(board, position, direction, invalid_values=None):
     raise InvalidAction("We did not receive a valid direction: ", direction)
 
 
+def _position_is_item(board, position, item):
+    return board[position] == item.value
+
+
 def position_is_powerup(board, position):
     powerups = [Item.ExtraBomb, Item.IncrRange, Item.Kick, Item.Skull]
     item_values = [item.value for item in powerups]
@@ -270,15 +274,15 @@ def position_is_powerup(board, position):
 
 
 def position_is_bomb(board, position):
-    return board[position] == Item.Bomb.value
+    return _position_is_item(board, position, Item.Bomb)
 
 
 def position_is_passage(board, position):
-    return board[position] == Item.Passage.value
+    return _position_is_item(board, position, Item.Passage)
 
 
 def position_is_rigid(board, position):
-    return board[position] == Item.Rigid.value
+    return _position_is_item(board, position, Item.Rigid)
 
 
 def position_is_agent(board, position):
@@ -294,10 +298,6 @@ def position_is_enemy(board, position, enemies):
     return Item(board[position]) in enemies
 
 
-def agent_value(id_):
-    return getattr(Item, 'Agent%d' % id_).value
-
-
 # TODO: Fix this so that it includes the teammate.
 def position_is_passable(board, position, enemies):
     return all([
@@ -309,7 +309,16 @@ def position_is_passable(board, position, enemies):
 
 
 def position_is_fog(board, position):
-    return board[position] == Item.Fog.value
+    return _position_is_item(board, position, Item.Fog)
+
+
+def agent_value(id_):
+    return getattr(Item, 'Agent%d' % id_).value
+
+
+def position_in_items(board, position, items):
+    return any([_position_is_item(board, position, item)
+                for item in items])
 
 
 def position_on_board(board, position):
