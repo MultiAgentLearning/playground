@@ -710,21 +710,29 @@ class ForwardModel(object):
 
     @staticmethod
     def get_rewards(agents, game_type, step_count, max_steps):
-        alive_agents = [num for num, agent in enumerate(agents) if agent.is_alive]
+        def any_lst_equal(lst, values):
+            return any([lst == v for v in values])
+
+        alive_agents = [num for num, agent in enumerate(agents) \
+                        if agent.is_alive]
         if game_type == GameType.FFA:
-            ret = [-1]*4
             if len(alive_agents) == 1 or step_count >= max_steps:
-                for num in alive_agents:
-                    ret[num] = 1
+                # Game is over. All of the alive agents get reward.
+                return [2*int(agent.is_alive) - 1 for agent in agents]
             else:
-                for num in alive_agents:
-                    ret[num] = 0
-            return ret
-        elif alive_agents == [0, 2] or alive_agents == [0] or alive_agents == [2]:
-            return [1, -1, 1, -1]
-        elif alive_agents == [1, 3] or alive_agents == [1] or alive_agents == [3]:
-            return [-1, 1, -1, 1]
-        elif step_count >= max_steps:
-            return [1]*4
+                # Game running: 0 for alive, -1 for dead.
+                return [int(agent.is_alive) - 1 for agent in agents]
         else:
-            return [0]*4
+            # We are playing a team game.
+            if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
+                # Team [0, 2] wins.
+                return [1, -1, 1, -1]
+            elif any_lst_equal(alive_agents, [[1, 3], [1], [3]]):
+                # Team [1, 3] wins.
+                return [-1, 1, -1, 1]
+            elif step_count >= max_steps:
+                # Game is over by max_steps. All agents tie.
+                return [1]*4
+            else:
+                # No team has yet won or lost.
+                return [0]*4
