@@ -23,7 +23,8 @@ AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]]
 # color for each of the items.
 ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51],
                [241, 196, 15], [141, 137, 124]]
-ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)]
+ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169),
+                (48, 117, 117)]
 # If using collapsing boards, the step at which the board starts to collapse.
 FIRST_COLLAPSE = 500 
 MAX_STEPS = 2500
@@ -189,7 +190,6 @@ def make_board(size, num_rigid=0, num_wood=0):
 
     # Make sure it's possible to reach most of the passages.
     while len(inaccessible_passages(board, agents)) > 4:
-        print('Re-making board - has too many unreachable passages.')
         board, agents = make(size, num_rigid, num_wood)
 
     return board
@@ -243,7 +243,8 @@ def inaccessible_passages(board, agent_positions):
 
 def is_valid_direction(board, position, direction, invalid_values=None):
     row, col = position
-    invalid_values = invalid_values or [item.value for item in [Item.Rigid, Item.Wood]]
+    invalid_values = invalid_values or [item.value for item \
+                                        in [Item.Rigid, Item.Wood]]
 
     if Action(direction) == Action.Stop:
         return True
@@ -258,15 +259,15 @@ def is_valid_direction(board, position, direction, invalid_values=None):
         return col - 1 >= 0 and board[row][col-1] not in invalid_values
 
     if Action(direction) == Action.Right:
-        return col + 1 < len(board[0]) and board[row][col+1] not in invalid_values
+        return col + 1 < len(board[0]) and \
+            board[row][col+1] not in invalid_values
 
     raise InvalidAction("We did not receive a valid direction: ", direction)
 
 
 def position_is_powerup(board, position):
-    item_values = [
-        item.value for item in [Item.ExtraBomb, Item.IncrRange, Item.Kick, Item.Skull]
-    ]
+    powerups = [Item.ExtraBomb, Item.IncrRange, Item.Kick, Item.Skull]
+    item_values = [item.value for item in powerups]
     return board[position] in item_values
 
 
@@ -323,7 +324,10 @@ def position_on_board(board, position):
 
 
 def get_direction(position, next_position):
-    """Gets the action value that goes from position --> next_position. Assumes that they are adjacent."""
+    """Get the direction such that position --> next_position.
+
+    We assume that they are adjacent.
+    """
     x, y = position
     nx, ny = next_position
     if x == nx:
