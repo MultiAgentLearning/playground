@@ -81,7 +81,6 @@ class Action(Enum):
     Left = 3
     Right = 4
     Bomb = 5
-    Pause = 6 # This pauses the game for 5 minutes.
 
 
 class Result(Enum):
