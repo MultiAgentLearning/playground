@@ -74,10 +74,7 @@ class ForwardModel(object):
         """
         def act_ex_communication(agent):
             if agent.is_alive:
-                action = agent.act(obs[agent.agent_id], action_space=action_space)
-                if action == Action.Pause.value:
-                    time.sleep(300)
-                return action
+                return agent.act(obs[agent.agent_id], action_space=action_space)
             else:
                 return utility.Action.Stop.value
 
@@ -87,10 +84,6 @@ class ForwardModel(object):
                 if type(action) == int:
                     action = [action] + [0, 0]
                 assert(type(action) == list)
-
-                # So humans can stop the game.
-                if action[0] == 6:
-                    time.sleep(300)
                 return action
             else:
                 return [utility.Action.Stop.value, 0, 0]
