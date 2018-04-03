@@ -18,27 +18,42 @@ TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
 DEFAULT_BOMB_LIFE = 25
-AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]] # color for each of the 4 agents
-ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51], [241, 196, 15], [141, 137, 124]]
-ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)] # ExtraBomb, IncrRange, etc. 
-FIRST_COLLAPSE = 500 # If using V1, the first step at which the board starts to collapse.
+# color for each of the 4 agents
+AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]]
+# color for each of the items.
+ITEM_COLORS = [[240,248,255], [128,128,128], [210,180,140], [255, 153, 51],
+               [241, 196, 15], [141, 137, 124]]
+ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169), (48, 117, 117)]
+# If using collapsing boards, the step at which the board starts to collapse.
+FIRST_COLLAPSE = 500 
 MAX_STEPS = 2500
 RADIO_VOCAB_SIZE = 8
 RADIO_NUM_WORDS = 2
 
 
 class Item(Enum):
+    """The Items in the game.
+
+    When picked up:
+      - ExtraBomb increments the agent's ammo by 1.
+      - IncrRange increments the agent's blast strength by 1.
+      - Skull randomly decrements ammo (bounded by 1), decrements
+        blast_strength (bounded by 2), or increments blast_strength by 2.
+
+    AgentDummy is used by team games to denote the third enemy and by ffa to
+    denote the teammate.
+    """
     Passage = 0
     Rigid = 1
     Wood = 2
     Bomb = 3
     Flames = 4
     Fog = 5
-    ExtraBomb = 6 # adds ammo.
-    IncrRange = 7 # increases the blast_strength
-    Kick = 8 # can kick bombs by touching them.
-    Skull = 9 # randomly reduces ammo (bounded by 1), reduces blast_strength (bounded by 2), or increases blast_strength by 2.
-    AgentDummy = 10 # used by team games to denote the third enemy and by ffa to denote the teammate.
+    ExtraBomb = 6
+    IncrRange = 7
+    Kick = 8
+    Skull = 9
+    AgentDummy = 10
     Agent0 = 11
     Agent1 = 12
     Agent2 = 13
@@ -46,11 +61,16 @@ class Item(Enum):
 
 
 class GameType(Enum):
-    # 1v1v1v1. You submit an agent and it competes against other single agents.
+    """The Game Types.
+
+    FFA: 1v1v1v1. Submit an agent; it competes against other submitted agents.
+    Team: 2v2. Submit an agent; it is matched up randomly with another agent
+      and together take on two other similarly matched agents.
+    TeamRadio: 2v2. Submit two agents; they are matched up against two other
+      agents. Each team passes discrete communications to each other.
+    """
     FFA = 1 
-    # 2v2: You submit one agent. It is matched up randomly with another agent and together take on two other similarly matched agents.
     Team = 2
-    # 2v2: You submit two agents. They are matched up against two other agents. Each team passes discrete communications to each other.
     TeamRadio = 3
 
 
@@ -99,10 +119,7 @@ def make_board(size, num_rigid=0, num_wood=0):
     Returns:
       board: The resulting random board.
     """
-    assert(num_rigid % 2 == 0)
-    assert(num_wood % 2 == 0)
-
-    def lay_wall(value, num_left):
+    def lay_wall(value, num_left, coordinates, board):
         x, y = random.sample(coordinates, 1)[0]
         coordinates.remove((x, y))
         coordinates.remove((y, x))
@@ -111,51 +128,69 @@ def make_board(size, num_rigid=0, num_wood=0):
         num_left -= 2
         return num_left
 
-    if num_rigid is None:
-        num_rigid = size
-    _num_rigid = num_rigid
-    _num_wood = num_wood
+    def make(size, num_rigid, num_wood):
+        # Initialize everything as a passage.
+        board = np.ones((size, size)).astype(np.uint8) * Item.Passage.value
 
-    # Initialize everything as a passage.
-    board = np.ones((size, size)).astype(np.uint8) * Item.Passage.value
+        # Gather all the possible coordinates to use for walls.
+        coordinates = set([
+            (x, y) for x, y in \
+            itertools.product(range(size), range(size)) \
+            if x != y])
 
-    # Gather all the possible coordinates to use for walls.
-    coordinates = set([(x, y) for x, y in itertools.product(range(size), range(size)) if x != y])
+        # Set the players down. Exclude them from coordinates.
+        board[1, 1] = Item.Agent0.value
+        board[size-2, 1] = Item.Agent1.value
+        board[size-2, size-2] = Item.Agent2.value
+        board[1, size-2] = Item.Agent3.value
+        agents = [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]
+        for position in agents:
+            if position in coordinates:
+                coordinates.remove(position)
 
-    # Set the players down. Exclude them from coordinates.
-    board[1, 1] = Item.Agent0.value
-    board[size-2, 1] = Item.Agent1.value
-    board[size-2, size-2] = Item.Agent2.value
-    board[1, size-2] = Item.Agent3.value
-    agents = [(1, 1), (size-2, 1), (1, size-2), (size-2, size-2)]
-    for position in agents:
-        if position in coordinates:
-            coordinates.remove(position)
+        # Exclude breathing room on either side of the agents.
+        for i in range(2, 4):
+            coordinates.remove((1, i))
+            coordinates.remove((i, 1))
+            coordinates.remove((1, size-i-1))
+            coordinates.remove((size-i-1, 1))
+            coordinates.remove((size-2, size-i-1))
+            coordinates.remove((size-i-1, size-2))
+            coordinates.remove((i, size-2))
+            coordinates.remove((size-2, i))
 
-    # Exclude breathing room on either side of the agents.
-    for i in range(2, 4):
-        coordinates.remove((1, i))
-        coordinates.remove((i, 1))
-        coordinates.remove((1, size-i-1))
-        coordinates.remove((size-i-1, 1))
-        coordinates.remove((size-2, size-i-1))
-        coordinates.remove((size-i-1, size-2))
-        coordinates.remove((i, size-2))
-        coordinates.remove((size-2, i))
+        # Lay down wooden walls providing guaranteed passage to other agents.
+        wood = Item.Wood.value
+        for i in range(4, size-4):
+            board[1, i] = wood
+            board[size-i-1, 1] = wood
+            board[size-2, size-i-1] = wood
+            board[size-i-1, size-2] = wood
+            coordinates.remove((1, i))
+            coordinates.remove((size-i-1, 1))
+            coordinates.remove((size-2, size-i-1))
+            coordinates.remove((size-i-1, size-2))
+            num_wood -= 4
 
-    # Lay down the rigid walls.
-    while num_rigid > 0:
-        num_rigid = lay_wall(Item.Rigid.value, num_rigid)
+        # Lay down the rigid walls.
+        while num_rigid > 0:
+            num_rigid = lay_wall(Item.Rigid.value, num_rigid, coordinates,
+                                 board)
 
-    # Lay down the wooden walls.
-    while num_wood > 0:
-        num_wood = lay_wall(Item.Wood.value, num_wood)
+        # Lay down the wooden walls.
+        while num_wood > 0:
+            num_wood = lay_wall(Item.Wood.value, num_wood, coordinates, board)
 
-    # Make sure it's possible for the agents to reach each other.
-    if not is_accessible(board, agents):
-        # TODO: This is excessive. Fix it.
-        # print('This board has unreachable passages or agents. Re-making...')
-        return make_board(size, _num_rigid, _num_wood)
+        return board, agents
+
+    assert(num_rigid % 2 == 0)
+    assert(num_wood % 2 == 0)
+    board, agents = make(size, num_rigid, num_wood)
+
+    # Make sure it's possible to reach most of the passages.
+    while len(inaccessible_passages(board, agents)) > 4:
+        print('Re-making board - has too many unreachable passages.')
+        board, agents = make(size, num_rigid, num_wood)
 
     return board
 
@@ -177,20 +212,12 @@ def make_items(board, num_items):
     return item_positions
 
 
-def is_accessible(board, agent_positions):
-    """Return true if this board is accessible.
-
-    That means two thigns:
-    1. All of the agents can reach each other.
-    2. Every passage can be reached.
-    """
+def inaccessible_passages(board, agent_positions):
+    """Return inaccessible passages on this board."""
     seen = set()
     agent_position = agent_positions.pop()
     passage_positions = np.where(board == Item.Passage.value)
-    positions = agent_positions
-    positions.extend(list(zip(passage_positions[0], passage_positions[1])))
-    # wood_positions = np.where(board == Item.Wood.value)
-    # positions.extend(list(zip(wood_positions[0], wood_positions[1])))
+    positions = list(zip(passage_positions[0], passage_positions[1]))
 
     Q = [agent_position]
     while Q:
@@ -207,11 +234,11 @@ def is_accessible(board, agent_positions):
             if next_position in positions:
                 positions.pop(positions.index(next_position))
                 if not len(positions):
-                    return True
+                    return []
 
             seen.add(next_position)
             Q.append(next_position)
-    return False
+    return positions
     
 
 def is_valid_direction(board, position, direction, invalid_values=None):
@@ -273,7 +300,12 @@ def agent_value(id_):
 
 
 def position_is_passable(board, position, enemies):
-    return any([position_is_agent(board, position), position_is_powerup(board, position) or position_is_passage(board, position)]) and not position_is_enemy(board, position, enemies)
+    return all([
+        any([position_is_agent(board, position),
+             position_is_powerup(board, position),
+             position_is_passage(board, position)]),
+        not position_is_enemy(board, position, enemies)
+    ])
 
 
 def position_is_fog(board, position):
@@ -333,7 +365,7 @@ def make_np_float(feature):
 class ForwardModel(object):
     """Class for helping with the [forward] modeling. Abstracts out the game state."""
 
-    def run(self, num_times, board, agents, bombs, items, flames, is_partially_observable, agent_view_size, action_space, is_communicative=False):
+    def run(self, num_times, board, agents, bombs, items, flames, is_partially_observable, agent_view_size, action_space, training_agent=None, is_communicative=False):
         """Run the forward model.
 
         Args:
@@ -346,6 +378,7 @@ class ForwardModel(object):
           is_partially_observable: Whether the board is partially observable or not. Only applies to TeamRadio.
           agent_view_size: If it's partially observable, then the size of the square that the agent can view.
           action_space: The actions that each agent can take.
+          training_agent: The training agent to pass to done.
           is_communicative: Whether the action depends on communication observations as well.
 
         Returns:
@@ -360,12 +393,17 @@ class ForwardModel(object):
         """
         steps = []
         for _ in num_times:
-            obs = self.get_observations(board, agents, bombs, is_partially_observable, agent_view_size)
-            actions = self.act(agents, obs, action_space, is_communicative=is_communicative)
-            board, agents, bombs, items, flames = self.step(actions, board, agents, bombs, items, flames)
-            next_obs = self.get_observations(board, agents, bombs, is_partially_observable, agent_view_size)
+            obs = self.get_observations(
+                board, agents, bombs, is_partially_observable, agent_view_size)
+            actions = self.act(agents, obs, action_space,
+                               is_communicative=is_communicative)
+            board, agents, bombs, items, flames = self.step(
+                actions, board, agents, bombs, items, flames)
+            next_obs = self.get_observations(
+                board, agents, bombs, is_partially_observable, agent_view_size)
             reward = self.get_rewards(agents, game_type, step_count, max_steps)
-            done = self.get_done(agents, game_type, step_count, max_steps, training_agent)
+            done = self.get_done(agents, game_type, step_count, max_steps,
+                                 training_agent)
             info = self.get_info(done, rewards, game_type, agents)
 
             steps.append({
@@ -422,7 +460,8 @@ class ForwardModel(object):
         return ret
 
     @staticmethod
-    def step(actions, curr_board, curr_agents, curr_bombs, curr_items, curr_flames):
+    def step(actions, curr_board, curr_agents, curr_bombs, curr_items,
+             curr_flames):
         board_size = len(curr_board)
 
         # Tick the flames. Replace any dead ones with passages. If there is an item there, then reveal that item.
@@ -555,7 +594,8 @@ class ForwardModel(object):
             curr_board[bomb.position] = Item.Bomb.value
 
         for agent in curr_agents:
-            curr_board[np.where(curr_board == agent_value(agent.agent_id))] = Item.Passage.value
+            position = np.where(curr_board == agent_value(agent.agent_id))
+            curr_board[position] = Item.Passage.value
             if agent.is_alive:
                 curr_board[agent.position] = agent_value(agent.agent_id)
 
@@ -645,20 +685,28 @@ class ForwardModel(object):
             elif done:
                 return {
                     'result': Result.Win,
-                    'winners': [num for num, reward in enumerate(rewards) if reward == 1]
+                    'winners': [num for num, reward in enumerate(rewards) \
+                                if reward == 1],
                 }
             else:
-                return {'result': Result.Incomplete}
+                return {
+                    'result': Result.Incomplete,
+                }
         elif done:
             if rewards == [1]*4:
-                return {'result': Result.Tie}
+                return {
+                    'result': Result.Tie,
+                }
             else:
                 return {
                     'result': Result.Win,
-                    'winners': [num for num, reward in enumerate(rewards) if reward == 1]
+                    'winners': [num for num, reward in enumerate(rewards) \
+                                if reward == 1],
                 }
         else:
-            return {'result': Result.Incomplete}
+            return {
+                'result': Result.Incomplete,
+            }
 
     @staticmethod
     def get_rewards(agents, game_type, step_count, max_steps):
