@@ -32,6 +32,8 @@ $ pip install -U .
 
 # Examples
 
+**NOTE**: There can only be **four** agents in the game.
+
 ## A Simple Example
 
 A simple game run in a Free-For-All configuration can be found in [simple_ffa_run.py](../examples/simple_ffa_run.py) which
@@ -63,4 +65,16 @@ agent_list = [
 ]
 ```
 
-**NOTE**: There can only be **four** agents in the game.
+## Playing an interactive game
+
+One can also become a player in the game by using [PlayerAgent](../pommerman/agents/player_agent.py). Let us
+replace both `RandomAgent`s in the simple example by two human players.
+
+```python
+agent_list = [
+    agents.SimpleAgent(),
+    agents.PlayerAgent(agent_control="arrows"), # arrows to move, space to lay bomb
+    agents.SimpleAgent(),
+    agents.PlayerAgent(agent_control="wasd"), # W,A,S,D to move, E to lay bomb
+]
+```
