@@ -34,7 +34,7 @@ $ pip install -U .
 
 ## A Simple Example
 
-A simple game run in a Free-For-All configuration can be found in [example_game.py](../examples/simple_ffa_run.py) which
+A simple game run in a Free-For-All configuration can be found in [simple_ffa_run.py](../examples/simple_ffa_run.py) which
 places two [SimpleAgent](../pommerman/agents/simple_agent.py)s and two [RandomAgent](../pommerman/agents/random_agent.py)s
 on the board.
 
