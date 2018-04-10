@@ -13,3 +13,4 @@ class DummyAgent(BaseAgent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_alive = False
+        self._agent_type = 'dummy'

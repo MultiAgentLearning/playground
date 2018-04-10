@@ -45,7 +45,7 @@ class Pomme(v0.Pomme):
         elif self._game_type == constants.GameType.Team or \
                                 self._game_type == constants.GameType.TeamRadio:
             alive = [agent for agent in self._agents if agent.is_alive]
-            if done and len(alive) < 4:
+            if done and len(alive) < len([x for x in self._agents if x._agent_type != 'dummy']):
                 team1 = []
                 team2 = []
                 for agent in alive:
@@ -62,7 +62,7 @@ class Pomme(v0.Pomme):
                         'result': constants.Result.Win,
                         'winners': [num for num, reward in enumerate(rewards) if reward == 1]
                     }
-            elif done and len(alive) == 4:
+            elif done and len(alive) == len([x for x in self._agents if x._agent_type != 'dummy']):
                 return {'result': constants.Result.Lose}
             else:
                 return {'result': constants.Result.Incomplete}
