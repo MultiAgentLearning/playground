@@ -24,7 +24,7 @@ class Pomme(v0.Pomme):
         alive_ids = sorted([agent.agent_id for agent in alive])
         if self._step_count >= self._max_steps:
             return True
-        elif len(alive) < 4:
+        elif len(alive) < len([x for x in self._agents if x._agent_type != 'dummy']):
             return True
         return False
 
