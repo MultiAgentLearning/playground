@@ -2,8 +2,8 @@
 
 The game ends when any agent dies. In FFA, all other agents win. In any of the team
 modes, the team with the most remaining players wins. If all players die at the same
-time or the same number of players die on each time, the game ends in a tie. All
-players/teams win if the game ends without anyone dying.
+time or the same number of players die on each team, the game ends in a tie. All
+players/teams lose if the game ends without anyone dying.
 """
 from .. import constants
 from .. import forward_model
@@ -62,23 +62,18 @@ class Pomme(v0.Pomme):
                         'result': constants.Result.Win,
                         'winners': [num for num, reward in enumerate(rewards) if reward == 1]
                     }
+            elif done and len(alive) == 4:
+                return {'result': constants.Result.Lose}
             else:
                 return {'result': constants.Result.Incomplete}
-        elif done:
-            if rewards == [1]*4:
-                return {'result': constants.Result.Tie}
-            else:
-                return {
-                    'result': constants.Result.Win,
-                    'winners': [num for num, reward in enumerate(rewards) if reward == 1]
-                }
-        else:
-            return {'result': constants.Result.Incomplete}
+
 
     def _get_rewards(self):
         alive_agents = [num for num, agent in enumerate(self._agents) if agent.is_alive]
         if len(alive_agents) == 0:
             return [0]*4
+        elif len(alive_agents) == 4:
+            return [-1]*4
         elif self._game_type == constants.GameType.FFA:
             ret = [-1]*4
             if len(alive_agents) > 0 or self._step_count >= self._max_steps:
@@ -92,11 +87,11 @@ class Pomme(v0.Pomme):
                                 self._game_type == constants.GameType.TeamRadio:
             team1 = []
             team2 = []
-            for agentnum in alive_agents:
-                if agentnum == 0 or agentnum == 2:
-                    team1.append(agentnum)
+            for num_agent in alive_agents:
+                if num_agent == 0 or num_agent == 2:
+                    team1.append(num_agent)
                 else:
-                    team2.append(agentnum)
+                    team2.append(num_agent)
             if len(team1) == len(team2):
                 return [0]*4
             else:
@@ -104,7 +99,3 @@ class Pomme(v0.Pomme):
                     return [1, -1, 1, -1]
                 else:
                     return [-1, 1, -1, 1]
-        elif self._step_count >= self._max_steps:
-            return [1]*4
-        else:
-            return [0]*4
