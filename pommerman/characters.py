@@ -9,7 +9,7 @@ from . import utility
 class Bomber(object):
     """Container to keep the agent state."""
 
-    def __init__(self, agent_id=None, game_type=None):
+    def __init__(self, agent_id=None, game_type=None, agent_type=None):
         self._game_type = game_type
         self.ammo = 1
         self.is_alive = True
@@ -17,6 +17,7 @@ class Bomber(object):
         self.can_kick = False
         if agent_id is not None:
             self.set_agent_id(agent_id)
+        self._agent_type = agent_type
 
     def set_agent_id(self, agent_id):
         self.agent_id = agent_id

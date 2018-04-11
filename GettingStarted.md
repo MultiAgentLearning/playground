@@ -36,17 +36,22 @@ Then you can play the game by running any of the following examples.
 
 Free-For-All (FFA)
 ```
-$ pom_battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
+$ pom_battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFA-v0
 ```
 
 An example with one player, two random agents, and one test agent:
 ```
-$ pom_battle --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=ffa_v0
+$ pom_battle --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=PommeFFA-v0
 ```
 
 A two-player, two-agent game:
 ```
-$ pom_battle --agents=player::arrows,player::wasd,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
+$ pom_battle --agents=player::arrows,player::wasd,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFA-v0
+```
+
+A fast two-agent game of 1v1:
+```
+$ pom_battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.DummyAgent,test::agents.DummyAgent --config=PommeFFAFast-v0
 ```
 
 ### Closing the environment
