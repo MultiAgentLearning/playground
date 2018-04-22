@@ -38,8 +38,8 @@ To see the ways you can get invovled with the project head over to our [Contribu
 
 # Contributing
 
-See [CONTRIBUTING](../CONTRIBUTING.md)
+We welcome contributions through pull request. See [CONTRIBUTING](../CONTRIBUTING.md) for more details.
 
 # Code of Conduct
 
-See [CODE OF CONDUCT](../CODE_OF_CONDUCT.md)
+We strive for an open community. Please read over our [CODE OF CONDUCT](../CODE_OF_CONDUCT.md)
