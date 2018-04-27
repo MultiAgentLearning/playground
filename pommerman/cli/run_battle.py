@@ -101,9 +101,6 @@ def main():
     docker_agent = 'docker::pommerman/simple-agent'
     
     parser = argparse.ArgumentParser(description='Playground Flags.')
-    parser.add_argument('--game',
-                        default='pommerman',
-                        help='Game to choose.')
     parser.add_argument('--config',
                         default='PommeFFA-v0',
                         help='Configuration to execute. See env_ids in '
