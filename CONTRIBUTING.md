@@ -43,3 +43,8 @@ The general workflow for commiting code.
 ## Discord
 
 Discussions, correspondence, and announcements often happen in Discord. You can get access through our [Discord invite.](https://discord.gg/wjVJEDc)
+
+## Formating
+
+**Spacing** - In between methods in classes use one line space. Functions, Classes, and groups of variables outside of a Class use two line spaces.
+
