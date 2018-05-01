@@ -159,8 +159,8 @@ class ForwardModel(object):
                     elif not agent.can_kick:
                         agent.stop()
                     else:
-                        invalid_values = list(range(len(constants.Item)+1))[1:]
-                        if not utility.is_valid_direction(curr_board, next_position, action, invalid_values=invalid_values):
+                        after_next_position = utility.get_next_position(next_position, constants.Action(action))
+                        if not utility.position_on_board(curr_board, after_next_position) or not utility.position_is_passage(curr_board, after_next_position):
                             agent.stop()
                         else:
                             next_positions[agent.agent_id] = next_position
