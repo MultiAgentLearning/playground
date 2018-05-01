@@ -7,7 +7,6 @@ import json
 import os
 
 import numpy as np
-from scipy.misc import imresize as resize
 import time
 from gym import spaces
 from gym.utils import seeding
@@ -16,12 +15,13 @@ import gym
 from .. import characters
 from .. import constants
 from .. import forward_model
+from .. import graphics
 from .. import utility
 
 
 class Pomme(gym.Env):
     metadata = {
-        'render.modes': ['human', 'rgb_array'],
+        'render.modes': ['human', 'rgb_array', 'rgb_pixel'],
     }
 
     def __init__(self,
@@ -51,6 +51,10 @@ class Pomme(gym.Env):
         self.training_agent = None
         self.model = forward_model.ForwardModel()
 
+        # This can be changed through set_render_mode
+        # or from the cli tool using '--render_mode=MODE_TYPE'
+        self._mode = 'human'
+
         # Observation and Action Spaces. These are both geared towards a single
         # agent even though the environment expects actions and returns
         # observations for all four agents. We do this so that it's clear what
@@ -61,6 +65,9 @@ class Pomme(gym.Env):
 
     def _set_action_space(self):
         self.action_space = spaces.Discrete(6)
+
+    def set_render_mode(self, mode):
+        self._mode = mode
 
     def _set_observation_space(self):
         """The Observation Space for each agent.
@@ -171,64 +178,37 @@ class Pomme(gym.Env):
         self._step_count += 1
         return obs, reward, done, info
 
-    def _render_frames(self):
-        agent_view_size = constants.AGENT_VIEW_SIZE
-        frames = []
-
-        all_frame = np.zeros((self._board_size, self._board_size, 3))
-        num_items = len(constants.Item)
-        for row in range(self._board_size):
-            for col in range(self._board_size):
-                value = self._board[row][col]
-                if utility.position_is_agent(self._board, (row, col)):
-                    num_agent = value - num_items
-                    if self._agents[num_agent].is_alive:
-                        all_frame[row][col] = constants.AGENT_COLORS[num_agent]
-                else:
-                    all_frame[row][col] = constants.ITEM_COLORS[value]
-
-        all_frame = np.array(all_frame)
-        frames.append(all_frame)
-
-        for agent in self._agents:
-            row, col = agent.position
-            my_frame = all_frame.copy()
-            for r in range(self._board_size):
-                for c in range(self._board_size):
-                    if self._is_partially_observable and not all([
-                            row >= r - agent_view_size, row < r + agent_view_size,
-                            col >= c - agent_view_size, col < c + agent_view_size
-                    ]):
-                        my_frame[r, c] = constants.ITEM_COLORS[constants.Item.Fog.value]
-            frames.append(my_frame)
-
-        return frames
-
-    def render(self, mode='human', close=False, record_pngs_dir=None, record_json_dir=None):
+    def render(self, mode=None, close=False, record_pngs_dir=None, record_json_dir=None):
         if close:
             self.close()
             return
+        
+        mode = mode
 
-        frames = self._render_frames()
+        if self._mode is not None:
+            mode = self._mode
+        elif mode is None:
+            mode = 'human'
+
         if mode == 'rgb_array':
-            return frames[0]
-
-        from PIL import Image
-        human_factor = constants.HUMAN_FACTOR
-
-        all_img = resize(frames[0], (self._board_size*human_factor, self._board_size*human_factor), interp='nearest')
-        other_imgs = [
-            resize(frame, (int(self._board_size*human_factor/4), int(self._board_size*human_factor/4)), interp='nearest')
-            for frame in frames[1:]
-        ]
-
-        other_imgs = np.concatenate(other_imgs, 0)
-        img = np.concatenate([all_img, other_imgs], 1)
+            rgb_array = graphics.PixelViewer.rgb_array(self._board, self._board_size, self._agents, self._is_partially_observable)
+            return rgb_array[0]
 
         if self._viewer is None:
-            from gym.envs.classic_control import rendering
-            self._viewer = rendering.SimpleImageViewer()
-            self._viewer.imshow(img)
+            if mode == 'rgb_pixel':
+                self._viewer = graphics.PixelViewer(board_size=self._board_size,
+                                                    agents=self._agents, 
+                                                    partially_observable=self._is_partially_observable)
+            else:
+                self._viewer = graphics.PommeViewer(board_size=self._board_size,
+                                                    agents=self._agents, 
+                                                    partially_observable=self._is_partially_observable,
+                                                    game_type=self._game_type)
+
+            self._viewer.set_board(self._board)
+            self._viewer.set_agents(self._agents)
+            self._viewer.set_step(self._step_count)
+            self._viewer.render()
 
             # Register all agents which need human input with Pyglet.
             # This needs to be done here as the first `imshow` creates the window.
@@ -238,10 +218,13 @@ class Pomme(gym.Env):
                 if agent.has_user_input():
                     self._viewer.window.push_handlers(agent)
         else:
-            self._viewer.imshow(img)
+            self._viewer.set_board(self._board)
+            self._viewer.set_agents(self._agents)
+            self._viewer.set_step(self._step_count)
+            self._viewer.render()
 
         if record_pngs_dir:
-            Image.fromarray(img).save(os.path.join(record_pngs_dir, '%d.png' % self._step_count))
+            self._viewer.save(record_pngs_dir)
         if record_json_dir:
             info = self.get_json_info()
             with open(os.path.join(record_json_dir, '%d.json' % self._step_count), 'w') as f:
