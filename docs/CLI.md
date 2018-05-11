@@ -60,5 +60,5 @@ Pommerman comes with a trainable agent out of the box. The agent uses a Proximal
 An example with all three simple agents running ffa:
 
 ```bash
-pom_tf_battle --agents=tensorforce::ppo,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=ffa_v0
+pom_tf_battle --agents=tensorforce::ppo,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFA-v0
 ```

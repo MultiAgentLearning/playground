@@ -7,7 +7,7 @@ and then report back the result.
 An example with all three simple agents running ffa:
 python train_with_tensorforce.py \
  --agents=tensorforce::ppo,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent \
- --config=ffa_v0
+ --config=PommeFFA-v0
 """
 import atexit
 import functools
