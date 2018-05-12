@@ -38,7 +38,7 @@ class SimpleAgent(BaseAgent):
         enemies = [constants.Item(e) for e in obs['enemies']]
         ammo = int(obs['ammo'])
         blast_strength = int(obs['blast_strength'])
-        items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=8)
+        items, dist, prev = self._djikstra(board, my_position, bombs, enemies, depth=10)
 
         # Move if we are in an unsafe place.
         unsafe_directions = self._directions_in_range_of_bomb(board, my_position, bombs, dist)
