@@ -47,7 +47,7 @@ class Pomme(v0.Pomme):
                 num_agent = board[r][c] - constants.Item.Agent0.value
                 agent = self._agents[num_agent]
                 agent.die()
-            elif utility.position_is_bomb(board, (r, c)):
+            elif utility.position_is_bomb(self._bombs, (r, c)):
                 # Bomb. Remove the bomb.
                 self._bombs = [b for b in self._bombs if b.position != (r, c)]
             elif (r, c) in self._items:

@@ -171,7 +171,7 @@ class ForwardModel(object):
 
                     # This might be a bomb position. Only move in that case if
                     # the agent can kick.
-                    if not utility.position_is_bomb(curr_board, next_position):
+                    if not utility.position_is_bomb(curr_bombs, next_position):
                         next_positions[agent.agent_id] = next_position
                     elif not agent.can_kick:
                         agent.stop()
@@ -239,12 +239,15 @@ class ForwardModel(object):
             bomb.tick()
             if bomb.is_moving():
                 invalid_values = list(range(len(constants.Item)+1))[1:]
-                if utility.is_valid_direction(
-                        curr_board, bomb.position, bomb.moving_direction.value,
-                        invalid_values=invalid_values):
-                                              
+                bomb_next_position = utility.get_next_position(
+                    bomb.position, bomb.moving_direction)
+                if utility.position_is_passage(curr_board, bomb_next_position):
                     curr_board[bomb.position] = constants.Item.Passage.value
                     bomb.move()
+                elif utility.position_is_flames(curr_board,
+                                                bomb_next_position):
+                    bomb.move()
+                    bomb.fire()
                 else:
                     bomb.stop()
 
