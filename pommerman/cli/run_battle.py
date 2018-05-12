@@ -129,9 +129,10 @@ def main():
                         default=None,
                         help='Directory to record the JSON representations of '
                         "the game. Doesn't record if None.")
-    parser.add_argument('--render',
-                        default=True,
-                        help="Whether to render or not. Defaults to True.")
+    parser.add_argument("--render",
+                        default=False,
+                        action='store_true',
+                        help="Whether to render or not. Defaults to False.")
     parser.add_argument('--render_mode',
                         default='human',
                         help="What mode to render. Options are human, rgb_pixel, and rgb_array")

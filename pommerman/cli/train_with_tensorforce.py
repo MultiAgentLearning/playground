@@ -84,8 +84,9 @@ def main():
                         help="Directory to record the JSON representations of "
                         "the game. Doesn't record if None.")
     parser.add_argument("--render",
-                        default=True,
-                        help="Whether to render or not. Defaults to True.")
+                        default=False,
+                        action='store_true',
+                        help="Whether to render or not. Defaults to False.")
     parser.add_argument("--game_state_file",
                         default=None,
                         help="File from which to load game state. Defaults to "
