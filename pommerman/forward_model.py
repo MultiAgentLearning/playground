@@ -141,6 +141,8 @@ class ForwardModel(object):
         # also bounce. A way of doing this is to gather all the new positions
         # before taking any actions. Then, if there are disputes, correct those
         # disputes iteratively.
+        # Additionally, if two agents try to switch spots by moving into each
+        # other's location, then they should also bounce. 
         def make_counter(next_positions):
             counter = defaultdict(list)
             for num, next_position in enumerate(next_positions):
@@ -184,6 +186,26 @@ class ForwardModel(object):
                     agent.stop()
             else:
                 next_positions[agent.agent_id] = None
+
+        for num_agent, agent in enumerate(curr_agents):
+            if not agent.is_alive:
+                continue
+
+            for num_agent2 in range(num_agent+1, len(curr_agents)):
+                agent2 = curr_agents[num_agent2]
+                if not agent2.is_alive:
+                    continue
+
+                # Check if the agents are about to switch into each other's
+                # prior spaces. If so, revert this move.
+                if all([
+                    curr_positions[num_agent] != next_positions[num_agent],
+                    curr_positions[num_agent2] != next_positions[num_agent2],
+                    curr_positions[num_agent] == next_positions[num_agent2],
+                    curr_positions[num_agent2] == next_positions[num_agent]
+                ]):
+                    next_positions[num_agent] = curr_positions[num_agent]
+                    next_positions[num_agent2] = curr_positions[num_agent2]                    
 
         counter = make_counter(next_positions)
         while has_position_conflict(counter):
