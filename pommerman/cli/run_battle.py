@@ -66,11 +66,11 @@ def run(args, num_times=1, seed=None):
         
         print("Final Result: ", info)
         if args.render:
-            time.sleep(5)
             env.render(record_pngs_dir=args.record_pngs_dir,
                        record_json_dir=args.record_json_dir, 
-                       mode=args.render_mode,
-                       close=True)
+                       mode=args.render_mode)
+            time.sleep(5)
+            env.render(close=True)
         return info
 
     infos = []
