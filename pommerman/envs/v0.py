@@ -196,12 +196,7 @@ class Pomme(gym.Env):
             self.close()
             return
         
-        mode = mode
-
-        if self._mode is not None:
-            mode = self._mode
-        elif mode is None:
-            mode = 'human'
+        mode = mode or self._mode or 'human'
 
         if mode == 'rgb_array':
             rgb_array = graphics.PixelViewer.rgb_array(
