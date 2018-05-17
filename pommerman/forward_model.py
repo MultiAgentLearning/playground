@@ -163,9 +163,10 @@ class ForwardModel(object):
                 if action == constants.Action.Stop.value:
                     agent.stop()
                 elif action == constants.Action.Bomb.value:
-                    bomb = agent.maybe_lay_bomb()
-                    if bomb:
-                        curr_bombs.append(bomb)
+                    if not utility.position_is_bomb(curr_bombs, position):
+                        bomb = agent.maybe_lay_bomb()
+                        if bomb:
+                            curr_bombs.append(bomb)
                 elif utility.is_valid_direction(curr_board, position, action):
                     next_position = agent.get_next_position(action)
 
