@@ -104,10 +104,11 @@ class ForwardModel(object):
 
         ret = []
         for agent in agents:
-            if is_communicative:
-                ret.append(act_with_communication(agent))
-            else:
-                ret.append(act_ex_communication(agent))
+            ret.append(act_ex_communication(agent))
+            # if is_communicative:
+            #     ret.append(act_with_communication(agent))
+            # else:
+            #     ret.append(act_ex_communication(agent))
         return ret
 
     @staticmethod

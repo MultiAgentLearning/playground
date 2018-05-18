@@ -72,17 +72,17 @@ class Bomber(object):
             self.ammo = min(self.ammo + 1, 10)
         elif item == constants.Item.IncrRange:
             self.blast_strength = min(self.blast_strength + 1, 10)
-        elif item == constants.Item.Kick:
-            self.can_kick = True
-        elif item == constants.Item.Skull:
-            rand = random.random()
-            if rand < .33:
-                self.blast_strength = max(2, self.blast_strength - 1)
-            elif rand < .66:
-                self.ammo = max(1, self.ammo - 1)
-            else:
-                self.blast_strength += 2
-                self.blast_strength = min(self.blast_strength, 10)
+        # elif item == constants.Item.Kick:
+        #     self.can_kick = True
+        # elif item == constants.Item.Skull:
+        #     rand = random.random()
+        #     if rand < .33:
+        #         self.blast_strength = max(2, self.blast_strength - 1)
+        #     elif rand < .66:
+        #         self.ammo = max(1, self.ammo - 1)
+        #     else:
+        #         self.blast_strength += 2
+        #         self.blast_strength = min(self.blast_strength, 10)
 
     def to_json(self):
         return {

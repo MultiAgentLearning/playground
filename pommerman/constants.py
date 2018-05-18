@@ -6,15 +6,15 @@ from enum import Enum
 
 
 RENDER_FPS = 15
-BOARD_SIZE = 13
-NUM_RIGID = 50
-NUM_WOOD = 50
+BOARD_SIZE = 11
+NUM_RIGID = 28
+NUM_WOOD = 26
 NUM_ITEMS = int(NUM_WOOD/2)
 AGENT_VIEW_SIZE = 4
 TIME_LIMIT = 3000
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 3
-DEFAULT_BOMB_LIFE = 25
+DEFAULT_BOMB_LIFE = 10
 # color for each of the 4 agents
 AGENT_COLORS = [[231,76,60], [46,139,87], [65,105,225], [238,130,238]]
 # color for each of the items.
@@ -24,7 +24,7 @@ ITEM_COLORS += [(153, 153, 255), (153, 204, 204), (97, 169, 169),
                 (48, 117, 117)]
 # If using collapsing boards, the step at which the board starts to collapse.
 FIRST_COLLAPSE = 500 
-MAX_STEPS = 2500
+MAX_STEPS = 800
 RADIO_VOCAB_SIZE = 8
 RADIO_NUM_WORDS = 2
 
@@ -68,8 +68,8 @@ class Item(Enum):
     Fog = 5
     ExtraBomb = 6
     IncrRange = 7
-    Kick = 8
-    Skull = 9
+    #Kick = 8
+    #Skull = 9
     AgentDummy = 10
     Agent0 = 11
     Agent1 = 12
