@@ -34,8 +34,7 @@ class Pomme(gym.Env):
                  num_items=None,
                  max_steps=1000,
                  is_partially_observable=False,
-                 **kwargs
-    ):
+                 **kwargs):
         self._render_fps = render_fps
         self._agents = None
         self._game_type = game_type
@@ -84,12 +83,14 @@ class Pomme(gym.Env):
         - enemies (three of {AgentDummy.value, Agent3.value}).
         """
         bss = self._board_size**2
-        min_obs = [0]*3*bss + [0]*5 + [constants.Item.AgentDummy.value]*4
-        max_obs = [len(constants.Item)]*bss + [self._board_size]*bss + [25]*bss
-        max_obs += [self._board_size]*2 + [self._num_items]*2 + [1]
-        max_obs += [constants.Item.Agent3.value]*4
-        self.observation_space = spaces.Box(np.array(min_obs),
-                                            np.array(max_obs))
+        min_obs = [0] * 3 * bss + [0] * 5 + [constants.Item.AgentDummy.value
+                                            ] * 4
+        max_obs = [len(constants.Item)] * bss + [self._board_size
+                                                ] * bss + [25] * bss
+        max_obs += [self._board_size] * 2 + [self._num_items] * 2 + [1]
+        max_obs += [constants.Item.Agent3.value] * 4
+        self.observation_space = spaces.Box(
+            np.array(min_obs), np.array(max_obs))
 
     def set_agents(self, agents):
         self._agents = agents
@@ -147,11 +148,10 @@ class Pomme(gym.Env):
                                    self.training_agent)
 
     def _get_info(self, done, rewards):
-        return self.model.get_info(done, rewards, self._game_type,
-                                   self._agents)
+        return self.model.get_info(done, rewards, self._game_type, self._agents)
 
     def reset(self):
-        assert(self._agents is not None)
+        assert (self._agents is not None)
 
         if self._init_game_state is not None:
             self.set_json_info()
@@ -190,12 +190,15 @@ class Pomme(gym.Env):
         self._step_count += 1
         return obs, reward, done, info
 
-    def render(self, mode=None, close=False, record_pngs_dir=None,
+    def render(self,
+               mode=None,
+               close=False,
+               record_pngs_dir=None,
                record_json_dir=None):
         if close:
             self.close()
             return
-        
+
         mode = mode or self._mode or 'human'
 
         if mode == 'rgb_array':
@@ -208,12 +211,12 @@ class Pomme(gym.Env):
             if mode == 'rgb_pixel':
                 self._viewer = graphics.PixelViewer(
                     board_size=self._board_size,
-                    agents=self._agents, 
+                    agents=self._agents,
                     partially_observable=self._is_partially_observable)
             else:
                 self._viewer = graphics.PommeViewer(
                     board_size=self._board_size,
-                    agents=self._agents, 
+                    agents=self._agents,
                     partially_observable=self._is_partially_observable,
                     game_type=self._game_type)
 
@@ -266,21 +269,21 @@ class Pomme(gym.Env):
 
         teammate = utility.make_np_float([obs["teammate"].value])
         enemies = utility.make_np_float([e.value for e in obs["enemies"]])
-        return np.concatenate((
-            board, bomb_blast_strength, bomb_life, position, ammo,
-            blast_strength, can_kick, teammate, enemies))
+        return np.concatenate(
+            (board, bomb_blast_strength, bomb_life, position, ammo,
+             blast_strength, can_kick, teammate, enemies))
 
     def get_json_info(self):
         """Returns a json snapshot of the current game state."""
         ret = {
-                'board_size': self._board_size,
-                'step_count': self._step_count,
-                'board': self._board,
-                'agents': self._agents,
-                'bombs': self._bombs,
-                'flames': self._flames,
-                'items': [[k, i] for k,i in self._items.items()]
-            }
+            'board_size': self._board_size,
+            'step_count': self._step_count,
+            'board': self._board,
+            'agents': self._agents,
+            'bombs': self._bombs,
+            'flames': self._flames,
+            'items': [[k, i] for k, i in self._items.items()]
+        }
         for key, value in ret.items():
             ret[key] = json.dumps(value, cls=utility.PommermanJSONEncoder)
         return ret
@@ -296,7 +299,7 @@ class Pomme(gym.Env):
         self._board *= constants.Item.Passage.value
         for x in range(self._board_size):
             for y in range(self._board_size):
-                self._board[x,y] = board_array[x][y]
+                self._board[x, y] = board_array[x][y]
 
         self._items = {}
         item_array = json.loads(self._init_game_state['items'])
@@ -308,22 +311,22 @@ class Pomme(gym.Env):
             agent = next(x for x in self._agents \
                          if x.agent_id == a['agent_id'])
             agent.set_start_position((a['position'][0], a['position'][1]))
-            agent.reset(int(a['ammo']), bool(a['is_alive']),
-                        int(a['blast_strength']), bool(a['can_kick']))
+            agent.reset(
+                int(a['ammo']), bool(a['is_alive']), int(a['blast_strength']),
+                bool(a['can_kick']))
 
         self._bombs = []
         bomb_array = json.loads(self._init_game_state['bombs'])
         for b in bomb_array:
             bomber = next(x for x in self._agents \
                           if x.agent_id == b['bomber_id'])
-            self._bombs.append(characters.Bomb(
-                bomber, tuple(b['position']), int(b['life']),
-                int(b['blast_strength']), b['moving_direction']))
-                                    
+            self._bombs.append(
+                characters.Bomb(bomber, tuple(b['position']), int(b['life']),
+                                int(b['blast_strength']),
+                                b['moving_direction']))
 
         self._flames = []
         flameArray = json.loads(self._init_game_state['flames'])
         for f in flameArray:
             self._flames.append(
                 characters.Flame(tuple(f['position']), f['life']))
-                                                 
