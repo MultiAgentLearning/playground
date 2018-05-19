@@ -177,8 +177,10 @@ class Pomme(gym.Env):
         return [seed]
 
     def step(self, actions):
+        max_blast_strength = self._agent_view_size or 10
         result = self.model.step(actions, self._board, self._agents,
-                                 self._bombs, self._items, self._flames)
+                                 self._bombs, self._items, self._flames,
+                                 max_blast_strength=max_blast_strength)
         self._board, self._agents, self._bombs, self._items, self._flames = \
                                                                     result[:5]
 
@@ -204,7 +206,7 @@ class Pomme(gym.Env):
         if mode == 'rgb_array':
             rgb_array = graphics.PixelViewer.rgb_array(
                 self._board, self._board_size, self._agents,
-                self._is_partially_observable)
+                self._is_partially_observable, self._agent_view_size)
             return rgb_array[0]
 
         if self._viewer is None:
@@ -212,12 +214,14 @@ class Pomme(gym.Env):
                 self._viewer = graphics.PixelViewer(
                     board_size=self._board_size,
                     agents=self._agents,
+                    agent_view_size=self._agent_view_size,
                     partially_observable=self._is_partially_observable)
             else:
                 self._viewer = graphics.PommeViewer(
                     board_size=self._board_size,
                     agents=self._agents,
                     partially_observable=self._is_partially_observable,
+                    agent_view_size=self._agent_view_size,
                     game_type=self._game_type)
 
             self._viewer.set_board(self._board)

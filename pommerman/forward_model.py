@@ -112,7 +112,7 @@ class ForwardModel(object):
 
     @staticmethod
     def step(actions, curr_board, curr_agents, curr_bombs, curr_items,
-             curr_flames):
+             curr_flames, max_blast_strength=10):
         board_size = len(curr_board)
 
         # Tick the flames. Replace any dead ones with passages. If there is an
@@ -230,7 +230,8 @@ class ForwardModel(object):
                         bombs[0].moving_direction = constants.Action(direction)
 
             if utility.position_is_powerup(curr_board, agent.position):
-                agent.pick_up(constants.Item(curr_board[agent.position]))
+                agent.pick_up(constants.Item(curr_board[agent.position]),
+                              max_blast_strength=max_blast_strength)
                 curr_board[agent.position] = constants.Item.Passage.value
 
         # Explode bombs.
@@ -325,8 +326,9 @@ class ForwardModel(object):
         def in_view_range(position, vrow, vcol):
             row, col = position
             return all([
-                row >= vrow - agent_view_size, row < vrow + agent_view_size,
-                col >= vcol - agent_view_size, col < vcol + agent_view_size])
+                row >= vrow - agent_view_size, row <= vrow + agent_view_size,
+                col >= vcol - agent_view_size, col <= vcol + agent_view_size
+            ])
 
         attrs = ['position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
                  'enemies']
@@ -342,7 +344,6 @@ class ForwardModel(object):
                         if not in_view_range(agent.position, row, col):
                             board[row, col] = constants.Item.Fog.value
             agent_obs['board'] = board
-
             bomb_blast_strengths, bomb_life = make_bomb_maps(agent.position)
             agent_obs['bomb_blast_strength'] = bomb_blast_strengths
             agent_obs['bomb_life'] = bomb_life

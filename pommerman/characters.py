@@ -67,22 +67,14 @@ class Bomber(object):
         self.blast_strength = blast_strength or constants.DEFAULT_BLAST_STRENGTH
         self.can_kick = can_kick
 
-    def pick_up(self, item):
+    def pick_up(self, item, max_blast_strength):
         if item == constants.Item.ExtraBomb:
             self.ammo = min(self.ammo + 1, 10)
         elif item == constants.Item.IncrRange:
-            self.blast_strength = min(self.blast_strength + 1, 10)
+            self.blast_strength = min(self.blast_strength + 1,
+                                      max_blast_strength)
         elif item == constants.Item.Kick:
             self.can_kick = True
-        elif item == constants.Item.Skull:
-            rand = random.random()
-            if rand < .33:
-                self.blast_strength = max(2, self.blast_strength - 1)
-            elif rand < .66:
-                self.ammo = max(1, self.ammo - 1)
-            else:
-                self.blast_strength += 2
-                self.blast_strength = min(self.blast_strength, 10)
 
     def to_json(self):
         return {

@@ -137,7 +137,7 @@ def make_items(board, num_items):
             continue
 
         item_positions[(row, col)] = random.choice([
-            constants.Item.ExtraBomb, constants.Item.IncrRange, constants.Item.Kick, constants.Item.Skull
+            constants.Item.ExtraBomb, constants.Item.IncrRange, constants.Item.Kick
         ]).value
         num_items -= 1
     return item_positions
@@ -218,7 +218,7 @@ def position_is_bomb(bombs, position):
 
 
 def position_is_powerup(board, position):
-    powerups = [constants.Item.ExtraBomb, constants.Item.IncrRange, constants.Item.Kick, constants.Item.Skull]
+    powerups = [constants.Item.ExtraBomb, constants.Item.IncrRange, constants.Item.Kick]
     item_values = [item.value for item in powerups]
     return board[position] in item_values
 

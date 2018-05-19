@@ -97,7 +97,7 @@ class SimpleAgent(BaseAgent):
 
         if exclude is None:
             exclude = [constants.Item.Fog, constants.Item.Rigid,
-                       constants.Item.Skull, constants.Item.Flames]
+                       constants.Item.Flames]
 
         def out_of_range(p1, p2):
             x1, y1 = p1
@@ -110,8 +110,8 @@ class SimpleAgent(BaseAgent):
         Q = queue.PriorityQueue()
 
         mx, my = my_position
-        for r in range(max(0, mx - depth), min(13, mx + depth)):
-            for c in range(max(0, my - depth), min(13, my + depth)):
+        for r in range(max(0, mx - depth), min(len(board), mx + depth)):
+            for c in range(max(0, my - depth), min(len(board), my + depth)):
                 position = (r, c)
                 if any([
                         out_of_range(my_position, position),
