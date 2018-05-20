@@ -394,7 +394,7 @@ class ForwardModel(object):
             if bomb.exploded():
                 new_explosions = True
             elif curr_board[bomb.position] == constants.Item.Flames.value:
-                board.Fire()
+                bomb.fire()
                 new_explosions = True
 
         while new_explosions:
