@@ -246,7 +246,7 @@ class ForwardModel(object):
             agent_occupancy[desired_position] += 1
 
         for desired_position in desired_bomb_positions:
-            bomb_occupancy[position] += 1
+            bomb_occupancy[desired_position] += 1
 
         # Resolve two or more agents or two or more bombs trying
         # to occupy the same space.
