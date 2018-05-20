@@ -27,7 +27,7 @@ class Pomme(v0.Pomme):
         if (self._radio_vocab_size and
                 not self._radio_num_words) or (not self._radio_vocab_size and
                                                self._radio_num_words):
-            assert("Include both radio_vocab_size and radio_num_words.")
+            assert ("Include both radio_vocab_size and radio_num_words.")
 
         self._radio_from_agent = {
             agent: (0, 0) for agent in [

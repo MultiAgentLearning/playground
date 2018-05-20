@@ -22,19 +22,26 @@ class Bomber(object):
         self.agent_id = agent_id
         if self._game_type == constants.GameType.FFA:
             self.teammate = constants.Item.AgentDummy
-            self.enemies = [getattr(constants.Item, 'Agent%d' % id_)
-                            for id_ in range(4) if id_ != agent_id]
+            self.enemies = [
+                getattr(constants.Item, 'Agent%d' % id_)
+                for id_ in range(4)
+                if id_ != agent_id
+            ]
         else:
             teammate_id = (agent_id + 2) % 4
             self.teammate = getattr(constants.Item, 'Agent%d' % teammate_id)
-            self.enemies = [getattr(constants.Item, 'Agent%d' % id_)
-                            for id_ in range(4) if id_ != agent_id and id_ != teammate_id]
+            self.enemies = [
+                getattr(constants.Item, 'Agent%d' % id_)
+                for id_ in range(4)
+                if id_ != agent_id and id_ != teammate_id
+            ]
             self.enemies.append(constants.Item.AgentDummy)
 
     def maybe_lay_bomb(self):
         if self.ammo > 0:
             self.ammo -= 1
-            return Bomb(self, self.position, constants.DEFAULT_BOMB_LIFE, self.blast_strength)
+            return Bomb(self, self.position, constants.DEFAULT_BOMB_LIFE,
+                        self.blast_strength)
         return None
 
     def incr_ammo(self):
@@ -90,7 +97,12 @@ class Bomber(object):
 class Bomb(object):
     """Container for the Bomb object."""
 
-    def __init__(self, bomber, position, life, blast_strength, moving_direction=None):
+    def __init__(self,
+                 bomber,
+                 position,
+                 life,
+                 blast_strength,
+                 moving_direction=None):
         self.bomber = bomber
         self.position = position
         self.life = life
@@ -106,7 +118,8 @@ class Bomb(object):
 
     def move(self):
         if self.is_moving():
-            self.position = utility.get_next_position(self.position, self.moving_direction)
+            self.position = utility.get_next_position(self.position,
+                                                      self.moving_direction)
 
     def stop(self):
         self.moving_direction = None
@@ -155,8 +168,4 @@ class Flame(object):
         return self._life == 0
 
     def to_json(self):
-        return {
-            "position": self.position,
-            "life": self._life
-        }
-
+        return {"position": self.position, "life": self._life}

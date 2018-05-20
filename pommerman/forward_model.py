@@ -10,9 +10,18 @@ from . import utility
 class ForwardModel(object):
     """Class for helping with the [forward] modeling of the game state."""
 
-    def run(self, num_times, board, agents, bombs, items, flames,
-            is_partially_observable, agent_view_size, action_space,
-            training_agent=None, is_communicative=False):
+    def run(self,
+            num_times,
+            board,
+            agents,
+            bombs,
+            items,
+            flames,
+            is_partially_observable,
+            agent_view_size,
+            action_space,
+            training_agent=None,
+            is_communicative=False):
         """Run the forward model.
 
         Args:
@@ -47,8 +56,8 @@ class ForwardModel(object):
         for _ in num_times:
             obs = self.get_observations(
                 board, agents, bombs, is_partially_observable, agent_view_size)
-            actions = self.act(agents, obs, action_space,
-                               is_communicative=is_communicative)
+            actions = self.act(
+                agents, obs, action_space, is_communicative=is_communicative)
             board, agents, bombs, items, flames = self.step(
                 actions, board, agents, bombs, items, flames)
             next_obs = self.get_observations(
@@ -84,20 +93,20 @@ class ForwardModel(object):
 
         Returns a list of actions.
         """
+
         def act_ex_communication(agent):
             if agent.is_alive:
-                return agent.act(obs[agent.agent_id],
-                                 action_space=action_space)
+                return agent.act(obs[agent.agent_id], action_space=action_space)
             else:
                 return constants.Action.Stop.value
 
         def act_with_communication(agent):
             if agent.is_alive:
-                action = agent.act(obs[agent.agent_id],
-                                   action_space=action_space)
+                action = agent.act(
+                    obs[agent.agent_id], action_space=action_space)
                 if type(action) == int:
                     action = [action] + [0, 0]
-                assert(type(action) == list)
+                assert (type(action) == list)
                 return action
             else:
                 return [constants.Action.Stop.value, 0, 0]
@@ -111,8 +120,13 @@ class ForwardModel(object):
         return ret
 
     @staticmethod
-    def step(actions, curr_board, curr_agents, curr_bombs, curr_items,
-             curr_flames, max_blast_strength=10):
+    def step(actions,
+             curr_board,
+             curr_agents,
+             curr_bombs,
+             curr_items,
+             curr_flames,
+             max_blast_strength=10):
         board_size = len(curr_board)
 
         # Tick the flames. Replace any dead ones with passages. If there is an
@@ -142,7 +156,7 @@ class ForwardModel(object):
         # before taking any actions. Then, if there are disputes, correct those
         # disputes iteratively.
         # Additionally, if two agents try to switch spots by moving into each
-        # other's location, then they should also bounce. 
+        # other's location, then they should also bounce.
         def make_counter(next_positions):
             counter = defaultdict(list)
             for num, next_position in enumerate(next_positions):
@@ -151,8 +165,11 @@ class ForwardModel(object):
             return counter
 
         def has_position_conflict(counter):
-            return any([len(agent_ids) > 1 for next_position, agent_ids in
-                        counter.items() if next_position])
+            return any([
+                len(agent_ids) > 1
+                for next_position, agent_ids in counter.items()
+                if next_position
+            ])
 
         curr_positions = [agent.position for agent in curr_agents]
         next_positions = [agent.position for agent in curr_agents]
@@ -177,8 +194,12 @@ class ForwardModel(object):
                     elif not agent.can_kick:
                         agent.stop()
                     else:
-                        after_next_position = utility.get_next_position(next_position, constants.Action(action))
-                        if not utility.position_on_board(curr_board, after_next_position) or not utility.position_is_passage(curr_board, after_next_position):
+                        after_next_position = utility.get_next_position(
+                            next_position, constants.Action(action))
+                        if not utility.position_on_board(
+                                curr_board, after_next_position
+                        ) or not utility.position_is_passage(
+                                curr_board, after_next_position):
                             agent.stop()
                         else:
                             next_positions[agent.agent_id] = next_position
@@ -192,7 +213,7 @@ class ForwardModel(object):
             if not agent.is_alive:
                 continue
 
-            for num_agent2 in range(num_agent+1, len(curr_agents)):
+            for num_agent2 in range(num_agent + 1, len(curr_agents)):
                 agent2 = curr_agents[num_agent2]
                 if not agent2.is_alive:
                     continue
@@ -200,13 +221,14 @@ class ForwardModel(object):
                 # Check if the agents are about to switch into each other's
                 # prior spaces. If so, revert this move.
                 if all([
-                    curr_positions[num_agent] != next_positions[num_agent],
-                    curr_positions[num_agent2] != next_positions[num_agent2],
-                    curr_positions[num_agent] == next_positions[num_agent2],
-                    curr_positions[num_agent2] == next_positions[num_agent]
+                        curr_positions[num_agent] != next_positions[num_agent],
+                        curr_positions[num_agent2] !=
+                        next_positions[num_agent2],
+                        curr_positions[num_agent] == next_positions[num_agent2],
+                        curr_positions[num_agent2] == next_positions[num_agent]
                 ]):
                     next_positions[num_agent] = curr_positions[num_agent]
-                    next_positions[num_agent2] = curr_positions[num_agent2]                    
+                    next_positions[num_agent2] = curr_positions[num_agent2]
 
         counter = make_counter(next_positions)
         while has_position_conflict(counter):
@@ -230,8 +252,9 @@ class ForwardModel(object):
                         bombs[0].moving_direction = constants.Action(direction)
 
             if utility.position_is_powerup(curr_board, agent.position):
-                agent.pick_up(constants.Item(curr_board[agent.position]),
-                              max_blast_strength=max_blast_strength)
+                agent.pick_up(
+                    constants.Item(curr_board[agent.position]),
+                    max_blast_strength=max_blast_strength)
                 curr_board[agent.position] = constants.Item.Passage.value
 
         # Explode bombs.
@@ -240,7 +263,7 @@ class ForwardModel(object):
         for bomb in curr_bombs:
             bomb.tick()
             if bomb.is_moving():
-                invalid_values = list(range(len(constants.Item)+1))[1:]
+                invalid_values = list(range(len(constants.Item) + 1))[1:]
                 next_position = utility.get_next_position(
                     bomb.position, bomb.moving_direction)
                 if not utility.position_on_board(curr_board, next_position):
@@ -258,8 +281,8 @@ class ForwardModel(object):
                 bomb.bomber.incr_ammo()
                 for _, indices in bomb.explode().items():
                     for r, c in indices:
-                        if not all([r >= 0, c >= 0, r < board_size,
-                                    c < board_size]):
+                        if not all(
+                            [r >= 0, c >= 0, r < board_size, c < board_size]):
                             break
                         if curr_board[r][c] == constants.Item.Rigid.value:
                             break
@@ -330,8 +353,10 @@ class ForwardModel(object):
                 col >= vcol - agent_view_size, col <= vcol + agent_view_size
             ])
 
-        attrs = ['position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
-                 'enemies']
+        attrs = [
+            'position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
+            'enemies'
+        ]
 
         observations = []
         for agent in agents:
@@ -392,7 +417,7 @@ class ForwardModel(object):
                 }
         elif done:
             # We are playing a team game.
-            if rewards == [-1]*4:
+            if rewards == [-1] * 4:
                 return {
                     'result': constants.Result.Tie,
                 }
@@ -409,6 +434,7 @@ class ForwardModel(object):
 
     @staticmethod
     def get_rewards(agents, game_type, step_count, max_steps):
+
         def any_lst_equal(lst, values):
             return any([lst == v for v in values])
 
@@ -417,10 +443,10 @@ class ForwardModel(object):
         if game_type == constants.GameType.FFA:
             if len(alive_agents) == 1:
                 # An agent won. Give them +1, others -1.
-                return [2*int(agent.is_alive) - 1 for agent in agents]
+                return [2 * int(agent.is_alive) - 1 for agent in agents]
             elif step_count >= max_steps:
                 # Game is over from time. Everyone gets -1.
-                return [-1]*4
+                return [-1] * 4
             else:
                 # Game running: 0 for alive, -1 for dead.
                 return [int(agent.is_alive) - 1 for agent in agents]
@@ -434,7 +460,7 @@ class ForwardModel(object):
                 return [-1, 1, -1, 1]
             elif step_count >= max_steps:
                 # Game is over by max_steps. All agents tie.
-                return [-1]*4
+                return [-1] * 4
             else:
                 # No team has yet won or lost.
-                return [0]*4
+                return [0] * 4

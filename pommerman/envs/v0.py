@@ -178,9 +178,14 @@ class Pomme(gym.Env):
 
     def step(self, actions):
         max_blast_strength = self._agent_view_size or 10
-        result = self.model.step(actions, self._board, self._agents,
-                                 self._bombs, self._items, self._flames,
-                                 max_blast_strength=max_blast_strength)
+        result = self.model.step(
+            actions,
+            self._board,
+            self._agents,
+            self._bombs,
+            self._items,
+            self._flames,
+            max_blast_strength=max_blast_strength)
         self._board, self._agents, self._bombs, self._items, self._flames = \
                                                                     result[:5]
 
