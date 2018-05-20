@@ -385,12 +385,27 @@ class ForwardModel(object):
                     curr_board[agent.position] = constants.Item.Passage.value
 
         # Explode bombs.
-        next_bombs = []
+
         exploded_map = np.zeros_like(curr_board)
+        new_explosions = False
+
         for bomb in curr_bombs:
             bomb.tick()
-
             if bomb.exploded():
+                new_explosions = True
+            elif curr_board[bomb.position] == constants.Item.Flames.value:
+                board.Fire()
+                new_explosions = True
+
+        while new_explosions:
+            next_bombs = []
+            new_explosions = False
+            for bomb in curr_bombs:
+
+                if not bomb.exploded():
+                    next_bombs.append(bomb)
+                    continue
+
                 bomb.bomber.incr_ammo()
                 for _, indices in bomb.explode().items():
                     for r, c in indices:
@@ -402,37 +417,30 @@ class ForwardModel(object):
                         exploded_map[r][c] = 1
                         if curr_board[r][c] == constants.Item.Wood.value:
                             break
-            else:
-                next_bombs.append(bomb)
 
-        # Remove bombs that were in the blast radius.
-        curr_bombs = []
-        for bomb in next_bombs:
-            if bomb.in_range(exploded_map):
-                bomb.bomber.incr_ammo()
-            else:
-                curr_bombs.append(bomb)
+            curr_bombs = next_bombs
 
-        # Kill these agents.
-        for agent in curr_agents:
-            if agent.in_range(exploded_map):
-                agent.die()
-        exploded_map = np.array(exploded_map)
+            for bomb in curr_bombs:
+                if bomb.in_range(exploded_map):
+                    bomb.fire()
+                    new_explosions = True
 
         # Update the board
         for bomb in curr_bombs:
             curr_board[bomb.position] = constants.Item.Bomb.value
-
-        for agent in curr_agents:
-            agent_id = agent.agent_id
-            if agent.is_alive:
-                curr_board[agent.position] = utility.agent_value(agent_id)
 
         flame_positions = np.where(exploded_map == 1)
         for row, col in zip(flame_positions[0], flame_positions[1]):
             curr_flames.append(characters.Flame((row, col)))
         for flame in curr_flames:
             curr_board[flame.position] = constants.Item.Flames.value
+
+        # Kill agents if positioned on flames
+        for agent in alive_agents:
+            if curr_board[agent.position] == constants.Item.Flames.value:
+                agent.die()
+            else:
+                curr_board[agent.position] = utility.agent_value(agent.agent_id)
 
         return curr_board, curr_agents, curr_bombs, curr_items, curr_flames
 
