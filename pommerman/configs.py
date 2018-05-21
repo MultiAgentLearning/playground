@@ -56,9 +56,27 @@ def team_competition_env():
     agent = characters.Bomber
     return locals()
 
+def ffa_v0_env():
+    """Start up a FFA config with the default settings."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.FFA
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'PommeFFA-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': constants.BOARD_SIZE,
+        'num_rigid': constants.NUM_RIGID,
+        'num_wood': constants.NUM_WOOD,
+        'num_items': constants.NUM_ITEMS,
+        'max_steps': constants.MAX_STEPS,
+        'render_fps': constants.RENDER_FPS,
+    }
+    agent = characters.Bomber
+    return locals()
+
 
 def ffa_v0_fast_env():
-    """Start up a FFA config with the default settings."""
+    """Start up a FFA config with the default settings and faster rendering."""
     env = envs.v0.Pomme
     game_type = constants.GameType.FFA
     env_entry_point = 'pommerman.envs.v0:Pomme'
@@ -116,7 +134,7 @@ def team_v0_env():
 
 
 def team_v0_fast_env():
-    """Start up a team config with the default settings."""
+    """Start up a team config with the default settings and faster rendering."""
     env = envs.v0.Pomme
     game_type = constants.GameType.Team
     env_entry_point = 'pommerman.envs.v0:Pomme'
