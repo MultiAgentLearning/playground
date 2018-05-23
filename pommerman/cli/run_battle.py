@@ -47,7 +47,6 @@ def run(args, num_times=1, seed=None):
         os.makedirs(record_json_dir)
 
     def _run(seed, record_pngs_dir=None, record_json_dir=None):
-        env.seed(seed)
         print("Starting the Game.")
         obs = env.reset()
         steps = 0
@@ -73,14 +72,16 @@ def run(args, num_times=1, seed=None):
             env.render(close=True)
         return info
 
+    if seed is None:
+        seed = random.randint(0, 1e6)
+    np.random.seed(seed)
+    random.seed(seed)
+    env.seed(seed)
+
     infos = []
     times = []
     for i in range(num_times):
         start = time.time()
-        if seed is None:
-            seed = random.randint(0, 1e6)
-        np.random.seed(seed)
-        random.seed(seed)
 
         record_pngs_dir_ = record_pngs_dir + '/%d' % (i+1) \
                            if record_pngs_dir else None
