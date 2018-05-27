@@ -13,7 +13,7 @@ import requests
 import subprocess
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
-import run_battle
+import pommerman
 
 client = docker.from_env()
 client.login(os.getenv("PLAYGROUND_DOCKER_LOGIN"), os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
@@ -115,7 +115,7 @@ def battle(name, user, num_times, config):
         agents.insert(agent_id, "docker::%s/%s" % (user, name))
 
         infos = []
-        infos = run_battle.run(game='pommerman', config=config, agents=",".join(agents), record_dir=None, num_times=num_times)
+        infos = pommerman.cli.run_battle.run(game='pommerman', config=config, agents=",".join(agents), record_dir=None, num_times=num_times)
         win_count = len([i for i in infos if 'winners' in i and agent_id in i['winners']])
         win_percent = 1. * win_count / len(infos)
         return True, win_percent
