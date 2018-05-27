@@ -4,13 +4,13 @@ Call this with a config, a game, and a list of agents. The script will start sep
 and then report back the result.
 
 An example with all four test agents running ffa:
-python run_battle.py --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFA-v0
+python run_battle.py --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFACompetition-v0
 
 An example with one player, two random agents, and one test agent:
-python run_battle.py --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=PommeFFA-v0
+python run_battle.py --agents=player::arrows,test::agents.SimpleAgent,random::null,random::null --config=PommeFFACompetition-v0
 
 An example with a docker agent:
-python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=PommeFFA-v0
+python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=PommeFFACompetition-v0
 """
 import atexit
 import os
@@ -103,7 +103,7 @@ def main():
     
     parser = argparse.ArgumentParser(description='Playground Flags.')
     parser.add_argument('--config',
-                        default='PommeFFA-v0',
+                        default='PommeFFACompetition-v0',
                         help='Configuration to execute. See env_ids in '
                         'configs.py for options.')
     parser.add_argument('--agents',
