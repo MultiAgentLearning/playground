@@ -247,10 +247,10 @@ class Pomme(gym.Env):
             self._viewer.set_step(self._step_count)
             self._viewer.render()
 
-        suffix = '%d.png' % self._step_count
         if record_pngs_dir:
             self._viewer.save(record_pngs_dir)
         if record_json_dir:
+            suffix = '%d.json' % self._step_count
             info = self.get_json_info()
             with open(os.path.join(record_json_dir, suffix), 'w') as f:
                 f.write(json.dumps(info, sort_keys=True, indent=4))
