@@ -76,3 +76,11 @@ agent_list = [
     agents.PlayerAgent(agent_control="wasd"), # W,A,S,D to move, E to lay bomb
 ]
 ```
+
+## Submitting an Agent.
+
+In order to submit an agent, you need to create an account at [pommerman.com](https://pommerman.com). You can do this by registering with your email address, or logging in with your Github account.
+
+Once you have created an account, login and navigate to your profile - [Pommerman profile](https://pommerman.com/me). To submit an agent, fill in the form with your agent's name, an ssh git url, and the path to your agent's Docker file from the github repository's top level directory.
+
+Next, you will need to add an ssh deploy key to your account so we can access your agent's repo. This is provided to you after registering the agent.
