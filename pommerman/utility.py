@@ -74,6 +74,8 @@ def make_board(size, num_rigid=0, num_wood=0):
             if x != y])
 
         # Set the players down. Exclude them from coordinates.
+        # Agent0 is in top left. Agent1 is in bottom left.
+        # Agent2 is in bottom right. Agent 3 is in top right.
         board[1, 1] = constants.Item.Agent0.value
         board[size - 2, 1] = constants.Item.Agent1.value
         board[size - 2, size - 2] = constants.Item.Agent2.value

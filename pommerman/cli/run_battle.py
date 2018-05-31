@@ -31,32 +31,32 @@ def run(args, num_times=1, seed=None):
     agent_env_vars = args.agent_env_vars
     game_state_file = args.game_state_file
     render_mode = args.render_mode
+    do_sleep = args.do_sleep
 
-    # TODO: After https://github.com/MultiAgentLearning/playground/pull/40
-    #       this is still missing the docker_env_dict parsing for the agents.
     agents = [
-        helpers.make_agent_from_string(agent_string, agent_id+1000)
+        helpers.make_agent_from_string(agent_string, agent_id)
         for agent_id, agent_string in enumerate(args.agents.split(','))
     ]
 
     env = make(config, agents, game_state_file, render_mode=render_mode)
 
-    if record_pngs_dir and not os.path.isdir(record_pngs_dir):
-        os.makedirs(record_pngs_dir)
-    if record_json_dir and not os.path.isdir(record_json_dir):
-        os.makedirs(record_json_dir)
-
     def _run(seed, record_pngs_dir=None, record_json_dir=None):
         print("Starting the Game.")
+        if record_pngs_dir and not os.path.isdir(record_pngs_dir):
+            os.makedirs(record_pngs_dir)
+        if record_json_dir and not os.path.isdir(record_json_dir):
+            os.makedirs(record_json_dir)
+
         obs = env.reset()
         steps = 0
         done = False
+
         while not done:
             steps += 1
             if args.render:
-                env.render(record_pngs_dir=args.record_pngs_dir,
-                           record_json_dir=args.record_json_dir,
-                           mode=args.render_mode)
+                env.render(record_pngs_dir=record_pngs_dir,
+                           record_json_dir=record_json_dir,
+                           do_sleep=do_sleep)
             actions = env.act(obs)
             obs, reward, done, info = env.step(actions)
 
@@ -65,10 +65,11 @@ def run(args, num_times=1, seed=None):
         
         print("Final Result: ", info)
         if args.render:
-            env.render(record_pngs_dir=args.record_pngs_dir,
-                       record_json_dir=args.record_json_dir, 
-                       mode=args.render_mode)
-            time.sleep(5)
+            env.render(record_pngs_dir=record_pngs_dir,
+                       record_json_dir=record_json_dir,
+                       do_sleep=do_sleep)
+            if do_sleep:
+                time.sleep(5)
             env.render(close=True)
         return info
 
@@ -137,6 +138,9 @@ def main():
     parser.add_argument('--game_state_file',
                         default=None,
                         help="File from which to load game state.")
+    parser.add_argument('--do_sleep',
+                        default=True,
+                        help="Whether we sleep after each rendering.")
     args = parser.parse_args()
     run(args)
 
