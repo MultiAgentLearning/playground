@@ -16,12 +16,14 @@ import atexit
 import os
 import random
 import time
+from datetime import datetime
 
 import argparse
 import numpy as np
 
 from .. import helpers
 from .. import make
+from pommerman import utility
 
 
 def run(args, num_times=1, seed=None):
@@ -71,6 +73,12 @@ def run(args, num_times=1, seed=None):
             if do_sleep:
                 time.sleep(5)
             env.render(close=True)
+
+        if record_json_dir:
+            finished_at = datetime.now().isoformat()
+            _agents = args.agents.split(',')
+            utility.join_json_state(record_json_dir, _agents, finished_at, config)
+
         return info
 
     if seed is None:

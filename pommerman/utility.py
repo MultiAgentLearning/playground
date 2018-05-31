@@ -1,6 +1,8 @@
 import itertools
 import json
 import random
+import os
+from jsonmerge import Merger
 
 from gym import spaces
 import numpy as np
@@ -328,3 +330,42 @@ def get_next_position(position, direction):
 
 def make_np_float(feature):
     return np.array(feature).astype(np.float32)
+
+def join_json_state(record_json_dir, agents, finished_at, config):
+    jsonSchema = {
+        "properties": {
+            "state": {
+                "mergeStrategy": "append"
+            }
+        }
+    }
+
+    jsonTemplate = {
+        "agents": agents,
+        "finished_at": finished_at,
+        "config": config,
+        "state": []
+    }
+
+    merger = Merger(jsonSchema)
+    base = merger.merge({}, jsonTemplate)
+
+    for root, dirs, files in os.walk(record_json_dir):
+        for name in files:
+            path = os.path.join(record_json_dir, name)
+            if name.endswith('.json') and "game_state" not in name:
+                with open(path) as data_file:    
+                    data = json.load(data_file)
+                    head = {"state":[data]}
+                    base = merger.merge(base, head)
+    
+    with open(os.path.join(record_json_dir, 'game_state.json'), 'w') as f:
+        f.write(json.dumps(base, sort_keys=True, indent=4))
+
+    for root, dirs, files in os.walk(record_json_dir):
+        for name in files:
+            if "game_state" not in name:
+                os.remove(os.path.join(record_json_dir, name))
+    
+
+    

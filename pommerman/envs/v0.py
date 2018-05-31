@@ -252,10 +252,7 @@ class Pomme(gym.Env):
         if record_pngs_dir:
             self._viewer.save(record_pngs_dir)
         if record_json_dir:
-            suffix = '%d.json' % self._step_count
-            info = self.get_json_info()
-            with open(os.path.join(record_json_dir, suffix), 'w') as f:
-                f.write(json.dumps(info, sort_keys=True, indent=4))
+            self.save_json(record_json_dir)
 
         if do_sleep:
             time.sleep(1.0 / self._render_fps)
@@ -284,6 +281,14 @@ class Pomme(gym.Env):
         return np.concatenate(
             (board, bomb_blast_strength, bomb_life, position, ammo,
              blast_strength, can_kick, teammate, enemies))
+
+    def save_json(self, record_json_dir):
+        info = self.get_json_info()
+        count = "{0:0=3d}".format(self._step_count)
+        suffix = count + '.json'
+        path = os.path.join(record_json_dir, suffix)
+        with open(path, 'w') as f:
+            f.write(json.dumps(info, sort_keys=True, indent=4))
 
     def get_json_info(self):
         """Returns a json snapshot of the current game state."""
