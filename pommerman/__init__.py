@@ -4,6 +4,7 @@ from . import agents
 from . import configs
 from . import constants
 from . import forward_model
+from . import helpers
 from . import utility
 
 registry = None
