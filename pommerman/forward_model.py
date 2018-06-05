@@ -182,7 +182,7 @@ class ForwardModel(object):
         # Gather desired next positions for moving bombs. Handle kicks later.
         desired_bomb_positions = [bomb.position for bomb in curr_bombs]
 
-        for bomb_num, bomb in enumerate(curr_bombs):
+        for num_bomb, bomb in enumerate(curr_bombs):
             curr_board[bomb.position] = constants.Item.Passage.value
             if bomb.is_moving():
                 desired_position = utility.get_next_position(
@@ -190,13 +190,13 @@ class ForwardModel(object):
                 if utility.position_on_board(curr_board, desired_position) \
                    and not utility.position_is_powerup(curr_board, desired_position) \
                    and not utility.position_is_wall(curr_board, desired_position):
-                    desired_bomb_positions[bomb_num] = desired_position
+                    desired_bomb_positions[num_bomb] = desired_position
 
         # Position switches:
         # Agent <-> Agent => revert both to previous position.
         # Bomb <-> Bomb => revert both to previous position.
         # Agent <-> Bomb => revert Bomb to previous position.
-        crossings = dict()
+        crossings = {}
 
         def crossing(current, desired):
             current_x, current_y = current
@@ -220,19 +220,19 @@ class ForwardModel(object):
                 else:
                     crossings[border] = (num_agent, True)
 
-        for bomb_num, bomb in enumerate(curr_bombs):
-            if desired_bomb_positions[bomb_num] != bomb.position:
-                desired_position = desired_bomb_positions[bomb_num]
+        for num_bomb, bomb in enumerate(curr_bombs):
+            if desired_bomb_positions[num_bomb] != bomb.position:
+                desired_position = desired_bomb_positions[num_bomb]
                 border = crossing(bomb.position, desired_position)
                 if border in crossings:
                     # Crossed - revert to prior position.
-                    desired_bomb_positions[bomb_num] = bomb.position
+                    desired_bomb_positions[num_bomb] = bomb.position
                     num, isAgent = crossings[border]
                     if not isAgent:
                         # Crossed bomb - revert that to prior position as well.
                         desired_bomb_positions[num] = curr_bombs[num].position
                 else:
-                    crossings[border] = (bomb_num, False)
+                    crossings[border] = (num_bomb, False)
 
         # Deal with multiple agents or multiple bomb collisions on desired next
         # position by resetting desired position to current position for
@@ -260,24 +260,25 @@ class ForwardModel(object):
                     agent_occupancy[curr_position] += 1
                     change = True
 
-            for bomb_num, bomb in enumerate(curr_bombs):
-                desired_position = desired_bomb_positions[bomb_num]
+            for num_bomb, bomb in enumerate(curr_bombs):
+                desired_position = desired_bomb_positions[num_bomb]
                 curr_position = bomb.position
                 if desired_position != curr_position and \
                       (bomb_occupancy[desired_position] > 1 or agent_occupancy[desired_position] > 1):
-                    desired_bomb_positions[bomb_num] = curr_position
+                    desired_bomb_positions[num_bomb] = curr_position
                     bomb_occupancy[curr_position] += 1
                     change = True
 
         # Handle kicks.
-        bombs_kicked_by = dict()
+        agent_indexed_by_kicked_bomb = {}
+        kicked_bomb_indexed_by_agent = {}
         delayed_bomb_updates = []
         delayed_agent_updates = []
 
         # Loop through all bombs to see if they need a good kicking or cause
         # collisions with an agent.
-        for bomb_num, bomb in enumerate(curr_bombs):
-            desired_position = desired_bomb_positions[bomb_num]
+        for num_bomb, bomb in enumerate(curr_bombs):
+            desired_position = desired_bomb_positions[num_bomb]
 
             if agent_occupancy[desired_position] == 0:
                 # There was never an agent around to kick or collide.
@@ -299,7 +300,7 @@ class ForwardModel(object):
                 if desired_position != bomb.position:
                     # Bomb moved, but agent did not. The bomb should revert
                     # and stop.
-                    delayed_bomb_updates.append((bomb_num, bomb.position))
+                    delayed_bomb_updates.append((num_bomb, bomb.position))
                 continue
 
             # NOTE: At this point, we have that the agent in question tried to
@@ -308,7 +309,7 @@ class ForwardModel(object):
                 # If we move the agent at this point, then we risk having two
                 # agents on a square in future iterations of the loop. So we
                 # push this change to the next stage instead.
-                delayed_bomb_updates.append((bomb_num, bomb.position))
+                delayed_bomb_updates.append((num_bomb, bomb.position))
                 delayed_agent_updates.append((num_agent, agent.position))
                 continue
 
@@ -323,16 +324,20 @@ class ForwardModel(object):
                        not utility.position_is_wall(curr_board, target_position):
                 # Ok to update bomb desired location as we won't iterate over it again here
                 # but we can not update bomb_occupancy on target position and need to check it again
-                delayed_bomb_updates.append((bomb_num, target_position))
-                bombs_kicked_by[bomb_num] = num_agent
+                # However we need to set the bomb count on the current position to zero so
+                # that the agent can stay on this position.
+                bomb_occupancy[desired_position] = 0
+                delayed_bomb_updates.append((num_bomb, target_position))
+                agent_indexed_by_kicked_bomb[num_bomb] = num_agent
+                kicked_bomb_indexed_by_agent[num_agent] = num_bomb
                 bomb.moving_direction = direction
                 # Bombs may still collide and we then need to reverse bomb and agent ..
             else:
-                delayed_bomb_updates.append((bomb_num, bomb.position))
+                delayed_bomb_updates.append((num_bomb, bomb.position))
                 delayed_agent_updates.append((num_agent, agent.position))
 
-        for (bomb_num, bomb_position) in delayed_bomb_updates:
-            desired_bomb_positions[bomb_num] = bomb_position
+        for (num_bomb, bomb_position) in delayed_bomb_updates:
+            desired_bomb_positions[num_bomb] = bomb_position
             bomb_occupancy[bomb_position] += 1
             change = True
 
@@ -346,8 +351,20 @@ class ForwardModel(object):
             for num_agent, agent in enumerate(alive_agents):
                 desired_position = desired_agent_positions[num_agent]
                 curr_position = agent.position
+                # Agents and bombs can only share a square if they are both in their
+                # original position (Agent dropped bomb and has not moved)
                 if desired_position != curr_position and \
                       (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] != 0):
+                    # Late collisions resulting from failed kicks force this agent to stay at the
+                    # original position. Check if this agent successfully kicked a bomb above and undo
+                    # the kick.
+                    if num_agent in kicked_bomb_indexed_by_agent:
+                        num_bomb = kicked_bomb_indexed_by_agent[num_agent]
+                        bomb = curr_bombs[num_bomb]
+                        desired_bomb_positions[num_bomb] = bomb.position
+                        bomb_occupancy[bomb.position] += 1
+                        del agent_indexed_by_kicked_bomb[num_bomb]
+                        del kicked_bomb_indexed_by_agent[num_agent]
                     desired_agent_positions[num_agent] = curr_position
                     agent_occupancy[curr_position] += 1
                     change = True
@@ -360,25 +377,28 @@ class ForwardModel(object):
                 # original location it moved from. If it is blocked now, it
                 # can't be kicked and the agent needs to move back to stay
                 # consistent with other movements.
-                if desired_position == curr_position and num_bomb not in bombs_kicked_by:
+                if desired_position == curr_position and num_bomb not in agent_indexed_by_kicked_bomb:
                     continue
 
                 bomb_occupancy_ = bomb_occupancy[desired_position]
                 agent_occupancy_ = agent_occupancy[desired_position]
-                if bomb_occupancy_ > 1 or agent_occupancy_ > 1:
+                # Agents and bombs can only share a square if they are both in their
+                # original position (Agent dropped bomb and has not moved)
+                if bomb_occupancy_ > 1 or agent_occupancy_ != 0:
                     desired_bomb_positions[num_bomb] = curr_position
                     bomb_occupancy[curr_position] += 1
-                    num_agent = bombs_kicked_by.get(num_bomb)
+                    num_agent = agent_indexed_by_kicked_bomb.get(num_bomb)
                     if num_agent is not None:
                         agent = alive_agents[num_agent]
                         desired_agent_positions[num_agent] = agent.position
                         agent_occupancy[agent.position] += 1
-                        del bombs_kicked_by[num_bomb]
+                        del kicked_bomb_indexed_by_agent[num_agent]
+                        del agent_indexed_by_kicked_bomb[num_bomb]
                     change = True
 
         for num_bomb, bomb in enumerate(curr_bombs):
             if desired_bomb_positions[num_bomb] == bomb.position and \
-               not num_bomb in bombs_kicked_by:
+               not num_bomb in agent_indexed_by_kicked_bomb:
                 # Bomb was not kicked this turn and its desired position is its
                 # current location. Stop it just in case it was moving before.
                 bomb.stop()
