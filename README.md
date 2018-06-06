@@ -26,7 +26,7 @@ Most open-source research tools in this domain have been designed with single ag
 
 #### How do I submit agents that I have trained?
 
-The setup for submitting agents will be live shortly. It involves making a [Docker](https://docs.docker.com/get-started/) container that runs your agent. We then read and upload your docker file via Github OAuth. You retain the ownership and license of the agents. We will not look at or use your code; we are just going to run your agent in competitions on our servers. We have an example agent that already works and further instructions are in the games/a/docker directory.
+The setup for submitting agents will be live shortly. It involves making a [Docker](https://docs.docker.com/get-started/) container that runs your agent. We then read and upload your docker file via Github Deploy Keys. You retain the ownership and license of the agents. We will only look at your code to ensure that it is safe to run, doesn't execute anything malicious, and does not cheat. We are just going to run your agent in competitions on our servers. We have an example agent that already works and further instructions are in the games/a/docker directory.
 
 #### Who is running this?
 
