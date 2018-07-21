@@ -40,11 +40,11 @@ The general workflow for commiting code.
 
 **Naming** - Classes use caps camelcase whereas functions, methods, and variables use snake case. Names should not exceed 80 characters.
 
+**Linting** - Please lint according to the google style. An easy way to do this is to use the yapf pip package: `yapf --style google <path/to/file>`. Include the flag `-i` to edit the file in place.
+
 ## Discord
 
 Discussions, correspondence, and announcements often happen in Discord. You can get access through our [Discord invite.](https://discord.gg/wjVJEDc)
 
-## Formating
 
-**Spacing** - In between methods in classes use one line space. Functions, Classes, and groups of variables outside of a Class use two line spaces.
 
