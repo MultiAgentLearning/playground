@@ -92,3 +92,13 @@ your docker file builds properly beforehand.
 Next, you will need to add an ssh deploy key to your account so we can access 
 your agent's repo. This is provided to you along with instructions after 
 registering the agent.
+
+## Actually Getting Started
+
+Here is some information that may help you more quickly develop successful agents:
+
+1. Two agents cannot move to the same cell. They will bounce back to their prior places if they try. The same applies to bombs. If an agent and a bomb both try to move to the same space, then the agent will succeed but the bomb will bounce back.
+2. If an agent with the can_kick ability moves to a cell with a bomb, then the bomb is kicked in the direction from which the agent came. The ensuing motion will persist until the bomb hits a wall, another agent, or the edge of the grid. 
+3. When a bomb explodes, it immediately reaches its full blast radius. If there is an agent or a wall in the way, then it prematurely ends and destroys that agent or wall. 
+4. If a bomb is in the vicinity of an explosion, then it will also go off. In this way, bombs can chain together.
+5. The SimpleAgent is very useful as a barometer for your own efforts. Four SimpleAgents playing against each other have a win rate of ~18% each with the remaining ~28% of the time being a tie. Keep in mind that it _can_ destroy itself. That can skew your own results if not properly understood.
