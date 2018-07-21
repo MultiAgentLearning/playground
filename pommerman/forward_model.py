@@ -506,8 +506,11 @@ class ForwardModel(object):
             'position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
             'enemies'
         ]
-        alive_agents = [utility.agent_value(agent.agent_id)
-                        for agent in agents if agent.is_alive]
+        alive_agents = [
+            utility.agent_value(agent.agent_id)
+            for agent in agents
+            if agent.is_alive
+        ]
 
         observations = []
         for agent in agents:

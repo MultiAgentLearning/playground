@@ -22,7 +22,6 @@ import gym
 from .. import helpers, make
 from ..agents import TensorForceAgent
 
-
 client = docker.from_env()
 
 
@@ -32,6 +31,7 @@ def clean_up_agents(agents):
 
 
 class WrappedEnv(OpenAIGym):
+
     def __init__(self, gym, visualize=False):
         self.gym = gym
         self.visualize = visualize
@@ -56,41 +56,46 @@ class WrappedEnv(OpenAIGym):
 
 def main():
     parser = argparse.ArgumentParser(description="Playground Flags.")
-    parser.add_argument("--game",
-                        default="pommerman",
-                        help="Game to choose.")
-    parser.add_argument("--config",
-                        default="PommeFFACompetition-v0",
-                        help="Configuration to execute. See env_ids in "
-                        "configs.py for options.")
-    parser.add_argument("--agents",
-                        default="tensorforce::ppo,test::agents.SimpleAgent,"
-                        "test::agents.SimpleAgent,test::agents.SimpleAgent",
-                        help="Comma delineated list of agent types and docker "
-                        "locations to run the agents.")
-    parser.add_argument("--agent_env_vars",
-                        help="Comma delineated list of agent environment vars "
-                        "to pass to Docker. This is only for the Docker Agent."
-                        " An example is '0:foo=bar:baz=lar,3:foo=lam', which "
-                        "would send two arguments to Docker Agent 0 and one to"
-                        " Docker Agent 3.",
-                        default="")
-    parser.add_argument("--record_pngs_dir",
-                        default=None,
-                        help="Directory to record the PNGs of the game. "
-                        "Doesn't record if None.")
-    parser.add_argument("--record_json_dir",
-                        default=None,
-                        help="Directory to record the JSON representations of "
-                        "the game. Doesn't record if None.")
-    parser.add_argument("--render",
-                        default=False,
-                        action='store_true',
-                        help="Whether to render or not. Defaults to False.")
-    parser.add_argument("--game_state_file",
-                        default=None,
-                        help="File from which to load game state. Defaults to "
-                        "None.")
+    parser.add_argument("--game", default="pommerman", help="Game to choose.")
+    parser.add_argument(
+        "--config",
+        default="PommeFFACompetition-v0",
+        help="Configuration to execute. See env_ids in "
+        "configs.py for options.")
+    parser.add_argument(
+        "--agents",
+        default="tensorforce::ppo,test::agents.SimpleAgent,"
+        "test::agents.SimpleAgent,test::agents.SimpleAgent",
+        help="Comma delineated list of agent types and docker "
+        "locations to run the agents.")
+    parser.add_argument(
+        "--agent_env_vars",
+        help="Comma delineated list of agent environment vars "
+        "to pass to Docker. This is only for the Docker Agent."
+        " An example is '0:foo=bar:baz=lar,3:foo=lam', which "
+        "would send two arguments to Docker Agent 0 and one to"
+        " Docker Agent 3.",
+        default="")
+    parser.add_argument(
+        "--record_pngs_dir",
+        default=None,
+        help="Directory to record the PNGs of the game. "
+        "Doesn't record if None.")
+    parser.add_argument(
+        "--record_json_dir",
+        default=None,
+        help="Directory to record the JSON representations of "
+        "the game. Doesn't record if None.")
+    parser.add_argument(
+        "--render",
+        default=False,
+        action='store_true',
+        help="Whether to render or not. Defaults to False.")
+    parser.add_argument(
+        "--game_state_file",
+        default=None,
+        help="File from which to load game state. Defaults to "
+        "None.")
     args = parser.parse_args()
 
     config = args.config
@@ -102,7 +107,7 @@ def main():
     # TODO: After https://github.com/MultiAgentLearning/playground/pull/40
     #       this is still missing the docker_env_dict parsing for the agents.
     agents = [
-        helpers.make_agent_from_string(agent_string, agent_id+1000)
+        helpers.make_agent_from_string(agent_string, agent_id + 1000)
         for agent_id, agent_string in enumerate(args.agents.split(","))
     ]
 

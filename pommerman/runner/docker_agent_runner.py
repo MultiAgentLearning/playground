@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class DockerAgentRunner(metaclass=abc.ABCMeta):
-
     """Abstract base class to implement Docker-based agent"""
 
     def __init__(self):
@@ -23,7 +22,7 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
         app = Flask(self.__class__.__name__)
 
         @app.route("/action", methods=["POST"])
-        def action(): #pylint: disable=W0612
+        def action():  #pylint: disable=W0612
             data = request.get_json()
             observation = data.get("obs")
             observation = json.loads(observation)
@@ -33,7 +32,7 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
             return jsonify({"action": action})
 
         @app.route("/ping", methods=["GET"])
-        def ping(): #pylint: disable=W0612
+        def ping():  #pylint: disable=W0612
             return jsonify(success=True)
 
         logger.info("Starting agent server on port %d", port)

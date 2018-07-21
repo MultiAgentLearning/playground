@@ -40,7 +40,8 @@ IMAGES_DICT = {
         'file_name': '%s.png' % file_name,
         'name': file_name,
         'image': None
-    } for num, file_name in enumerate(file_names)
+    }
+    for num, file_name in enumerate(file_names)
 }
 FONTS_FILE_NAMES = ['Cousine-Regular.ttf']
 

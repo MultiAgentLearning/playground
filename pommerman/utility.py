@@ -66,8 +66,8 @@ def make_board(size, num_rigid=0, num_wood=0):
 
     def make(size, num_rigid, num_wood):
         # Initialize everything as a passage.
-        board = np.ones(
-            (size, size)).astype(np.uint8) * constants.Item.Passage.value
+        board = np.ones((size,
+                         size)).astype(np.uint8) * constants.Item.Passage.value
 
         # Gather all the possible coordinates to use for walls.
         coordinates = set([
@@ -331,14 +331,9 @@ def get_next_position(position, direction):
 def make_np_float(feature):
     return np.array(feature).astype(np.float32)
 
+
 def join_json_state(record_json_dir, agents, finished_at, config):
-    jsonSchema = {
-        "properties": {
-            "state": {
-                "mergeStrategy": "append"
-            }
-        }
-    }
+    jsonSchema = {"properties": {"state": {"mergeStrategy": "append"}}}
 
     jsonTemplate = {
         "agents": agents,
@@ -354,11 +349,11 @@ def join_json_state(record_json_dir, agents, finished_at, config):
         for name in files:
             path = os.path.join(record_json_dir, name)
             if name.endswith('.json') and "game_state" not in name:
-                with open(path) as data_file:    
+                with open(path) as data_file:
                     data = json.load(data_file)
-                    head = {"state":[data]}
+                    head = {"state": [data]}
                     base = merger.merge(base, head)
-    
+
     with open(os.path.join(record_json_dir, 'game_state.json'), 'w') as f:
         f.write(json.dumps(base, sort_keys=True, indent=4))
 
@@ -366,6 +361,3 @@ def join_json_state(record_json_dir, agents, finished_at, config):
         for name in files:
             if "game_state" not in name:
                 os.remove(os.path.join(record_json_dir, name))
-    
-
-    

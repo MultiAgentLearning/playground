@@ -17,8 +17,9 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import pommerman
 
 client = docker.from_env()
-client.login(os.getenv("PLAYGROUND_DOCKER_LOGIN"),
-             os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
+client.login(
+    os.getenv("PLAYGROUND_DOCKER_LOGIN"),
+    os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
 
 game_directory = os.path.expanduser('~/battles')
 json_directory = os.path.join(game_directory, 'json')
@@ -40,13 +41,15 @@ def run_test(docker_build_path, github_repo, private_key, name, agent_id, user,
 
     record_pngs_dir = os.path.join(png_directory, 'test-%s-%s' % (user, name))
     record_json_dir = os.path.join(json_directory, 'test-%s-%s' % (user, name))
-    
+
     test = Test(name, user, config, private_key, github_repo, agent_id,
                 docker_build_path, record_pngs_dir, record_json_dir)
     return test.run()
 
 
 server_ready_notifs = defaultdict(set)
+
+
 @celery.task
 def add_server_ready_notif(notif):
     """Add this notification to the queue. Run battle if it completes a set."""
@@ -55,15 +58,13 @@ def add_server_ready_notif(notif):
     battle_notifs = server_ready_notifs[battle_info]
     if len(battle_notifs) > 4:
         logging.warn("We have too many battle notifs. How did this happen?")
-        logging.warn(", ".join(
-            ["{}.{}.{}".format(notif['agent_id'],
-                               notif['aid'],
-                               notif['docker_image'])
-             for notif in battle_notifs]))
+        logging.warn(", ".join([
+            "{}.{}.{}".format(notif['agent_id'], notif['aid'],
+                              notif['docker_image']) for notif in battle_notifs
+        ]))
     elif len(battle_notifs) == 4:
         # Everyone is ready. Let's do this.
-        battle_notifs = sorted(list(battle_notifs),
-                               key=lambda k: k['agent_id'])
+        battle_notifs = sorted(list(battle_notifs), key=lambda k: k['agent_id'])
         agents = {k:v for k, v in battle_notifs \
                   if k in ['aid', 'docker_image', 'agent_id']}
         run_battle(battle_info, agents)
@@ -94,6 +95,7 @@ def run_battle(battle_info, agents):
 
 
 class Battle(object):
+
     def __init__(self, agents, record_pngs_dir, record_json_dir):
         """A battle object.
 
@@ -110,13 +112,20 @@ class Battle(object):
         # At this point, we can assume that the containers have been pulled.
         # We now start the game, which notifies those containers to start the
         # agents and let us know they're ready.
-        agents = ["docker::%s" % agent['docker_image']
-                  for agent in self._agents]
+        agents = [
+            "docker::%s" % agent['docker_image'] for agent in self._agents
+        ]
         agents = ",".join(agents)
-        args = Args(agents, self._config, self._record_pngs_dir,
-                    self._record_json_dir, agent_env_vars, None, render,
-                    do_sleep=False)
-        
+        args = Args(
+            agents,
+            self._config,
+            self._record_pngs_dir,
+            self._record_json_dir,
+            agent_env_vars,
+            None,
+            render,
+            do_sleep=False)
+
         seed = os.getenv("PLAYGROUND_GAME_SEED")
         infos = pommerman.cli.run_battle.run(args, num_times=1, seed=seed)
         return infos[0]
@@ -126,25 +135,30 @@ class Battle(object):
     def _fail(aids, error):
         """Sends ping to server that this was a failed battle."""
         request_url = os.getenv('PLAYGROUND_SERVER_URL') + '/fail_battle'
-        requests.post(request_url, json={
-            "aids": aids,
-            "error": error,
-            "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
-        })
+        requests.post(
+            request_url,
+            json={
+                "aids": aids,
+                "error": error,
+                "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
+            })
 
     # TODO: Add logging in case the post fails.
     @staticmethod
     def _pass(aids, info):
         """Sends ping that this was a successful test."""
         request_url = os.getenv('PLAYGROUND_SERVER_URL') + '/pass_battle'
-        requests.post(request_url, json={
-            "aids": aids,
-            "info": info,
-            "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
-        })
+        requests.post(
+            request_url,
+            json={
+                "aids": aids,
+                "info": info,
+                "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
+            })
 
 
 class Test(object):
+
     def __init__(self, name, user, config, private_key, github_repo, agent_id,
                  docker_build_path, record_pngs_dir, record_json_dir):
         self._name = name
@@ -188,22 +202,26 @@ class Test(object):
     def _fail(agent_id, error):
         """Sends ping to server that this was a failed test."""
         request_url = os.getenv('PLAYGROUND_SERVER_URL') + '/fail_test'
-        requests.post(request_url, json={
-            "agent_id": agent_id,
-            "error": error,
-            "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
-        })
+        requests.post(
+            request_url,
+            json={
+                "agent_id": agent_id,
+                "error": error,
+                "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
+            })
 
     # TODO: Add logging in case the post fails.
     @staticmethod
     def _pass(agent_id, win_percent):
         """Sends ping that this was a successful test."""
         request_url = os.getenv('PLAYGROUND_SERVER_URL') + '/pass_test'
-        requests.post(request_url, json={
-            "agent_id": agent_id,
-            "win_percent": win_percent,
-            "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
-        })
+        requests.post(
+            request_url,
+            json={
+                "agent_id": agent_id,
+                "win_percent": win_percent,
+                "access": os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
+            })
 
     def _battle(self, num_times, agent_env_vars, render, seed=None):
         return battle(num_times, agent_env_vars, render, seed, self._user,
@@ -214,18 +232,25 @@ class Test(object):
 def battle(num_times, agent_env_vars, render, seed, user, name, config,
            record_pngs_dir, record_json_dir):
     try:
-        agents = ["test::agents.SimpleAgent"]*3
+        agents = ["test::agents.SimpleAgent"] * 3
         agent_id = random.randint(0, len(agents))
         agent_tag = "docker::multiagentlearning/pommerman-%s-%s" % (user, name)
         agents.insert(agent_id, agent_tag)
         agents = ",".join(agents)
-        
-        args = Args(agents, config, record_pngs_dir, record_json_dir,
-                    agent_env_vars, None, render, do_sleep=True)
-        
+
+        args = Args(
+            agents,
+            config,
+            record_pngs_dir,
+            record_json_dir,
+            agent_env_vars,
+            None,
+            render,
+            do_sleep=True)
+
         infos = []
-        infos = pommerman.cli.run_battle.run(args, num_times=num_times,
-                                             seed=seed)
+        infos = pommerman.cli.run_battle.run(
+            args, num_times=num_times, seed=seed)
         win_count = len([i for i in infos if 'winners' in i \
                          and agent_id in i['winners']])
         win_percent = 1. * win_count / len(infos)
@@ -234,44 +259,53 @@ def battle(num_times, agent_env_vars, render, seed, user, name, config,
         traceback.print_exc()
         return False, "battle: %s" % e
 
+
 def save_ssh_pk(name, private_key):
     try:
         path = os.path.expanduser('~/.ssh/id_%s' % name)
         if os.path.exists(path):
             os.remove(path)
-            
-        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as f:
+
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, 0o600),
+                       'w') as f:
             f.write(private_key)
-            
+
         return True, ""
     except Exception as e:
         return False, "save_ssh_pk: %s" % e
+
 
 def download_repo(name, github_repo):
     try:
         directory = os.path.expanduser('~/Repos/%s' % name)
         if os.path.exists(directory):
             shutil.rmtree(directory)
-            
+
         from git import Repo
         from git import Git
-            
+
         git_ssh_identity_file = os.path.expanduser('~/.ssh/id_%s' % name)
         git_ssh_cmd = 'ssh -i %s' % git_ssh_identity_file
-        Repo.clone_from(github_repo, directory, env={'GIT_SSH_COMMAND': git_ssh_cmd})
+        Repo.clone_from(
+            github_repo, directory, env={
+                'GIT_SSH_COMMAND': git_ssh_cmd
+            })
         return True, ""
     except Exception as e:
         return False, "download_repo: %s" % e
+
 
 def docker_build(docker_build_path, name, user):
     try:
         repo_path = os.path.join(os.path.expanduser('~/Repos'), name)
         img = client.images.build(
-            path=repo_path, dockerfile=docker_build_path,
+            path=repo_path,
+            dockerfile=docker_build_path,
             tag='multiagentlearning/pommerman-%s-%s' % (user, name))
         return True, img
     except Exception as e:
         return False, "docker_build: %s" % e
+
 
 def docker_push_and_clean_up(img, name, user):
     try:
@@ -288,6 +322,7 @@ def docker_push_and_clean_up(img, name, user):
 
 class Args(object):
     """Args object to replicate the args in run_battle."""
+
     def __init__(self, agents, config, record_pngs_dir, record_json_dir,
                  agent_env_vars, game_state_file, render, do_sleep):
         self.config = config

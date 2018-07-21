@@ -202,8 +202,7 @@ class Pomme(gym.Env):
                close=False,
                record_pngs_dir=None,
                record_json_dir=None,
-               do_sleep=True
-    ):
+               do_sleep=True):
         if close:
             self.close()
             return
@@ -340,10 +339,9 @@ class Pomme(gym.Env):
             moving_direction = b['moving_direction']
             if moving_direction is not None:
                 moving_direction = constants.Action(moving_direction)
-            self._bombs.append(characters.Bomb(
-                bomber, tuple(b['position']), int(b['life']),
-                int(b['blast_strength']), moving_direction)
-            )
+            self._bombs.append(
+                characters.Bomb(bomber, tuple(b['position']), int(b['life']),
+                                int(b['blast_strength']), moving_direction))
 
         self._flames = []
         flameArray = json.loads(self._init_game_state['flames'])

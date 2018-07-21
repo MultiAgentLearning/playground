@@ -5,6 +5,7 @@ from pommerman.runner import DockerAgentRunner
 
 
 class MyAgent(DockerAgentRunner):
+
     def __init__(self):
         self._agent = agents.SimpleAgent()
 

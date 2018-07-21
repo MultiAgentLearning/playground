@@ -2,10 +2,11 @@ import os
 
 from .. import agents
 
-
 use_game_servers = os.getenv("PLAYGROUND_USE_GAME_SERVERS")
-game_servers = {id_: os.getenv("PLAYGROUND_GAME_INSTANCE_%d" % id_)
-                for id_ in range(4)}
+game_servers = {
+    id_: os.getenv("PLAYGROUND_GAME_INSTANCE_%d" % id_)
+    for id_ in range(4)
+}
 
 
 # NOTE: This routine is meant for internal usage.

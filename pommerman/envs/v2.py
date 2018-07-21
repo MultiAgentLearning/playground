@@ -30,7 +30,8 @@ class Pomme(v0.Pomme):
             assert ("Include both radio_vocab_size and radio_num_words.")
 
         self._radio_from_agent = {
-            agent: (0, 0) for agent in [
+            agent: (0, 0)
+            for agent in [
                 constants.Item.Agent0, constants.Item.Agent1,
                 constants.Item.Agent2, constants.Item.Agent3
             ]
@@ -40,8 +41,8 @@ class Pomme(v0.Pomme):
     def _set_action_space(self):
         self.action_space = spaces.Tuple(
             tuple([spaces.Discrete(6)] +
-                  [spaces.Discrete(self._radio_vocab_size)] *
-                  self._radio_num_words))
+                  [spaces.Discrete(self._radio_vocab_size
+                                  )] * self._radio_num_words))
 
     def _set_observation_space(self):
         """The Observation Space for each agent.

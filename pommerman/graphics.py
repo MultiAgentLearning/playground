@@ -359,8 +359,8 @@ class PommeViewer(Viewer):
         sprites = []
 
         for agent in self._agents:
-            x = self.board_right(
-                x_offset=-3) - (4 - agent.agent_id) * (image_size + spacing)
+            x = self.board_right(x_offset=-3) - (4 - agent.agent_id) * (
+                image_size + spacing)
             y = board_top
             agent_image = self._resource_manager.agent_image(agent.agent_id)
             agent_image.width = image_size
