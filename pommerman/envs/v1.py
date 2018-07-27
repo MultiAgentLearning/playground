@@ -21,6 +21,7 @@ from . import v0
 
 
 class Pomme(v0.Pomme):
+    '''The second hardest pommerman env. v1 addes a collapsing board.'''
     metadata = {
         'render.modes': ['human', 'rgb_array', 'rgb_pixel'],
         'video.frames_per_second': constants.RENDER_FPS
@@ -48,6 +49,9 @@ class Pomme(v0.Pomme):
         board = self._board.copy()
 
         def collapse(r, c):
+            '''Handles the collapsing of the board. Will
+            kill of remove any item/agent that is on the
+            collapsing tile.'''
             if utility.position_is_agent(board, (r, c)):
                 # Agent. Kill it.
                 num_agent = board[r][c] - constants.Item.Agent0.value

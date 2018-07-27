@@ -1,3 +1,5 @@
+'''This is the base abstraction for agents in pommerman.
+All agents should inherent from this class'''
 from .. import characters
 
 

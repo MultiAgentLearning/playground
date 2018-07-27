@@ -27,6 +27,7 @@ from pommerman import utility
 
 
 def run(args, num_times=1, seed=None):
+    '''Wrapper to help start the game'''
     config = args.config
     record_pngs_dir = args.record_pngs_dir
     record_json_dir = args.record_json_dir
@@ -42,7 +43,8 @@ def run(args, num_times=1, seed=None):
 
     env = make(config, agents, game_state_file, render_mode=render_mode)
 
-    def _run(seed, record_pngs_dir=None, record_json_dir=None):
+    def _run(record_pngs_dir=None, record_json_dir=None):
+        '''Runs a game'''
         print("Starting the Game.")
         if record_pngs_dir and not os.path.isdir(record_pngs_dir):
             os.makedirs(record_pngs_dir)
@@ -99,7 +101,7 @@ def run(args, num_times=1, seed=None):
                            if record_pngs_dir else None
         record_json_dir_ = record_json_dir + '/%d' % (i+1) \
                            if record_json_dir else None
-        infos.append(_run(seed, record_pngs_dir_, record_json_dir_))
+        infos.append(_run(record_pngs_dir_, record_json_dir_))
 
         times.append(time.time() - start)
         print("Game Time: ", times[-1])
@@ -109,6 +111,7 @@ def run(args, num_times=1, seed=None):
 
 
 def main():
+    '''CLI entry pointed used to bootstrap a battle'''
     simple_agent = 'test::agents.SimpleAgent'
     player_agent = 'player::arrows'
     docker_agent = 'docker::pommerman/simple-agent'

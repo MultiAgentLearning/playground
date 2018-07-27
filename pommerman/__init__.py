@@ -1,3 +1,4 @@
+'''Entry point into the pommerman module'''
 import gym
 import inspect
 from . import agents
@@ -7,12 +8,12 @@ from . import forward_model
 from . import helpers
 from . import utility
 
-registry = None
+REGISTRY = None
 
 
 def _register():
-    global registry
-    registry = []
+    global REGISTRY
+    REGISTRY = []
     for name, f in inspect.getmembers(configs, inspect.isfunction):
         if not name.endswith('_env'):
             continue
@@ -23,16 +24,16 @@ def _register():
             entry_point=config['env_entry_point'],
             kwargs=config['env_kwargs']
         )
-        registry.append(config['env_id'])
+        REGISTRY.append(config['env_id'])
 
 
 # Register environments with gym
 _register()
 
-
 def make(config_id, agent_list, game_state_file=None, render_mode='human'):
-    assert config_id in registry, "Unknown configuration '{}'. " \
-        "Possible values: {}".format(config_id, registry)
+    '''Makes the pommerman env and registers it with gym'''
+    assert config_id in REGISTRY, "Unknown configuration '{}'. " \
+        "Possible values: {}".format(config_id, REGISTRY)
     env = gym.make(config_id)
 
     for id, agent in enumerate(agent_list):

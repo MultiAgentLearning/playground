@@ -1,3 +1,4 @@
+'''An example docker agent.'''
 import json
 import time
 import os

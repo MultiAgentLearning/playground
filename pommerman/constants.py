@@ -28,7 +28,7 @@ RADIO_NUM_WORDS = 2
 
 # Files for images and and fonts
 RESOURCE_DIR = 'resources/'
-file_names = [
+FILE_NAMES = [
     'Passage', 'Rigid', 'Wood', 'Bomb', 'Flames', 'Fog', 'ExtraBomb',
     'IncrRange', 'Kick', 'AgentDummy', 'Agent0', 'Agent1', 'Agent2', 'Agent3',
     'AgentDummy-No-Background', 'Agent0-No-Background', 'Agent1-No-Background',
@@ -40,8 +40,7 @@ IMAGES_DICT = {
         'file_name': '%s.png' % file_name,
         'name': file_name,
         'image': None
-    }
-    for num, file_name in enumerate(file_names)
+    } for num, file_name in enumerate(FILE_NAMES)
 }
 FONTS_FILE_NAMES = ['Cousine-Regular.ttf']
 
@@ -96,6 +95,7 @@ class GameType(Enum):
 
 
 class Action(Enum):
+    '''The Actions an agent can take'''
     Stop = 0
     Up = 1
     Down = 2
@@ -105,6 +105,7 @@ class Action(Enum):
 
 
 class Result(Enum):
+    '''The results available for the end of the game'''
     Win = 0
     Loss = 1
     Tie = 2
@@ -112,4 +113,5 @@ class Result(Enum):
 
 
 class InvalidAction(Exception):
+    '''Invalid Actions Exception'''
     pass

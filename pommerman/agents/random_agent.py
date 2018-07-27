@@ -1,3 +1,4 @@
+'''An agent that preforms a random action each step'''
 from . import BaseAgent
 
 

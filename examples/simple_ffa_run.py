@@ -1,8 +1,13 @@
+'''An example to show how to set up an pommerman game programmatically'''
 import pommerman
 from pommerman import agents
 
 
 def main():
+    '''Simple function to bootstrap a game.
+       
+       Use this as an example to set up your training env.
+    '''
     # Print all possible environments in the Pommerman registry
     print(pommerman.registry)
 

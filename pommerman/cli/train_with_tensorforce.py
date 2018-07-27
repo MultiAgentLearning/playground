@@ -22,7 +22,8 @@ import gym
 from .. import helpers, make
 from ..agents import TensorForceAgent
 
-client = docker.from_env()
+
+CLIENT = docker.from_env()
 
 
 def clean_up_agents(agents):
@@ -31,7 +32,8 @@ def clean_up_agents(agents):
 
 
 class WrappedEnv(OpenAIGym):
-
+    '''An Env Wrapper used to make it easier to work 
+    with multiple agents'''
     def __init__(self, gym, visualize=False):
         self.gym = gym
         self.visualize = visualize
@@ -55,6 +57,7 @@ class WrappedEnv(OpenAIGym):
 
 
 def main():
+    '''CLI interface to bootstrap taining'''
     parser = argparse.ArgumentParser(description="Playground Flags.")
     parser.add_argument("--game", default="pommerman", help="Game to choose.")
     parser.add_argument(

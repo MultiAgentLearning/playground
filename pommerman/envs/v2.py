@@ -16,6 +16,8 @@ from . import v0
 
 
 class Pomme(v0.Pomme):
+    '''The hardest pommerman environment. This class expands env v0 
+    adding communication between agents.'''
     metadata = {
         'render.modes': ['human', 'rgb_array', 'rgb_pixel'],
         'video.frames_per_second': constants.RENDER_FPS
