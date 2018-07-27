@@ -1,9 +1,10 @@
+'''This is the basic docker agent runner'''
 import abc
 import logging
 import json
 from flask import Flask, jsonify, request
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class DockerAgentRunner(metaclass=abc.ABCMeta):
@@ -22,7 +23,8 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
         app = Flask(self.__class__.__name__)
 
         @app.route("/action", methods=["POST"])
-        def action():  #pylint: disable=W0612
+        def action(): #pylint: disable=W0612
+            '''handles an action over http'''
             data = request.get_json()
             observation = data.get("obs")
             observation = json.loads(observation)
@@ -32,8 +34,9 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
             return jsonify({"action": action})
 
         @app.route("/ping", methods=["GET"])
-        def ping():  #pylint: disable=W0612
+        def ping(): #pylint: disable=W0612
+            '''Basic agent health check'''
             return jsonify(success=True)
 
-        logger.info("Starting agent server on port %d", port)
+        LOGGER.info("Starting agent server on port %d", port)
         app.run(host=host, port=port)

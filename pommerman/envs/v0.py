@@ -20,6 +20,7 @@ from .. import utility
 
 
 class Pomme(gym.Env):
+    '''The base pommerman env.'''
     metadata = {
         'render.modes': ['human', 'rgb_array', 'rgb_pixel'],
     }
@@ -344,7 +345,7 @@ class Pomme(gym.Env):
                                 int(b['blast_strength']), moving_direction))
 
         self._flames = []
-        flameArray = json.loads(self._init_game_state['flames'])
-        for f in flameArray:
+        flame_array = json.loads(self._init_game_state['flames'])
+        for f in flame_array:
             self._flames.append(
                 characters.Flame(tuple(f['position']), f['life']))

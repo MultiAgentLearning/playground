@@ -1,3 +1,6 @@
+'''The base simple agent use to train agents.
+This agent is also the benchmark for other agents.
+'''
 from collections import defaultdict
 import queue
 import random
@@ -25,8 +28,8 @@ class SimpleAgent(BaseAgent):
         self._prev_direction = None
 
     def act(self, obs, action_space):
-
         def convert_bombs(bomb_map):
+            '''Flatten outs the bomb array'''
             ret = []
             locations = np.where(bomb_map > 0)
             for r, c in zip(locations[0], locations[1]):
@@ -117,19 +120,20 @@ class SimpleAgent(BaseAgent):
                 constants.Item.Fog, constants.Item.Rigid, constants.Item.Flames
             ]
 
-        def out_of_range(p1, p2):
-            x1, y1 = p1
-            x2, y2 = p2
-            return depth is not None and abs(y2 - y1) + abs(x2 - x1) > depth
+        def out_of_range(p_1, p_2):
+            '''Determines if two points are out of rang of each other'''
+            x_1, y_1 = p_1
+            x_2, y_2 = p_2
+            return abs(y_2 - y_1) + abs(x_2 - x_1) > depth
 
         items = defaultdict(list)
         dist = {}
         prev = {}
         Q = queue.PriorityQueue()
 
-        mx, my = my_position
-        for r in range(max(0, mx - depth), min(len(board), mx + depth)):
-            for c in range(max(0, my - depth), min(len(board), my + depth)):
+        my_x, my_y = my_position
+        for r in range(max(0, my_x - depth), min(len(board), my_x + depth)):
+            for c in range(max(0, my_y - depth), min(len(board), my_y + depth)):
                 position = (r, c)
                 if any([
                         out_of_range(my_position, position),
@@ -216,18 +220,19 @@ class SimpleAgent(BaseAgent):
                               bombs, enemies):
 
         def is_stuck_direction(next_position, bomb_range, next_board, enemies):
+            '''Helper function to do determine if the agents next move is possible.'''
             Q = queue.PriorityQueue()
             Q.put((0, next_position))
             seen = set()
 
-            nx, ny = next_position
+            next_x, next_y = next_position
             is_stuck = True
             while not Q.empty():
                 dist, position = Q.get()
                 seen.add(position)
 
-                px, py = position
-                if nx != px and ny != py:
+                position_x, position_y = position
+                if next_x != position_x and next_y != position_y:
                     is_stuck = False
                     break
 
@@ -236,7 +241,7 @@ class SimpleAgent(BaseAgent):
                     break
 
                 for row, col in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                    new_position = (row + px, col + py)
+                    new_position = (row + position_x, col + position_y)
                     if new_position in seen:
                         continue
 
@@ -247,7 +252,7 @@ class SimpleAgent(BaseAgent):
                                                         new_position, enemies):
                         continue
 
-                    dist = abs(row + px - nx) + abs(col + py - ny)
+                    dist = abs(row + position_x - next_x) + abs(col + position_y - next_y)
                     Q.put((dist, new_position))
             return is_stuck
 
@@ -261,7 +266,7 @@ class SimpleAgent(BaseAgent):
             for direction, bomb_range in unsafe_directions.items():
                 next_position = utility.get_next_position(
                     my_position, direction)
-                nx, ny = next_position
+                next_x, next_y = next_position
                 if not utility.position_on_board(next_board, next_position) or \
                    not utility.position_is_passable(next_board, next_position, enemies):
                     continue
@@ -341,8 +346,8 @@ class SimpleAgent(BaseAgent):
                 return True
 
             # We can reach a passage that's outside of the bomb scope.
-            px, py = position
-            if px != x and py != y:
+            position_x, position_y = position
+            if position_x != x and position_y != y:
                 return True
 
         return False
@@ -414,10 +419,10 @@ class SimpleAgent(BaseAgent):
             x, y = utility.get_next_position(my_position, direction)
             is_bad = False
             for bomb in bombs:
-                bx, by = bomb['position']
+                bomb_x, bomb_y = bomb['position']
                 blast_strength = bomb['blast_strength']
-                if (x == bx and abs(by - y) <= blast_strength) or \
-                   (y == by and abs(bx - x) <= blast_strength):
+                if (x == bomb_x and abs(bomb_y - y) <= blast_strength) or \
+                   (y == bomb_y and abs(bomb_x - x) <= blast_strength):
                     is_bad = True
                     break
             if not is_bad:
