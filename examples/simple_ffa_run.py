@@ -9,7 +9,7 @@ def main():
        Use this as an example to set up your training env.
     '''
     # Print all possible environments in the Pommerman registry
-    print(pommerman.registry)
+    print(pommerman.REGISTRY)
 
     # Create a set of agents (exactly four)
     agent_list = [
