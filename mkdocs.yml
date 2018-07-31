@@ -1,0 +1,8 @@
+site_name: Pommerman
+pages:
+  - Home: index.md
+  - Getting Started: README.md
+  - Command Line Interface: CLI.md
+  - Game Rules: game_rules.md
+  - Research Topics: research.md
+theme: readthedocs
