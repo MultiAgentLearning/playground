@@ -479,7 +479,8 @@ class ForwardModel(object):
         return curr_board, curr_agents, curr_bombs, curr_items, curr_flames
 
     def get_observations(self, curr_board, agents, bombs,
-                         is_partially_observable, agent_view_size):
+                         is_partially_observable, agent_view_size, 
+                         game_type, game_env):
         """Gets the observations as an np.array of the visible squares.
 
         The agent gets to choose whether it wants to keep the fogged part in
@@ -532,6 +533,8 @@ class ForwardModel(object):
             bomb_blast_strengths, bomb_life = make_bomb_maps(agent.position)
             agent_obs['bomb_blast_strength'] = bomb_blast_strengths
             agent_obs['bomb_life'] = bomb_life
+            agent_obs['game_type'] = game_type.value
+            agent_obs['game_env'] = game_env
 
             for attr in attrs:
                 assert hasattr(agent, attr)

@@ -31,6 +31,7 @@ def ffa_competition_env():
         'num_items': constants.NUM_ITEMS,
         'max_steps': constants.MAX_STEPS,
         'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -50,6 +51,7 @@ def ffa_competition_fast_env():
         'num_items': constants.NUM_ITEMS,
         'max_steps': constants.MAX_STEPS,
         'render_fps': 1000,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -71,6 +73,7 @@ def team_competition_env():
         'render_fps': constants.RENDER_FPS,
         'agent_view_size': constants.AGENT_VIEW_SIZE,
         'is_partially_observable': True,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -90,6 +93,7 @@ def ffa_v0_fast_env():
         'num_items': constants.NUM_ITEMS,
         'max_steps': constants.MAX_STEPS,
         'render_fps': 1000,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -110,6 +114,7 @@ def ffa_v1_env():
         'first_collapse': constants.FIRST_COLLAPSE,
         'max_steps': constants.MAX_STEPS,
         'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -129,6 +134,7 @@ def team_v0_env():
         'num_items': constants.NUM_ITEMS,
         'max_steps': constants.MAX_STEPS,
         'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -148,6 +154,7 @@ def team_v0_fast_env():
         'num_items': constants.NUM_ITEMS,
         'max_steps': constants.MAX_STEPS,
         'render_fps': 2000,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
@@ -171,6 +178,7 @@ def radio_v2_env():
         'radio_vocab_size': constants.RADIO_VOCAB_SIZE,
         'radio_num_words': constants.RADIO_NUM_WORDS,
         'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
     }
     agent = characters.Bomber
     return locals()
