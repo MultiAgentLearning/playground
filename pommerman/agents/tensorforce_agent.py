@@ -26,7 +26,8 @@ class TensorForceAgent(BaseAgent):
                     str(num): {
                         'type': int,
                         'num_actions': space.n
-                    } for num, space in enumerate(env.action_space.spaces)
+                    }
+                    for num, space in enumerate(env.action_space.spaces)
                 }
             else:
                 actions = dict(type='int', num_actions=env.action_space.n)

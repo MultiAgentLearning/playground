@@ -38,7 +38,7 @@ REPEAT_INTERVAL = 0.1
 
 
 class Keystate:
-
+    '''Handles keyboard state for a human player'''
     def __init__(self):
         self.keydown_time = time()
         self.last_repeat_time = None
@@ -74,7 +74,7 @@ class PlayerAgent(BaseAgent):
         # and prevents Pommerman from running.
         #
         from pyglet.window import key
-        CONTROLS = {
+        controls = {
             'arrows': {
                 key.UP: 1,
                 key.DOWN: 2,
@@ -93,9 +93,9 @@ class PlayerAgent(BaseAgent):
             }
         }
 
-        assert agent_control in CONTROLS, "Unknown control: {}".format(
+        assert agent_control in controls, "Unknown control: {}".format(
             agent_control)
-        self._key2act = CONTROLS[agent_control]
+        self._key2act = controls[agent_control]
 
         self._action_q = []
         self._keystate = {}

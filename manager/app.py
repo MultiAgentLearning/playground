@@ -21,7 +21,7 @@ def check_for_access():
         game_manager_access = os.getenv('PLAYGROUND_GAME_MANAGER_ACCESS')
         if not access or access != game_manager_access:
             return jsonify(received=False, error="Access Denied"), 400
-    
+
 
 # To Game Manager and Servers, from Web.
 @app.route('/ping', methods=['GET'])
@@ -67,14 +67,16 @@ def request_battle():
     try:
         incoming = request.get_json()
         agents = [{
-            'docker_image': incoming.get('docker_image_agent_%d' % agent_id),
-            'aid': incoming.get('aid_%d' % agent_id)
-            'agent_id': agent_id
-            for agent_id in range(4)
-        }]
+            'docker_image':
+            incoming.get('docker_image_agent_%d' % agent_id),
+            'aid':
+            incoming.get('aid_%d' % agent_id),
+            'agent_id':
+            agent_id
+        } for agent_id in range(4)]
         battle_info = incoming['config']
         battle_info += '-%d-%d-%d-%d' % [agent['aid'] for agent in agents]
-        success, message = notify_containers(agents, battle_info):
+        success, message = notify_containers(agents, battle_info)
         if success:
             return jsonify(success=True, error="")
         else:
@@ -90,7 +92,7 @@ def notify_containers(agents, battle_info):
             server = pommerman.helpers.game_servers[agent['agent_id']]
         else:
             server = "http://localhost"
-            
+
         port = "8000"
         url = ':'.join([server, port])
         request_url = url + "/start_container"
@@ -117,22 +119,27 @@ def start_container():
         battle_info = incoming["battle_info"]
         docker_image = incoming["docker_image"]
         url = incoming["url"]
-        
+
         client = docker.from_env()
-        client.login(os.getenv("PLAYGROUND_DOCKER_LOGIN"),
-                     os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
+        client.login(
+            os.getenv("PLAYGROUND_DOCKER_LOGIN"),
+            os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
         logging.warn("Pulling the image %s..." % docker_image)
         img = client.images.pull(docker_image, tag="latest")
 
         if img:
             request_url = game_manager_url + "/container_is_ready"
-            request_json = {'aid': incoming['aid'], 'battle_info': battle_info,
-                            'docker_image': docker_image, 'agent_id': agent_id}
+            request_json = {
+                'aid': incoming['aid'],
+                'battle_info': battle_info,
+                'docker_image': docker_image,
+                'agent_id': agent_id
+            }
             requests.post(request_url, json=request_json)
         else:
             pass
     except Exception as e:
-        print("Failed to pull container: %s" % )
+        print("Failed to pull container: %s" % e)
 
 
 # From Game Servers, To Game Manager.
@@ -154,17 +161,17 @@ def run_container():
     docker_image = incoming['docker_image']
     env_vars = incoming['env_vars']
     port = incoming['port']
-    
+
     client = docker.from_env()
-    client.login(os.getenv("PLAYGROUND_DOCKER_LOGIN"),
-                 os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
+    client.login(
+        os.getenv("PLAYGROUND_DOCKER_LOGIN"),
+        os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
     container = client.containers.run(
         docker_image,
         detach=True,
         auto_remove=True,
         ports={10080: port},
-        environment=env_vars
-    )
+        environment=env_vars)
     for line in container.logs(stream=True):
         print(line.decode("utf-8").strip())
 

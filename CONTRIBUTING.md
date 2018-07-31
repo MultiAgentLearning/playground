@@ -38,13 +38,34 @@ The general workflow for commiting code.
 
 **Spacing** - In between methods in classes use one line space. Functions, Classes, and groups of variables outside of a Class use two line spaces.
 
-**Naming** - Classes use caps camelcase whereas functions, methods, and variables use snake case. Names should not exceed 80 characters.
+**Naming** - Classes use caps camelcase whereas functions, methods, and variables use snake case. Constants are all caps and use snake case. Names should not exceed 80 characters.
+
+**Commenting** - Doc string are required for all files, modules, classes, and functions. Comment complicated code or code that isn't easily understood.
+
+ 
+## Linting 
+
+This project uses pylint to ensure code is formatted correctly. You can lint a module space or a single file by using one of the following terminal commands.
+
+```
+# A directory or module
+pylint pommerman/
+
+# A single file
+pylint pommerman/utility.
+```
+
+If your code doesn't pass linting please make the updates to ensure your code passes. PR's will not be accepted if your code doesn't pass the linter. 
+
+You can dig into the how we lint by taking a look at the `pylintrc` file in the root of this repo.
+
+**Linting** - Please lint according to the google style. An easy way to do this is to use the yapf pip package: `yapf --style google <path/to/file>`. Include the flag `-i` to edit the file in place.
+
+**Linting** - Please lint according to the google style. An easy way to do this is to use the yapf pip package: `yapf --style google <path/to/file>`. Include the flag `-i` to edit the file in place.
 
 ## Discord
 
 Discussions, correspondence, and announcements often happen in Discord. You can get access through our [Discord invite.](https://discord.gg/wjVJEDc)
 
-## Formating
 
-**Spacing** - In between methods in classes use one line space. Functions, Classes, and groups of variables outside of a Class use two line spaces.
 

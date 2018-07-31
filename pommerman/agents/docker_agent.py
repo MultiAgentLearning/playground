@@ -1,3 +1,4 @@
+'''An example docker agent.'''
 import json
 import time
 import os
@@ -26,10 +27,11 @@ class DockerAgent(BaseAgent):
         self._docker_client = docker_client
         if not self._docker_client:
             self._docker_client = docker.from_env()
-            self._docker_client.login(os.getenv("PLAYGROUND_DOCKER_LOGIN"),
-                                      os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
+            self._docker_client.login(
+                os.getenv("PLAYGROUND_DOCKER_LOGIN"),
+                os.getenv("PLAYGROUND_DOCKER_PASSWORD"))
 
-        self._acknowledged = False # Becomes True when the container is ready.
+        self._acknowledged = False  # Becomes True when the container is ready.
         self._server = server
         self._port = port
         self._timeout = 32
@@ -41,7 +43,7 @@ class DockerAgent(BaseAgent):
                 continue
             env_key = key.replace("DOCKER_AGENT_", "")
             self._env_vars[env_key] = value
-        
+
         # Start the docker agent if it is on this computer. Otherwise, it's far
         # away and we need to tell that server to start it.
         if 'localhost' in server:
@@ -52,9 +54,11 @@ class DockerAgent(BaseAgent):
             self._wait_for_docker()
         else:
             request_url = "{}:8000/run_container".format(server)
-            request_json = {'docker_image': self._docker_image,
-                            'env_vars': self._env_vars,
-                            'port': port}
+            request_json = {
+                'docker_image': self._docker_image,
+                'env_vars': self._env_vars,
+                'port': port
+            }
             requests.post(request_url, json=request_json)
             waiting_thread = threading.Thread(
                 target=self._wait_for_docker, daemon=True)

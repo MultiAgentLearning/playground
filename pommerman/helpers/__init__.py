@@ -1,15 +1,16 @@
+''' Helpers'''
 import os
-
 from .. import agents
 
-
-use_game_servers = os.getenv("PLAYGROUND_USE_GAME_SERVERS")
-game_servers = {id_: os.getenv("PLAYGROUND_GAME_INSTANCE_%d" % id_)
+USE_GAME_SERVERS = os.getenv("PLAYGROUND_USE_GAME_SERVERS")
+GAME_SERVERS = {id_: os.getenv("PLAYGROUND_GAME_INSTANCE_%d" % id_)
                 for id_ in range(4)}
 
 
 # NOTE: This routine is meant for internal usage.
 def make_agent_from_string(agent_string, agent_id, docker_env_dict=None):
+    '''Internal helper for building an agent instance'''
+    
     agent_type, agent_control = agent_string.split("::")
 
     assert agent_type in ["player", "random", "docker", "test", "tensorforce"]
@@ -22,10 +23,10 @@ def make_agent_from_string(agent_string, agent_id, docker_env_dict=None):
         agent_instance = agents.RandomAgent()
     elif agent_type == "docker":
         port = agent_id + 1000
-        if not use_game_servers:
+        if not USE_GAME_SERVERS:
             server = 'http://localhost'
         else:
-            server = game_servers[agent_id]
+            server = GAME_SERVERS[agent_id]
         assert port is not None
         agent_instance = agents.DockerAgent(
             agent_control, port=port, server=server, env_vars=docker_env_dict)

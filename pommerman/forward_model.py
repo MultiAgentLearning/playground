@@ -1,3 +1,4 @@
+'''Module to manage and advanced game state'''
 from collections import defaultdict
 
 import numpy as np
@@ -95,12 +96,14 @@ class ForwardModel(object):
         """
 
         def act_ex_communication(agent):
+            '''Handles agent's move without communication'''
             if agent.is_alive:
                 return agent.act(obs[agent.agent_id], action_space=action_space)
             else:
                 return constants.Action.Stop.value
 
         def act_with_communication(agent):
+            '''Handles agent's move with communication'''
             if agent.is_alive:
                 action = agent.act(
                     obs[agent.agent_id], action_space=action_space)
@@ -199,6 +202,7 @@ class ForwardModel(object):
         crossings = {}
 
         def crossing(current, desired):
+            '''Checks to see if an agent is crossing paths'''
             current_x, current_y = current
             desired_x, desired_y = desired
             if current_x != desired_x:
@@ -227,8 +231,8 @@ class ForwardModel(object):
                 if border in crossings:
                     # Crossed - revert to prior position.
                     desired_bomb_positions[num_bomb] = bomb.position
-                    num, isAgent = crossings[border]
-                    if not isAgent:
+                    num, is_agent = crossings[border]
+                    if not is_agent:
                         # Crossed bomb - revert that to prior position as well.
                         desired_bomb_positions[num] = curr_bombs[num].position
                 else:
@@ -484,6 +488,7 @@ class ForwardModel(object):
         board_size = len(curr_board)
 
         def make_bomb_maps(position):
+            ''' Makes an array of an agents bombs and the bombs attributes '''
             blast_strengths = np.zeros((board_size, board_size))
             life = np.zeros((board_size, board_size))
 
@@ -495,19 +500,23 @@ class ForwardModel(object):
                     life[(x, y)] = bomb.life
             return blast_strengths, life
 
-        def in_view_range(position, vrow, vcol):
+        def in_view_range(position, v_row, v_col):
+            '''Checks to see if a tile is in an agents viewing area'''
             row, col = position
             return all([
-                row >= vrow - agent_view_size, row <= vrow + agent_view_size,
-                col >= vcol - agent_view_size, col <= vcol + agent_view_size
+                row >= v_row - agent_view_size, row <= v_row + agent_view_size,
+                col >= v_col - agent_view_size, col <= v_col + agent_view_size
             ])
 
         attrs = [
             'position', 'blast_strength', 'can_kick', 'teammate', 'ammo',
             'enemies'
         ]
-        alive_agents = [utility.agent_value(agent.agent_id)
-                        for agent in agents if agent.is_alive]
+        alive_agents = [
+            utility.agent_value(agent.agent_id)
+            for agent in agents
+            if agent.is_alive
+        ]
 
         observations = []
         for agent in agents:
@@ -591,6 +600,7 @@ class ForwardModel(object):
     def get_rewards(agents, game_type, step_count, max_steps):
 
         def any_lst_equal(lst, values):
+            '''Checks if list are equal'''
             return any([lst == v for v in values])
 
         alive_agents = [num for num, agent in enumerate(agents) \
@@ -615,6 +625,9 @@ class ForwardModel(object):
                 return [-1, 1, -1, 1]
             elif step_count >= max_steps:
                 # Game is over by max_steps. All agents tie.
+                return [-1] * 4
+            elif len(alive_agents) == 0:
+                # Everyone's dead. All agents tie.
                 return [-1] * 4
             else:
                 # No team has yet won or lost.

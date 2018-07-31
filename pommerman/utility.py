@@ -1,3 +1,6 @@
+'''This file contains a set of utility functions that
+help with positioning, building a game board, and
+encoding data to be used later'''
 import itertools
 import json
 import random
@@ -11,7 +14,7 @@ from . import constants
 
 
 class PommermanJSONEncoder(json.JSONEncoder):
-
+    '''A helper class to encode state data into a json object'''
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -56,6 +59,7 @@ def make_board(size, num_rigid=0, num_wood=0):
     """
 
     def lay_wall(value, num_left, coordinates, board):
+        '''Lays all of the walls on a board'''
         x, y = random.sample(coordinates, 1)[0]
         coordinates.remove((x, y))
         coordinates.remove((y, x))
@@ -65,9 +69,10 @@ def make_board(size, num_rigid=0, num_wood=0):
         return num_left
 
     def make(size, num_rigid, num_wood):
+        '''Constructs a game/board'''
         # Initialize everything as a passage.
-        board = np.ones(
-            (size, size)).astype(np.uint8) * constants.Item.Passage.value
+        board = np.ones((size,
+                         size)).astype(np.uint8) * constants.Item.Passage.value
 
         # Gather all the possible coordinates to use for walls.
         coordinates = set([
@@ -135,6 +140,7 @@ def make_board(size, num_rigid=0, num_wood=0):
 
 
 def make_items(board, num_items):
+    '''Lays all of the items on the board'''
     item_positions = {}
     while num_items > 0:
         row = random.randint(0, len(board) - 1)
@@ -182,6 +188,7 @@ def inaccessible_passages(board, agent_positions):
 
 
 def is_valid_direction(board, position, direction, invalid_values=None):
+    '''Determins if a move is in a valid direction'''
     row, col = position
     if invalid_values is None:
         invalid_values = [item.value for item in \
@@ -209,10 +216,12 @@ def is_valid_direction(board, position, direction, invalid_values=None):
 
 
 def _position_is_item(board, position, item):
+    '''Determins if a position holds an item'''
     return board[position] == item.value
 
 
 def position_is_flames(board, position):
+    '''Determins if a position has flames'''
     return _position_is_item(board, position, constants.Item.Flames)
 
 
@@ -229,6 +238,7 @@ def position_is_bomb(bombs, position):
 
 
 def position_is_powerup(board, position):
+    '''Determins is a position has a powerup present'''
     powerups = [
         constants.Item.ExtraBomb, constants.Item.IncrRange, constants.Item.Kick
     ]
@@ -237,23 +247,28 @@ def position_is_powerup(board, position):
 
 
 def position_is_wall(board, position):
+    '''Determins if a position is a wall tile'''
     return position_is_rigid(board, position) or \
         position_is_wood(board, position)
 
 
 def position_is_passage(board, position):
+    '''Determins if a position is passage tile'''
     return _position_is_item(board, position, constants.Item.Passage)
 
 
 def position_is_rigid(board, position):
+    '''Determins if a position has a rigid tile'''
     return _position_is_item(board, position, constants.Item.Rigid)
 
 
 def position_is_wood(board, position):
+    '''Determins if a position has a wood tile'''
     return _position_is_item(board, position, constants.Item.Wood)
 
 
 def position_is_agent(board, position):
+    '''Determins if a position has an agent present'''
     return board[position] in [
         constants.Item.Agent0.value, constants.Item.Agent1.value,
         constants.Item.Agent2.value, constants.Item.Agent3.value
@@ -261,11 +276,13 @@ def position_is_agent(board, position):
 
 
 def position_is_enemy(board, position, enemies):
+    '''Determins if a position is an enemy'''
     return constants.Item(board[position]) in enemies
 
 
 # TODO: Fix this so that it includes the teammate.
 def position_is_passable(board, position, enemies):
+    '''Determins if a possible can be passed'''
     return all([
         any([
             position_is_agent(board, position),
@@ -276,18 +293,22 @@ def position_is_passable(board, position, enemies):
 
 
 def position_is_fog(board, position):
+    '''Determins if a position is fog'''
     return _position_is_item(board, position, constants.Item.Fog)
 
 
 def agent_value(id_):
+    '''Gets the state value based off of agents "name"'''
     return getattr(constants.Item, 'Agent%d' % id_).value
 
 
 def position_in_items(board, position, items):
+    '''Dtermines if the current positions has an item'''
     return any([_position_is_item(board, position, item) for item in items])
 
 
 def position_on_board(board, position):
+    '''Determines if a positions is on the board'''
     x, y = position
     return all([len(board) > x, len(board[0]) > y, x >= 0, y >= 0])
 
@@ -298,14 +319,14 @@ def get_direction(position, next_position):
     We assume that they are adjacent.
     """
     x, y = position
-    nx, ny = next_position
-    if x == nx:
-        if y < ny:
+    next_x, next_y = next_position
+    if x == next_x:
+        if y < next_y:
             return constants.Action.Right
         else:
             return constants.Action.Left
-    elif y == ny:
-        if x < nx:
+    elif y == next_y:
+        if x < next_x:
             return constants.Action.Down
         else:
             return constants.Action.Up
@@ -314,6 +335,7 @@ def get_direction(position, next_position):
 
 
 def get_next_position(position, direction):
+    '''Returns the next position coordinates'''
     x, y = position
     if direction == constants.Action.Right:
         return (x, y + 1)
@@ -329,36 +351,33 @@ def get_next_position(position, direction):
 
 
 def make_np_float(feature):
+    '''Converts an integer feature space into a floats'''
     return np.array(feature).astype(np.float32)
 
-def join_json_state(record_json_dir, agents, finished_at, config):
-    jsonSchema = {
-        "properties": {
-            "state": {
-                "mergeStrategy": "append"
-            }
-        }
-    }
 
-    jsonTemplate = {
+def join_json_state(record_json_dir, agents, finished_at, config):
+    '''Combines all of the json state files into one'''
+    json_schema = {"properties": {"state": {"mergeStrategy": "append"}}}
+
+    json_template = {
         "agents": agents,
         "finished_at": finished_at,
         "config": config,
         "state": []
     }
 
-    merger = Merger(jsonSchema)
-    base = merger.merge({}, jsonTemplate)
+    merger = Merger(json_schema)
+    base = merger.merge({}, json_template)
 
     for root, dirs, files in os.walk(record_json_dir):
         for name in files:
             path = os.path.join(record_json_dir, name)
             if name.endswith('.json') and "game_state" not in name:
-                with open(path) as data_file:    
+                with open(path) as data_file:
                     data = json.load(data_file)
-                    head = {"state":[data]}
+                    head = {"state": [data]}
                     base = merger.merge(base, head)
-    
+
     with open(os.path.join(record_json_dir, 'game_state.json'), 'w') as f:
         f.write(json.dumps(base, sort_keys=True, indent=4))
 
@@ -366,6 +385,3 @@ def join_json_state(record_json_dir, agents, finished_at, config):
         for name in files:
             if "game_state" not in name:
                 os.remove(os.path.join(record_json_dir, name))
-    
-
-    
