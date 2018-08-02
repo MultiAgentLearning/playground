@@ -35,6 +35,7 @@ class Pomme(gym.Env):
                  num_items=None,
                  max_steps=1000,
                  is_partially_observable=False,
+                 env=None,
                  **kwargs):
         self._render_fps = render_fps
         self._agents = None
@@ -47,6 +48,7 @@ class Pomme(gym.Env):
         self._max_steps = max_steps
         self._viewer = None
         self._is_partially_observable = is_partially_observable
+        self._env = env
 
         self.training_agent = None
         self.model = forward_model.ForwardModel()
