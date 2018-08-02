@@ -44,4 +44,4 @@ We welcome contributions through pull request. See [CONTRIBUTING](../master/CONT
 
 # Code of Conduct
 
-We strive for an open community. Please read over our [CODE OF CONDUCT](../CODE_OF_CONDUCT.md)
+We strive for an open community. Please read over our [CODE OF CONDUCT](../master/CODE_OF_CONDUCT.md)
