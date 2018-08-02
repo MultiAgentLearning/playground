@@ -40,7 +40,7 @@ To see the ways you can get invovled with the project head over to our [Contribu
 
 # Contributing
 
-We welcome contributions through pull request. See [CONTRIBUTING](../CONTRIBUTING.md) for more details.
+We welcome contributions through pull request. See [CONTRIBUTING](../master/CONTRIBUTING.md) for more details.
 
 # Code of Conduct
 
