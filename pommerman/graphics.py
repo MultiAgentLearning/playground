@@ -15,7 +15,7 @@ from scipy.misc import imresize as resize
 
 try:
     import pyglet
-except ImportError as e:
+except ImportError as error:
     reraise(
         suffix="Install pyglet with 'pip install pyglet'. If you want to just "
         "install all Gym dependencies, run 'pip install -e .[all]' or "
@@ -23,23 +23,26 @@ except ImportError as e:
 
 try:
     from pyglet.gl import *
-    layer_background = pyglet.graphics.OrderedGroup(0)
-    layer_foreground = pyglet.graphics.OrderedGroup(1)
-    layer_top = pyglet.graphics.OrderedGroup(2)
-except pyglet.canvas.xlib.NoSuchDisplayException as e:
-    print("Import error NSDE! You will not be able to render --> %s" % e)
-except ImportError as e:
-    print("Import error GL! You will not be able to render --> %s" % e)
+    LAYER_BACKGROUND = pyglet.graphics.OrderedGroup(0)
+    LAYER_FOREGROUND = pyglet.graphics.OrderedGroup(1)
+    LAYER_TOP = pyglet.graphics.OrderedGroup(2)
+except pyglet.canvas.xlib.NoSuchDisplayException as error:
+    print("Import error NSDE! You will not be able to render --> %s" % error)
+except ImportError as error:
+    print("Import error GL! You will not be able to render --> %s" % error)
 
 from . import constants
 from . import utility
 
 __location__ = os.path.dirname(os.path.realpath(__file__))
-_resource_path = os.path.join(__location__, constants.RESOURCE_DIR)
+RESOURCE_PATH = os.path.join(__location__, constants.RESOURCE_DIR)
 
 
 class Viewer(object):
-
+    ''' Base class for the graphics module.
+        Used to share common functionality between the different
+        rendering engines.
+     '''
     def __init__(self):
         self.window = None
         self.display = None
@@ -82,7 +85,7 @@ class Viewer(object):
 
 
 class PixelViewer(Viewer):
-
+    '''Renders the game as a set of square pixels'''
     def __init__(self,
                  display=None,
                  board_size=11,
@@ -116,11 +119,15 @@ class PixelViewer(Viewer):
 
             @self.window.event
             def on_resize(width, height):
+                '''Registers an event handler with a pyglet window to resize the window'''
                 self.width = width
                 self.height = height
 
             @self.window.event
             def on_close():
+                ''' Registers an event handler with a pyglet to tell the render engine the
+                    window is closed
+                '''
                 self.isopen = True
 
         assert len(frames.shape
@@ -200,7 +207,7 @@ class PixelViewer(Viewer):
 
 
 class PommeViewer(Viewer):
-
+    '''The primary render engine for pommerman.'''
     def __init__(self,
                  display=None,
                  board_size=11,
@@ -235,6 +242,7 @@ class PommeViewer(Viewer):
 
         @self.window.event
         def close(self):
+            '''Pyglet event handler to close the window'''
             self.window.close()
             self.isopen = False
 
@@ -277,16 +285,16 @@ class PommeViewer(Viewer):
 
     def render_board(self, board, x_offset, y_offset, size, top=0):
         sprites = []
-        for r in range(self._board_size):
-            for c in range(self._board_size):
-                x = c * size + x_offset
-                y = top - y_offset - r * size
-                tile_state = board[r][c]
+        for row in range(self._board_size):
+            for col in range(self._board_size):
+                x = col * size + x_offset
+                y = top - y_offset - row * size
+                tile_state = board[row][col]
                 tile = self._resource_manager.tile_from_state_value(tile_state)
                 tile.width = size
                 tile.height = size
                 sprite = pyglet.sprite.Sprite(
-                    tile, x, y, batch=self._batch, group=layer_foreground)
+                    tile, x, y, batch=self._batch, group=LAYER_FOREGROUND)
                 sprites.append(sprite)
         return sprites
 
@@ -314,7 +322,7 @@ class PommeViewer(Viewer):
             color=constants.BACKGROUND_COLOR)
         image = image_pattern.create_image(self._width, self._height)
         return pyglet.sprite.Sprite(
-            image, 0, 0, batch=self._batch, group=layer_background)
+            image, 0, 0, batch=self._batch, group=LAYER_BACKGROUND)
 
     def render_text(self):
         text = []
@@ -326,7 +334,7 @@ class PommeViewer(Viewer):
             x=constants.BORDER_SIZE,
             y=board_top,
             batch=self._batch,
-            group=layer_top)
+            group=LAYER_TOP)
         title_label.color = constants.TILE_COLOR
         text.append(title_label)
 
@@ -344,7 +352,7 @@ class PommeViewer(Viewer):
             x=constants.BORDER_SIZE,
             y=5,
             batch=self._batch,
-            group=layer_top)
+            group=LAYER_TOP)
         time_label.color = constants.TEXT_COLOR
         text.append(time_label)
         return text
@@ -359,8 +367,8 @@ class PommeViewer(Viewer):
         sprites = []
 
         for agent in self._agents:
-            x = self.board_right(
-                x_offset=-3) - (4 - agent.agent_id) * (image_size + spacing)
+            x = self.board_right(x_offset=-3) - (4 - agent.agent_id) * (
+                image_size + spacing)
             y = board_top
             agent_image = self._resource_manager.agent_image(agent.agent_id)
             agent_image.width = image_size
@@ -371,12 +379,12 @@ class PommeViewer(Viewer):
                     x,
                     y,
                     batch=self._batch,
-                    group=layer_foreground))
+                    group=LAYER_FOREGROUND))
 
             if agent.is_alive is False:
                 sprites.append(
                     pyglet.sprite.Sprite(
-                        dead, x, y, batch=self._batch, group=layer_top))
+                        dead, x, y, batch=self._batch, group=LAYER_TOP))
 
         return sprites
 
@@ -390,7 +398,7 @@ class PommeViewer(Viewer):
 
 
 class ResourceManager(object):
-
+    '''Handles sprites and other resources for the PommeViewer'''
     def __init__(self):
         self._index_resources()
         self._load_fonts()
@@ -400,7 +408,7 @@ class ResourceManager(object):
     @staticmethod
     def _index_resources():
         # Tell pyglet where to find the resources
-        pyglet.resource.path = [_resource_path]
+        pyglet.resource.path = [RESOURCE_PATH]
         pyglet.resource.reindex()
 
     @staticmethod
@@ -416,7 +424,7 @@ class ResourceManager(object):
     @staticmethod
     def _load_fonts():
         for i in range(0, len(constants.FONTS_FILE_NAMES)):
-            font_path = os.path.join(_resource_path,
+            font_path = os.path.join(RESOURCE_PATH,
                                      constants.FONTS_FILE_NAMES[i])
             pyglet.font.add_file(font_path)
 
