@@ -32,7 +32,7 @@ class Pomme(v0.Pomme):
         first_collapse = kwargs.get('first_collapse')
         self.collapses = list(
             range(first_collapse, self._max_steps,
-                  int((self._max_steps - first_collapse) / self._board_size)))
+                  int((self._max_steps - first_collapse) / 4)))
 
     def _collapse_board(self, ring):
         """Collapses the board at a certain ring radius.
