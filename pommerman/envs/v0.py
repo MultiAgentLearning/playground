@@ -198,6 +198,11 @@ class Pomme(gym.Env):
         reward = self._get_rewards()
         info = self._get_info(done, reward)
 
+        if done:
+            # Callback to let the agents know that the game has ended.
+            for agent in self._agents:
+                agent.episode_end(reward[agent.agent_id])
+
         self._step_count += 1
         return obs, reward, done, info
 
