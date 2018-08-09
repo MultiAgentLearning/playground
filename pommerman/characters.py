@@ -45,7 +45,7 @@ class Bomber(object):
         return None
 
     def incr_ammo(self):
-        self.ammo += 1
+        self.ammo = min(self.ammo + 1, 10)
 
     def get_next_position(self, direction):
         action = constants.Action(direction)
@@ -76,7 +76,7 @@ class Bomber(object):
 
     def pick_up(self, item, max_blast_strength):
         if item == constants.Item.ExtraBomb:
-            self.ammo = min(self.ammo + 1, 10)
+            self.incr_ammo()
         elif item == constants.Item.IncrRange:
             self.blast_strength = min(self.blast_strength + 1,
                                       max_blast_strength)
