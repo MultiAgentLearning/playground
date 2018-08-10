@@ -65,9 +65,6 @@ def run(args, num_times=1, seed=None):
             actions = env.act(obs)
             obs, reward, done, info = env.step(actions)
 
-        for agent in agents:
-            agent.episode_end(reward[agent.agent_id])
-
         print("Final Result: ", info)
         if args.render:
             env.render(
