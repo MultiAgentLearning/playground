@@ -38,6 +38,7 @@ class Pomme(gym.Env):
                  env=None,
                  **kwargs):
         self._render_fps = render_fps
+        self._intended_actions = []
         self._agents = None
         self._game_type = game_type
         self._board_size = board_size
@@ -181,6 +182,8 @@ class Pomme(gym.Env):
         return [seed]
 
     def step(self, actions):
+        self._intended_actions = actions
+
         max_blast_strength = self._agent_view_size or 10
         result = self.model.step(
             actions,
@@ -307,7 +310,8 @@ class Pomme(gym.Env):
             'agents': self._agents,
             'bombs': self._bombs,
             'flames': self._flames,
-            'items': [[k, i] for k, i in self._items.items()]
+            'items': [[k, i] for k, i in self._items.items()],
+            'intended_actions': self._intended_actions
         }
         for key, value in ret.items():
             ret[key] = json.dumps(value, cls=utility.PommermanJSONEncoder)

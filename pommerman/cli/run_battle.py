@@ -52,11 +52,9 @@ def run(args, num_times=1, seed=None):
             os.makedirs(record_json_dir)
 
         obs = env.reset()
-        steps = 0
         done = False
 
         while not done:
-            steps += 1
             if args.render:
                 env.render(
                     record_pngs_dir=record_pngs_dir,
