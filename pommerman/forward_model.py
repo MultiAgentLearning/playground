@@ -149,6 +149,13 @@ class ForwardModel(object):
                 flames.append(flame)
         curr_flames = flames
 
+        # Redraw all current flames
+        # Multiple flames may share a position and the map should contain
+        # a flame until all flames are dead to avoid issues with bomb
+        # movements and explosions.
+        for flame in curr_flames:
+            curr_board[flame.position] = constants.Item.Flames.value
+
         # Step the living agents and moving bombs.
         # If two agents try to go to the same spot, they should bounce back to
         # their previous spots. This is complicated with one example being when
