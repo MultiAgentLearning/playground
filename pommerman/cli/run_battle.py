@@ -77,7 +77,7 @@ def run(args, num_times=1, seed=None):
             finished_at = datetime.now().isoformat()
             _agents = args.agents.split(',')
             utility.join_json_state(record_json_dir, _agents, finished_at,
-                                    config)
+                                    config, info)
 
         return info
 
