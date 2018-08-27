@@ -355,16 +355,24 @@ def make_np_float(feature):
     return np.array(feature).astype(np.float32)
 
 
-def join_json_state(record_json_dir, agents, finished_at, config):
+def join_json_state(record_json_dir, agents, finished_at, config, info):
     '''Combines all of the json state files into one'''
     json_schema = {"properties": {"state": {"mergeStrategy": "append"}}}
-
+    
     json_template = {
         "agents": agents,
         "finished_at": finished_at,
         "config": config,
-        "state": []
+        "result": {
+            "name": info['result'].name,
+            "id": info['result'].value
+        }
     }
+
+    if info['result'] is not constants.Result.Tie:
+        json_template['winners'] = info['winners']
+
+    json_template['state'] = []
 
     merger = Merger(json_schema)
     base = merger.merge({}, json_template)
