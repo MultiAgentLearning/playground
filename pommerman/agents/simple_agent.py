@@ -315,7 +315,7 @@ class SimpleAgent(BaseAgent):
     def _is_adjacent_enemy(items, dist, enemies):
         for enemy in enemies:
             for position in items.get(enemy, []):
-                if dist[position] == 1:
+                if dist[position] <= 1:
                     return True
         return False
 
@@ -381,6 +381,9 @@ class SimpleAgent(BaseAgent):
     def _near_enemy(cls, my_position, items, dist, prev, enemies, radius):
         nearest_enemy_position = cls._nearest_position(dist, enemies, items,
                                                        radius)
+        if nearest_enemy_position == my_position:
+            return None
+
         return cls._get_direction_towards_position(my_position,
                                                    nearest_enemy_position, prev)
 
