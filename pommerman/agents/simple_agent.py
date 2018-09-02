@@ -129,7 +129,7 @@ class SimpleAgent(BaseAgent):
         items = defaultdict(list)
         dist = {}
         prev = {}
-        Q = queue.PriorityQueue()
+        Q = queue.Queue()
 
         my_x, my_y = my_position
         for r in range(max(0, my_x - depth), min(len(board), my_x + depth)):
@@ -141,20 +141,23 @@ class SimpleAgent(BaseAgent):
                 ]):
                     continue
 
+                prev[position] = None
+                item = constants.Item(board[position])
+                items[item].append(position)
+                
                 if position == my_position:
+                    Q.put(position)
                     dist[position] = 0
                 else:
                     dist[position] = np.inf
 
-                prev[position] = None
-                Q.put((dist[position], position))
 
         for bomb in bombs:
             if bomb['position'] == my_position:
                 items[constants.Item.Bomb].append(my_position)
 
         while not Q.empty():
-            _, position = Q.get()
+            position = Q.get()
 
             if utility.position_is_passable(board, position, enemies):
                 x, y = position
@@ -167,9 +170,11 @@ class SimpleAgent(BaseAgent):
                     if val < dist[new_position]:
                         dist[new_position] = val
                         prev[new_position] = position
+                        Q.put(new_position)
+                    elif (val == dist[new_position] and random.random() < .5):
+                        dist[new_position] = val
+                        prev[new_position] = position   
 
-            item = constants.Item(board[position])
-            items[item].append(position)
 
         return items, dist, prev
 
