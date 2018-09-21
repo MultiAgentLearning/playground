@@ -8,6 +8,7 @@ from . import forward_model
 from . import helpers
 from . import utility
 
+gym.logger.set_level(40)
 REGISTRY = None
 
 
