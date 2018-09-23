@@ -58,8 +58,14 @@ class Pomme(v0.Pomme):
                 agent = self._agents[num_agent]
                 agent.die()
             elif utility.position_is_bomb(self._bombs, (r, c)):
-                # Bomb. Remove the bomb.
-                self._bombs = [b for b in self._bombs if b.position != (r, c)]
+                # Bomb. Remove the bomb. Update agent's ammo tally.
+                new_bombs = []
+                for b in self._bombs:
+                    if b.position == (r, c):
+                        b.bomber.incr_ammo()
+                    else:
+                        new_bombs.append(b)
+                self._bombs = new_bombs
             elif (r, c) in self._items:
                 # Item. Remove the item.
                 del self._items[(r, c)]
