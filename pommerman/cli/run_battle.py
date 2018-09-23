@@ -13,10 +13,11 @@ An example with a docker agent:
 python run_battle.py --agents=player::arrows,docker::pommerman/test-agent,random::null,random::null --config=PommeFFACompetition-v0
 """
 import atexit
+from datetime import datetime
 import os
 import random
+import sys
 import time
-from datetime import datetime
 
 import argparse
 import numpy as np
@@ -82,7 +83,8 @@ def run(args, num_times=1, seed=None):
         return info
 
     if seed is None:
-        seed = random.randint(0, 1e6)
+        # Pick a random seed between 0 and 2^31 - 1
+        seed = random.randint(0, np.iinfo(np.int32).max)
     np.random.seed(seed)
     random.seed(seed)
     env.seed(seed)
