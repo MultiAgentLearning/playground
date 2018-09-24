@@ -42,6 +42,18 @@ IMAGES_DICT = {
         'image': None
     } for num, file_name in enumerate(FILE_NAMES)
 }
+BOMB_FILE_NAMES = [
+    'Bomb-1', 'Bomb-2', 'Bomb-3', 'Bomb-4', 'Bomb-5', 'Bomb-6',
+    'Bomb-7', 'Bomb-8', 'Bomb-9', 'Bomb-10',
+]
+BOMB_DICT = {
+    num: {
+        'id': num,
+        'file_name': '%s.png' % file_name,
+        'name': file_name,
+        'image': None
+    } for num, file_name in enumerate(BOMB_FILE_NAMES)
+}
 FONTS_FILE_NAMES = ['Cousine-Regular.ttf']
 
 # Human view board configurations

@@ -62,6 +62,9 @@ class Viewer(object):
     def set_board(self, state):
         self._board_state = state
 
+    def set_bombs(self, bombs):
+        self._bombs = bombs
+
     def set_agents(self, agents):
         self._agents = agents
         self._agent_count = len(agents)
@@ -290,7 +293,11 @@ class PommeViewer(Viewer):
                 x = col * size + x_offset
                 y = top - y_offset - row * size
                 tile_state = board[row][col]
-                tile = self._resource_manager.tile_from_state_value(tile_state)
+                if tile_state == constants.Item.Bomb.value:
+                    bomb_life = self.get_bomb_life(row, col)
+                    tile = self._resource_manager.get_bomb_tile(bomb_life)
+                else:
+                    tile = self._resource_manager.tile_from_state_value(tile_state)
                 tile.width = size
                 tile.height = size
                 sprite = pyglet.sprite.Sprite(
@@ -396,6 +403,12 @@ class PommeViewer(Viewer):
         return constants.BORDER_SIZE + (
             self._board_size * self._tile_size) + x_offset
 
+    def get_bomb_life(self, row, col):
+        for bomb in self._bombs:
+            x, y = bomb.position
+            if x == row and y == col:
+                return bomb.life
+
 
 class ResourceManager(object):
     '''Handles sprites and other resources for the PommeViewer'''
@@ -403,6 +416,7 @@ class ResourceManager(object):
         self._index_resources()
         self._load_fonts()
         self.images = self._load_images()
+        self.bombs = self._load_bombs()
         self._fog_value = self._get_fog_index_value()
 
     @staticmethod
@@ -414,6 +428,16 @@ class ResourceManager(object):
     @staticmethod
     def _load_images():
         images_dict = constants.IMAGES_DICT
+        for i in range(0, len(images_dict)):
+            image_data = images_dict[i]
+            image = pyglet.resource.image(image_data['file_name'])
+            images_dict[i]['image'] = image
+
+        return images_dict
+
+    @staticmethod
+    def _load_bombs():
+        images_dict = constants.BOMB_DICT
         for i in range(0, len(images_dict)):
             image_data = images_dict[i]
             image = pyglet.resource.image(image_data['file_name'])
@@ -449,3 +473,6 @@ class ResourceManager(object):
     def fog_tile(self):
         img = self.images[self._fog_value]
         return img['image']
+
+    def get_bomb_tile(self, life):
+        return self.bombs[life - 1]['image']
