@@ -22,7 +22,7 @@ def init():
     if ui.ask_yes_no(l.server_prompt.value): # Check if user wants to connect to a custom server or not
         ip=ui.ask_string(l.server_ip.value) # If yes, prompt for IP of server
     else:
-        ip="localhost:5050" # If no, then set IP to that of the default server
+        ip="play.pommerman.com:5050" # If no, then set IP to that of the default server
     ui.info(l.server_connecting_p1.value, ui.yellow, l.server_connecting_p2.value, ui.reset, l.server_connecting_p3.value) # Write out connecting statement
     if(ip==None): # Check if IP isn't None
         ui.fatal(l.e_invalid_ip.value) # Write the error to the terminal
