@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ -z "$1" ]; then
+  echo "Usage: run_sample_docker_agent <container-id>"
+  exit 1
+fi
+
+container_id="$(docker run -d -p 10080:10080 "$1")"
+
+echo "Started running container $container_id"
+exit 0

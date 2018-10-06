@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -ex
+
+pushd $(dirname $0) > /dev/null
+  pushd ..
+    docker build . -f examples/docker-agent/Dockerfile
+  popd > /dev/null
+popd > /dev/null
+
