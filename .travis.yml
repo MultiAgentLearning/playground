@@ -5,9 +5,9 @@ python:
 script:
   - # @TODO run tests here
   - pip install .
-  - "nosetests && pylint pommerman"
-  - "nosetests && pylint mananger"
-  - "nosetests && pylint examples"
+  - "nosetests && pylint -j 0 pommerman"
+  - "nosetests && pylint -j 0 mananger"
+  - "nosetests && pylint -j 0 examples"
 
 deploy:
   provider: pypi
