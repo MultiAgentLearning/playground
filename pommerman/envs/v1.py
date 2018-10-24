@@ -28,7 +28,7 @@ class Pomme(v0.Pomme):
     }
 
     def __init__(self, *args, **kwargs):
-        super(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         first_collapse = kwargs.get('first_collapse')
         self.collapses = list(
             range(first_collapse, self._max_steps,
@@ -37,10 +37,11 @@ class Pomme(v0.Pomme):
     def _collapse_board(self, ring):
         """Collapses the board at a certain ring radius.
 
-        For example, if the board is 13x13 and ring is 0, then the the ring of the first row, last row,
-        first column, and last column is all going to be turned into rigid walls. All agents in that ring
-        die and all bombs are removed without detonating.
-
+        For example, if the board is 13x13 and ring is 0, then the the ring of
+        the first row, last row, first column, and last column is all going to
+        be turned into rigid walls. All agents in that ring die and all bombs
+        are removed without detonating.
+        
         For further rings, the values get closer to the center.
 
         Args:
