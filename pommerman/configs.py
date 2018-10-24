@@ -101,6 +101,29 @@ def team_competition_fast_env():
     return locals()
 
 
+def team_competition_v1_env():
+    """Start up a collapsing Team config with the competition settings."""
+    env = envs.v1.Pomme
+    game_type = constants.GameType.Team
+    env_entry_point = 'pommerman.envs.v1:Pomme'
+    env_id = 'PommeTeamCompetition-v1'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': constants.BOARD_SIZE,
+        'num_rigid': constants.NUM_RIGID,
+        'num_wood': constants.NUM_WOOD,
+        'num_items': constants.NUM_ITEMS,
+        'first_collapse': constants.FIRST_COLLAPSE,
+        'max_steps': constants.MAX_STEPS,
+        'render_fps': constants.RENDER_FPS,
+        'agent_view_size': constants.AGENT_VIEW_SIZE,
+        'is_partially_observable': True,
+        'env': env_entry_point,
+    }
+    agent = characters.Bomber
+    return locals()
+
+
 def ffa_v0_fast_env():
     """Start up a FFA config with the default settings."""
     env = envs.v0.Pomme
