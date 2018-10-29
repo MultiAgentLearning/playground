@@ -32,7 +32,8 @@ FILE_NAMES = [
     'Passage', 'Rigid', 'Wood', 'Bomb', 'Flames', 'Fog', 'ExtraBomb',
     'IncrRange', 'Kick', 'AgentDummy', 'Agent0', 'Agent1', 'Agent2', 'Agent3',
     'AgentDummy-No-Background', 'Agent0-No-Background', 'Agent1-No-Background',
-    'Agent2-No-Background', 'Agent3-No-Background', 'X-No-Background'
+    'Agent2-No-Background', 'Agent3-No-Background', 'X-No-Background',
+    'Agent0-Team', 'Agent1-Team', 'Agent2-Team', 'Agent3-Team',
 ]
 IMAGES_DICT = {
     num: {

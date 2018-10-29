@@ -234,7 +234,7 @@ class PommeViewer(Viewer):
         self.window.set_caption('Pommerman')
         self.isopen = True
         self._board_size = board_size
-        self._resource_manager = ResourceManager()
+        self._resource_manager = ResourceManager(game_type)
         self._tile_size = constants.TILE_SIZE
         self._agent_tile_size = (board_height / 4) / board_size
         self._agent_count = len(agents)
@@ -412,12 +412,16 @@ class PommeViewer(Viewer):
 
 class ResourceManager(object):
     '''Handles sprites and other resources for the PommeViewer'''
-    def __init__(self):
+    def __init__(self, game_type):
         self._index_resources()
         self._load_fonts()
         self.images = self._load_images()
         self.bombs = self._load_bombs()
         self._fog_value = self._get_fog_index_value()
+        self._is_team = True
+
+        if game_type == constants.GameType.FFA:
+            self._is_team = False
 
     @staticmethod
     def _index_resources():
@@ -459,6 +463,9 @@ class ResourceManager(object):
                 return id
 
     def tile_from_state_value(self, value):
+        if self._is_team and value in range(10, 14):
+            return self.images[value + 10]['image']
+
         return self.images[value]['image']
 
     def agent_image(self, agent_id):
