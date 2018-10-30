@@ -13,4 +13,4 @@ Signup and join our Discord chat. Then check out the Github, which has all the i
 
 # Whats in the docs?
 
-The docs cover a few topics. These include the a getting started guide, game rules, research, and how to use the CLI tool.
+The docs cover a few topics. These include the a getting started guide, game rules, multiplayer, research, and how to use the CLI tool.

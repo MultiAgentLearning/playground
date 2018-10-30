@@ -1,10 +1,10 @@
 # Command-Line Interface
 
-Pommerman comes with a CLI tool that allows you to quickly launch a game. This can be used to test how well a trained agent plays againts other agents.
+Pommerman comes with a CLI tool that allows you to quickly launch a game. This can be used to test how well a trained agent plays against other agents.
 
 Call this with a config, a game, and a list of agents. The script will start separate threads to operate the agents and then report back the result.
 
-An example with all four test agents running ffa:
+An example with all four test agents running FFA:
 
 ```bash
 pom_battle --agents=test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent,test::agents.SimpleAgent --config=PommeFFACompetition-v0
