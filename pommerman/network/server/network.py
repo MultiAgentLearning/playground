@@ -266,6 +266,7 @@ def thread(pipe_main, queue_subproc, port, max_players, mode, stop_timeout):
     STOP_TIMEOUT = stop_timeout
     ws_thread = threading.Thread(target=_run_server, args=(port,))
     ws_thread.start()
+    asyncio.set_event_loop(asyncio.new_event_loop())
     asyncio.get_event_loop().run_until_complete(program_loop())
     asyncio.get_event_loop().run_forever()
     ws_thread.join()
