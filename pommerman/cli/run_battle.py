@@ -61,6 +61,9 @@ def run(args, num_times=1, seed=None):
                     record_pngs_dir=record_pngs_dir,
                     record_json_dir=record_json_dir,
                     do_sleep=do_sleep)
+            if args.render is False and record_json_dir:
+                env.save_json(record_json_dir)
+                time.sleep(1.0 / env._render_fps)
             actions = env.act(obs)
             obs, reward, done, info = env.step(actions)
 
@@ -73,6 +76,10 @@ def run(args, num_times=1, seed=None):
             if do_sleep:
                 time.sleep(5)
             env.render(close=True)
+            
+        if args.render is False and record_json_dir:
+            env.save_json(record_json_dir)
+            time.sleep(1.0 / env._render_fps)
 
         if record_json_dir:
             finished_at = datetime.now().isoformat()
