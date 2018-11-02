@@ -10,8 +10,8 @@ for functions)"""
 import asyncio
 import websockets
 import threading
-from . import constants
 import time
+from . import constants
 import os
 import re
 import gzip
@@ -29,7 +29,6 @@ PIPE_MAIN = False  # This holds the queue (Main-proc <-> Network-proc)
 QUEUE_SUBPROC = False  # This holds the queue (Subproc <-> Network-proc)
 MODE = ""
 STOP_TIMEOUT = 0
-THREAD_LOCK = False
 
 
 async def message_parse(message, websocket):
@@ -129,122 +128,110 @@ async def message_parse(message, websocket):
 async def ws_handler(websocket, pth=None):  # pylint: disable=unused-argument
     """Handle the messages recieved by WebSocket (pth is not required but still\
 returned by the 'websockets' library)"""
-    global THREAD_LOCK
     try:
-        while THREAD_LOCK:
-            pass
-        THREAD_LOCK = True
         async for message in websocket:
             try:
                 await message_parse(rapidjson.loads(message), websocket)
             except:
                 pass
-            THREAD_LOCK = False
-            time.sleep(
-                0.0001
-            )  # Sleep for the a extremely small amount of time so the other thread can take the lock
     except websockets.exceptions.ConnectionClosed:
         pass
 
 
 async def program_loop():
     """Handles other network-related function"""
-    global THREAD_LOCK, CONCURRENTLY_LOOKING
+    global CONCURRENTLY_LOOKING
     while (True):
-        while THREAD_LOCK:
-            pass
-        THREAD_LOCK = True
-        for uuid_ in list(PLAYER_WS.keys()):
-            i = PLAYER_WS[uuid_]
-            if i["ws"].closed:
-                if i["noroom"] is True:
+        try:
+            for uuid_ in list(PLAYER_WS.keys()):
+                i = PLAYER_WS[uuid_]
+                if not i["ws"].open:
+                    if i["noroom"] is True:
+                        try:
+                            del CONCURRENTLY_LOOKING["noroom"][CONCURRENTLY_LOOKING[
+                                "noroom"].index(uuid_)]
+                        except:
+                            pass
+                    elif i["noroom"] is False:
+                        try:
+                            del CONCURRENTLY_LOOKING["room"][i["room"]][
+                                CONCURRENTLY_LOOKING["room"][i["room"]].index(
+                                    uuid_)]
+                        except:
+                            pass
                     try:
-                        del CONCURRENTLY_LOOKING["noroom"][CONCURRENTLY_LOOKING[
-                            "noroom"].index(uuid_)]
+                        del PLAYER_WS[uuid_]
                     except:
                         pass
-                elif i["noroom"] is False:
-                    try:
-                        del CONCURRENTLY_LOOKING["room"][i["room"]][
-                            CONCURRENTLY_LOOKING["room"][i["room"]].index(
-                                uuid_)]
-                    except:
-                        pass
-                try:
-                    del PLAYER_WS[uuid_]
-                except:
-                    pass
-        if PIPE_MAIN.poll():
-            queue_msg = PIPE_MAIN.recv()
-            if queue_msg[0] is constants.SubprocessCommands.get_players.value:
-                PIPE_MAIN.send(
-                    [CONCURRENTLY_LOOKING,
-                     len(PLAYER_WS),
-                     len(MATCH_PROCESS)])
-            elif queue_msg[0] is constants.SubprocessCommands.update_cc.value:
-                CONCURRENTLY_LOOKING = queue_msg[1]
-        if not QUEUE_SUBPROC.empty():
-            queue_msg = QUEUE_SUBPROC.get()
-            MATCH_PROCESS[queue_msg[2]] = {
-                "pipe": queue_msg[0],
-                "players": queue_msg[1],
-                "match_id": queue_msg[2],
-                "free": False,
-                "delete": False
-            }
-            for i in queue_msg[1]:
-                if i in PLAYER_WS:  # If the players didn't quits during matching
-                    await PLAYER_WS[i]["ws"].send(
-                        rapidjson.dumps({
-                            "intent":
-                            constants.NetworkCommands.match_start.value,
-                            "match_id":
-                            queue_msg[2]
-                        }))
-        for key in list(MATCH_PROCESS.keys()):
-            value = MATCH_PROCESS[key]
-            if value["pipe"].poll() and not value["free"]:
-                pipe_msg = value["pipe"].recv()
-                if pipe_msg[0] == constants.SubprocessCommands.match_next.value:
-                    value["free"] = True
-                    value["act"] = [0, 0, 0, 0]
-                    value["recv"] = [False, False, False, False]
-                    value["time"] = time.time()
-                    value["turn_id"] = pipe_msg[1]
-                    value["alive"] = pipe_msg[3]
-                    for x, y in enumerate(value["players"]):
-                        if y in list(PLAYER_WS.keys()):
-                            try:
-                                await PLAYER_WS[y]["ws"].send(pipe_msg[2][x])
-                            except:
-                                pass
-                        elif y not in PLAYER_WS:
-                            value["act"][x] = 5
-                if pipe_msg[0] is constants.SubprocessCommands.match_end.value:
-                    value["delete"] = True
-                    for x, y in enumerate(value["players"]):
-                        if y in PLAYER_WS:
-                            await PLAYER_WS[y]["ws"].send(
-                                rapidjson.dumps({
-                                    "intent":
-                                    constants.NetworkCommands.match_end.value,
-                                    "reward":
-                                    pipe_msg[1][x],
-                                    "agent":
-                                    10 + x
-                                }))
-            if value["free"]:
-                if value["time"] + STOP_TIMEOUT < time.time(
-                ) or value["recv"].count(True) == value["alive"]:
-                    value["pipe"].send(value["act"])
-                    value["free"] = False
-            if value["delete"]:
-                value["pipe"].send("END")
-                del MATCH_PROCESS[key]
-        THREAD_LOCK = False
-        time.sleep(
-            0.0001
-        )  # Sleep for the a extremely small amount of time so the other thread can take the lock
+            if PIPE_MAIN.poll():
+                queue_msg = PIPE_MAIN.recv()
+                if queue_msg[0] is constants.SubprocessCommands.get_players.value:
+                    PIPE_MAIN.send(
+                        [CONCURRENTLY_LOOKING,
+                         len(PLAYER_WS),
+                         len(MATCH_PROCESS)])
+                elif queue_msg[0] is constants.SubprocessCommands.update_cc.value:
+                    CONCURRENTLY_LOOKING = queue_msg[1]
+            if not QUEUE_SUBPROC.empty():
+                queue_msg = QUEUE_SUBPROC.get()
+                MATCH_PROCESS[queue_msg[2]] = {
+                    "pipe": queue_msg[0],
+                    "players": queue_msg[1],
+                    "match_id": queue_msg[2],
+                    "free": False,
+                    "delete": False
+             }
+                for i in queue_msg[1]:
+                    if i in PLAYER_WS:  # If the players didn't quits during matching
+                        await PLAYER_WS[i]["ws"].send(
+                            rapidjson.dumps({
+                                "intent":
+                                constants.NetworkCommands.match_start.value,
+                                "match_id":
+                                queue_msg[2]
+                            }))
+            for key in list(MATCH_PROCESS.keys()):
+                value = MATCH_PROCESS[key]
+                if value["pipe"].poll() and not value["free"]:
+                    pipe_msg = value["pipe"].recv()
+                    if pipe_msg[0] == constants.SubprocessCommands.match_next.value:
+                        value["free"] = True
+                        value["act"] = [0, 0, 0, 0]
+                        value["recv"] = [False, False, False, False]
+                        value["time"] = time.time()
+                        value["turn_id"] = pipe_msg[1]
+                        value["alive"] = pipe_msg[3]
+                        for x, y in enumerate(value["players"]):
+                            if y in list(PLAYER_WS.keys()):
+                                try:
+                                    await PLAYER_WS[y]["ws"].send(pipe_msg[2][x])
+                                except:
+                                    pass
+                            elif y not in PLAYER_WS:
+                                value["act"][x] = 5
+                    if pipe_msg[0] is constants.SubprocessCommands.match_end.value:
+                        value["delete"] = True
+                        for x, y in enumerate(value["players"]):
+                            if y in PLAYER_WS:
+                                await PLAYER_WS[y]["ws"].send(
+                                    rapidjson.dumps({
+                                        "intent":
+                                        constants.NetworkCommands.match_end.value,
+                                        "reward":
+                                        pipe_msg[1][x],
+                                        "agent":
+                                        10 + x
+                                    }))
+                if value["free"]:
+                    if value["time"] + STOP_TIMEOUT < time.time(
+                    ) or value["recv"].count(True) == value["alive"]:
+                        value["pipe"].send(value["act"])
+                        value["free"] = False
+                if value["delete"]:
+                    value["pipe"].send("END")
+                    del MATCH_PROCESS[key]
+        finally:
+            time.sleep(0.0001)  # Sleep for a while so other threads get the GIL
 
 
 def _run_server(port):

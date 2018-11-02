@@ -21,7 +21,7 @@ class Network(object):
         """Arguments:  
         * ip: The IP of the server"""
         self.ws_ = websocket.create_connection(
-            "ws://" + str(ip), enable_multithread=True)
+            "ws://" + str(ip))
         self.lock = threading.Lock()
 
     def server_status(self):
