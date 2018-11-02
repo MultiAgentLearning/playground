@@ -53,7 +53,7 @@ def init():
                 modes.append(id)
     timeout = float(ui.ask_string(constants.Strings.server_timeout.value))
     mode = str(ui.ask_choice(constants.Strings.server_mode.value, modes))
-    run(max_players, int(max_players / 4), port, timeout, mode)
+    run(port, max_players, timeout, mode, ui_en=True, exit_handler=True)
 
 
 def run(port,
@@ -61,8 +61,8 @@ def run(port,
         timeout,
         mode,
         max_matches=False,
-        ui_en=True,
-        exit_handler=True):
+        ui_en=False,
+        exit_handler=False):
     """Description: This function is responsible for running the server.  
     Arguments:  
     * port: The port used by the server  
@@ -78,7 +78,7 @@ isn't set"""
     netqueue = multiprocessing.Queue()
     subprocess_net = multiprocessing.Process(
         target=network.thread,
-        args=(rnetpipe, netqueue, port, max_players, mode, timeout))
+        args=(rnetpipe, netqueue, port, max_players, mode, timeout), daemon=True)
     subprocess_net.start()
     if not max_matches:
         max_matches = int(max_players / 4)
@@ -90,7 +90,7 @@ isn't set"""
     while (True):
         netpipe.send([constants.SubprocessCommands.get_players.value])
         concurrent_list, num_players, num_matches = netpipe.recv()
-        if num_matches < max_matches:
+        if int(num_matches) < max_matches:
             for x in list(concurrent_list["room"].keys()):
                 i = concurrent_list["room"][x]
                 if len(i) >= 4:
@@ -137,7 +137,7 @@ isn't set"""
 def _create_match(players, queue_subproc, mode):
     """Description: This function is responsible for creating a match"""
     subprocess = multiprocessing.Process(
-        target=match.thread, args=(players, queue_subproc, mode))
+        target=match.thread, args=(players, queue_subproc, mode), daemon=True)
     subprocess.start()
     return subprocess
 
