@@ -1,9 +1,16 @@
 site_name: Pommerman
-pages:
+theme: material
+markdown_extensions:
+  - codehilite
+repo_url: http://github.com/MultiAgentLearning/playground
+site_url: http://pommerman.com/
+site_description: 'Documentation for Pommerman.'
+
+nav:
   - Home: index.md
-  - Getting Started: README.md
+  - Getting Started: getting_started.md
   - Command Line Interface: CLI.md
-  - Game Rules: game_rules.md
-  - Research Topics: research.md
   - Multiplayer: multiplayer.md
-theme: readthedocs
+  - Competitions: competitions.md
+  - Environment Reference: environment.md
+  - Research Topics: research.md
