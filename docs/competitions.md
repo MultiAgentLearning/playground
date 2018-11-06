@@ -1,0 +1,19 @@
+# Competitions
+## Submitting an Agent
+In order to submit an agent, you need to create an account at [Pommerman's website](https://pommerman.com). You can do this by registering with your email address or logging in with your GitHub account.  
+Once you have created an account, login and navigate to your profile - [Pommerman profile](https://pommerman.com/me). To submit an agent, fill in the form with your agent's name, an SSH GIT url, and the path to your agent's Docker file from the GitHub repository's top level directory. Please make sure that your Docker file builds properly beforehand.  
+Next, you will need to add an SSH deploy key to your account so we can access your agent's repository. This is provided to you along with instructions after registering the agent.  
+Before doing all of this, note that we use Docker to run the agents. The best example for making a Docker agent is in the repo in the `examples/docker-agent` directory. This *must* work in order to properly enter an agent, and we suggest using the accompanying `pom_battle_cli` command to test out your Docker implementation. If you are having trouble still, feel free to ask questions on our [Discord channel](index.md#How%20do%20I%20get%20help%20%3F/).  
+## Rules and Submission
+1. Each submission should have a Docker file per agent. For FFA and Team Random, there is one agent; For Team Radio, there will be two agents. Instructions and an example for building Docker containers from trained agents can be found in our repository.
+2. The positions for each agent will be randomized modulo that each agent's position will be opposite from its teammate's position.
+3. The agents should follow the prescribed convention specified in our example code and expose an "act" endpoint that accepts a dictionary of observations. Because we are using Docker containers and http requests, we do not have any requirements for programming language or framework. There will be ample opportunity to test this on our servers beforehand.
+4. If an agent has a bug in its software that causes its container to crash, that will count as a loss for that agent's team.
+5. The expected response from the agent will be a single integer in [0, 5] representing which of the six actions that agent would like to take, as well as two more integers in [1, 8. representing the message if applicable.
+6. If an agent does not respond in an appropriate time limit (100ms), then we will automatically issue them the Stop action and have them send out the message (0, 0) if applicable.
+7. The game setup as described does not allow for the agents to share a centralized controller. If, however, some clever participant figured out a way to force this, they will be subsequently disqualified.
+8. Agents submitted by organizers can participate in the competitions but are not eligible for prizes. They will be excluded from consideration in the final standings.
+9. Competitions will run according to a double elimination style with two brackets. Each battle will be best of three, with the winner moving on and the loser suffering a defeat. Any draws will be replayed. At the end, we will have a clear top four.
+## NIPS 2018
+Each competitor will submit two agents that will be teamed together. These agents can be the same one and can be in the same repository even, but we expect there to be two submissions for each entrant. We additionally expect there to be notable differences among the submissions. Similarly to the June 3rd competition, we will examine the code before running it on our servers and collusion will not be tolerated.  
+The competition will be held live at NIPS 2018 in Montreal. We would prefer it if serious entrants were there, but that is not a requirement.
