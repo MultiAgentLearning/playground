@@ -216,7 +216,6 @@ def expand(node):
 
     # build children
     for action in constants.Action:
-
         child_node = copy.deepcopy(node)
         # NOTE: For now, simulate all other agents' moves using Simple Agent
         agents_actions = node.game_env.act(node.game_env.get_observations())
@@ -242,17 +241,23 @@ def expand(node):
 
 
 def backup(from_edge):
-
+    """
+    Given the lowest edge in the search tree, backup its
+    value along all edges to the root
+    :param from_edge: the edge
+    :return: None
+    """
     if from_edge is None or from_edge.parent is None:
         return
 
     backup_reward = from_edge.total_reward
     cur_edge = from_edge.parent.parent_edge
 
-    while cur_edge is not None and cur_edge.parent.parent_edge is not None:
+    while cur_edge is not None and cur_edge.parent is not None:
         cur_edge.total_reward += backup_reward
         cur_edge.visit_count += 1
         cur_edge.avg_reward = cur_edge.total_reward / cur_edge.visit_count
+        cur_edge = cur_edge.parent.parent_edge
 
 
 def perform_MCTS(game_env, agent_id):
