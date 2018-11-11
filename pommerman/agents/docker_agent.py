@@ -154,7 +154,7 @@ class DockerAgent(BaseAgent):
                     "reward": json.dumps(reward, cls=utility.PommermanJSONEncoder)
                 })
         except requests.exceptions.Timeout as e:
-            print('Timeout in shutdown()!')
+            print('Timeout in episode_end()!')
 
     def shutdown(self):
         request_url = "http://localhost:{}/shutdown".format(self._port)
