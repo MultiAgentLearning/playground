@@ -45,13 +45,13 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
             self.init_agent(id, game_type)
             return jsonify(success=True)
 
-        @app.route("/shutdown", methods=["GET"])
+        @app.route("/shutdown", methods=["POST"])
         def shutdown(): #pylint: disable=W0612
             '''Requests destruction of any created objects'''
             self.shutdown()
             return jsonify(success=True)
 
-        @app.route("/episode_end", methods=["GET"])
+        @app.route("/episode_end", methods=["POST"])
         def episode_end(): #pylint: disable=W0612
             '''Info about end of a game'''
             data = request.get_json()
