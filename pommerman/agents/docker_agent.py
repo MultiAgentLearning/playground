@@ -108,6 +108,20 @@ class DockerAgent(BaseAgent):
                 print("This is a Docker error. Please fix: ", e)
                 raise
 
+    def init_agent(self, id, game_type):
+        super(DockerAgent, self).init_agent(id, game_type)
+        request_url = "http://localhost:{}/init_agent".format(self._port)
+        try:
+            req = requests.post(
+                request_url,
+                timeout=0.5,
+                json={
+                    "id": json.dumps(id, cls=utility.PommermanJSONEncoder),
+                    "game_type": json.dumps(game_type, cls=utility.PommermanJSONEncoder)
+                })
+        except requests.exceptions.Timeout as e:
+            print('Timeout in init_agent()!')
+
     def act(self, obs, action_space):
         obs_serialized = json.dumps(obs, cls=utility.PommermanJSONEncoder)
         request_url = "http://localhost:{}/action".format(self._port)
@@ -130,7 +144,28 @@ class DockerAgent(BaseAgent):
                 action = action[0]
         return action
 
+    def episode_end(self, reward):
+        request_url = "http://localhost:{}/episode_end".format(self._port)
+        try:
+            req = requests.post(
+                request_url,
+                timeout=0.5,
+                json={
+                    "reward": json.dumps(reward, cls=utility.PommermanJSONEncoder)
+                })
+        except requests.exceptions.Timeout as e:
+            print('Timeout in shutdown()!')
+
     def shutdown(self):
+        request_url = "http://localhost:{}/shutdown".format(self._port)
+        try:
+            req = requests.post(
+                request_url,
+                timeout=0.5,
+                json={ })
+        except requests.exceptions.Timeout as e:
+            print('Timeout in shutdown()!')
+
         print("Stopping container..")
         if self._container:
             try:
