@@ -22,6 +22,8 @@ class PommermanJSONEncoder(json.JSONEncoder):
             return obj.value
         elif isinstance(obj, constants.Action):
             return obj.value
+        elif isinstance(obj, constants.GameType):
+            return obj.value
         elif isinstance(obj, np.int64):
             return int(obj)
         elif hasattr(obj, 'to_json'):
