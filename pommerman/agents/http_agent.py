@@ -58,7 +58,7 @@ class HttpAgent(BaseAgent):
                 time.sleep(backoff)
 
     def init_agent(self, id, game_type):
-        super(DockerAgent, self).init_agent(id, game_type)
+        super(HttpAgent, self).init_agent(id, game_type)
         request_url = "http://{}:{}/init_agent".format(self._host, self._port)
         try:
             req = requests.post(
