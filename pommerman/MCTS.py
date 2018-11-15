@@ -1,5 +1,4 @@
 import copy
-import numpy as np
 import math
 
 from . import utility
@@ -13,6 +12,7 @@ class MCTNode:
             self.agent_id = agent_id    # The playing agent
             self.parent_edge = None
             self.child_edges = []
+            self.is_training = training
 
         else:
             # FIXME: During testing of agent, it is hard to keep agent's own little environment
@@ -29,11 +29,7 @@ class MCTNode:
         raise ValueError('Invalid agent id was stored in this node!')
 
     def get_agent_laid_bombs(self):
-        bombs = []
-        for bomb in self.game_env._bombs:
-            if bomb.bomber.agent_id == self.agent_id:
-                bombs.append(bomb)
-        return bombs
+        return [b for b in self.game_env._bombs if b.bomber.agent_id == self.agent_id]
 
     def get_alive_agents(self):
         return [agent.agent_id for agent in self.game_env._agents if agent.is_alive]
@@ -111,7 +107,7 @@ def decide_reward(prev_node, cur_node):
     if this_agent.agent_id in missing_agent_ids:
         reward += constants.REWARD_DIED
 
-    # Check if any enemies died (regardless of dying from who)
+    # Check if any enemies died (regardless of dying from whom)
     for enemy in this_agent.enemies:
         enemy_agent_id = int(enemy.name[-1])
         if enemy_agent_id in missing_agent_ids:
@@ -239,6 +235,9 @@ def expand(node):
         edge.total_reward = rollout_reward
         edge.avg_reward = rollout_reward
 
+        # Backup the value to root
+        backup(edge)
+
 
 def backup(from_edge):
     """
@@ -266,9 +265,6 @@ def perform_MCTS(game_env, agent_id):
     for i in range(constants.NUM_SIMULATIONS):
         leaf = select(root)
         expand(leaf)
-
-        for child_edge in leaf.child_edges:
-            backup(child_edge)
 
     next_rewards = [edge.avg_reward for edge in root.child_edges]
     pi = utility.softmax(next_rewards)
