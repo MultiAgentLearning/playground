@@ -393,3 +393,10 @@ def join_json_state(record_json_dir, agents, finished_at, config, info):
         for name in files:
             if "game_state" not in name:
                 os.remove(os.path.join(record_json_dir, name))
+
+
+def softmax(x):
+    x = np.array(x)
+    x -= np.max(x, axis=-1, keepdims=True)  # For numerical stability
+    exps = np.exp(x)
+    return exps / np.sum(exps, axis=-1, keepdims=True)
