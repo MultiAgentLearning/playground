@@ -3,6 +3,7 @@
 This includes not just ints but also classes like Item, GameType, Action, etc.
 """
 from enum import Enum
+from keras import regularizers
 
 RENDER_FPS = 15
 BOARD_SIZE = 11
@@ -13,6 +14,7 @@ AGENT_VIEW_SIZE = 4
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 2
 DEFAULT_BOMB_LIFE = 10
+NUM_ACTIONS = 6
 # color for each of the 4 agents
 AGENT_COLORS = [[231, 76, 60], [46, 139, 87], [65, 105, 225], [238, 130, 238]]
 # color for each of the items.
@@ -65,6 +67,41 @@ BACKGROUND_COLOR = (41, 39, 51, 255)
 TILE_COLOR = (248, 221, 82, 255)
 TEXT_COLOR = (170, 170, 170, 255)
 
+
+# MCTS
+NUM_SIMULATIONS = 300
+UCT_C = 1
+ROLLOUT_DEPTH = 10
+
+# Rollout immediate rewards
+REWARD_DECAY      = -1
+REWARD_WOOD       = 5
+REWARD_POWERUP    = 25
+REWARD_ENEMY_DIED = 250
+REWARD_DIED       = -300
+
+# Model
+# Model input dimensions
+INPUT_DIM = (BOARD_SIZE, BOARD_SIZE, 15)
+NUM_FILTERS = 64 # Default number of filters for conv layers
+NUM_RESIDUAL_BLOCKS = 16
+
+''' Train '''
+SAVE_MODELS_DIR = 'saved-models/'
+MODEL_PREFIX = 'version'
+SAVE_TRAIN_DATA_DIR = 'generated-training-data/'
+SAVE_TRAIN_DATA_PREF = 'data-for-iter-'
+NUM_WORKERS = 12                            # For generating self plays in parallel                          # Total number of self plays to generate
+BATCH_SIZE = 32
+REG_CONST = 6e-5                            # Weight decay constant (l1/l2 regularizer)
+LEARNING_RATE = 0.001                       # Traning learning rate
+REGULARIZER = regularizers.l2(REG_CONST)    # Default kernal regularizer
+EPOCHS = 100                                 # Training Epochs
+
+# Training
+SIMPLE_SPARRER = 'simple_sparer'
+MODEL_SPARRER = 'model_sparrer'
+RANDOM_SPARRER = 'random_sparrer'
 
 class Item(Enum):
     """The Items in the game.
