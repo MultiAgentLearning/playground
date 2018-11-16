@@ -5,12 +5,13 @@ import itertools
 import json
 import random
 import os
+import copy
 from jsonmerge import Merger
 
 from gym import spaces
 import numpy as np
 
-from . import constants
+import constants
 
 
 class PommermanJSONEncoder(json.JSONEncoder):
@@ -400,6 +401,129 @@ def softmax(x):
     x -= np.max(x, axis=-1, keepdims=True)  # For numerical stability
     exps = np.exp(x)
     return exps / np.sum(exps, axis=-1, keepdims=True)
+
+
+def update_agent_memory(cur_memory, cur_obs):
+    """
+    Update agent's memory of the board
+    :param cur_memory: Current memory including board, bomb_life, and bomb_blast_strength
+    :param cur_obs: Current observation of the agent, including the above
+    :return: The new memory
+    """
+    def _get_explosion_range(row, col, blast_strength_map):
+        strength = int(blast_strength_map[row, col])
+        indices = {
+            'up': ([row - i, col] for i in range(1, strength)),
+            'down': ([row + i, col] for i in range(strength)),
+            'left': ([row, col - i] for i in range(1, strength)),
+            'right': ([row, col + i] for i in range(1, strength))
+        }
+        return indices
+
+    # Note: all three 11x11 boards are numpy arrays
+    if cur_memory is None:
+        new_memory = {
+            'bomb_life': np.copy(cur_obs['bomb_life']),
+            'bomb_blast_strength': np.copy(cur_obs['bomb_blast_strength']),
+            'board': np.copy(cur_obs['board'])
+        }
+        return new_memory
+
+    # Work on a copy and keep original unchanged
+    cur_memory = copy.deepcopy(cur_memory)
+
+    # Update history by incrementing timestep by 1
+    board = cur_memory['board']
+    bomb_life = cur_memory['bomb_life']
+    bomb_blast_strength = cur_memory['bomb_blast_strength']
+
+    # Decrease bomb_life by 1
+    original_bomb_life = np.copy(bomb_life)
+    np.putmask(bomb_life, bomb_life > 0, bomb_life - 1)
+
+    # Find out which bombs are going to explode
+    exploding_bomb_pos = np.logical_xor(original_bomb_life, bomb_life)
+    non_exploding_bomb_pos = np.logical_and(bomb_life, np.ones_like(bomb_life))
+    has_explosions = exploding_bomb_pos.any()
+
+    # Map to record which positions will become flames
+    flamed_positions = np.zeros_like(board)
+
+    while has_explosions:
+        has_explosions = False
+        # For each bomb
+        for row, col in zip(*exploding_bomb_pos.nonzero()):
+            # For each direction
+            for direction, indices in _get_explosion_range(row, col, bomb_blast_strength).items():
+                # For each location along that direction
+                for r, c in indices:
+                    if not position_on_board(board, (r, c)):
+                        break
+                    # Stop when reaching a wall
+                    if board[r, c] == constants.Item.Rigid.value:
+                        break
+                    # Otherwise the position is flamed
+                    flamed_positions[r, c] = 1
+                    # Stop when reaching a wood
+                    if board[r, c] == constants.Item.Wood.value:
+                        break
+
+        # Check if other non-exploding bombs are triggered
+        exploding_bomb_pos = np.zeros_like(exploding_bomb_pos)
+
+        for row, col in zip(*non_exploding_bomb_pos.nonzero()):
+            if flamed_positions[row, col]:
+                has_explosions = True
+                exploding_bomb_pos[row, col] = True
+                non_exploding_bomb_pos[row, col] = False
+
+
+    new_memory = dict()
+
+    # Update bomb_life map
+    new_memory['bomb_life'] = np.where(flamed_positions == 0, bomb_life, 0)
+    # Update bomb_strength map
+    new_memory['bomb_blast_strength'] = np.where(flamed_positions == 0, bomb_blast_strength, 0)
+
+    # Update Board
+    # If board from observation has fog value, do nothing &
+    # keep original updated history.
+    # Otherwise, overwrite history by observation.
+    new_memory['board'] = np.where(flamed_positions == 0, cur_memory['board'], constants.Item.Passage.value)
+
+    # Overlay agent's newest observations onto the memory
+    obs_board = cur_obs['board']
+    for r, c in zip(*np.where(obs_board != constants.Item.Fog.value)):
+        # board[r, c] = obs_board[r, c] if obs_board[r, c] in self.memory_values else 0
+        new_memory['board'][r, c] = obs_board[r, c]
+        new_memory['bomb_life'][r, c] = cur_obs['bomb_life'][r, c]
+        new_memory['bomb_blast_strength'][r, c] = cur_obs['bomb_blast_strength'][r, c]
+
+    # For invisible parts of the memory, only keep useful information
+    for r, c in zip(*np.where(obs_board == constants.Item.Fog.value)):
+        if new_memory['board'][r, c] not in constants.MEMORY_VALS:
+            new_memory['board'][r, c] = constants.Item.Passage.value
+
+    return new_memory
+
+
+def combine_agent_obs_and_memory(memory, cur_obs):
+    """
+    Returns an extended observation of the agent
+    by incorporating its memory.
+    NOTE: Assumes the memory is up-to-date (i.e. called `update_agent_memory()`)
+    :param memory: The agent's memory of the game, including board, bomb life, and blast strength
+    :param cur_obs: The agent's current observation object
+    :return: The new, extended observation
+    """
+    if memory is None:
+        return cur_obs
+
+    extended_obs = copy.deepcopy(cur_obs)
+    for map in ['bomb_life', 'bomb_blast_strength', 'board']:
+        extended_obs[map] = np.copy(memory[map])
+    return extended_obs
+
     
 
 def convert_to_model_input(agent_id, history):
@@ -519,7 +643,8 @@ def bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_
                 old_bomb_strength = bomb_set[(bomb_new_x, bomb_new_y)][0]
                 bomb_expand(bomb_input, (bomb_new_x, bomb_new_y), old_bomb_strength, life, bomb_set, board_obs)
 
-def augmentData(X, y):
+
+def augment_data(X, y):
 
     # Up Down Flip
     up_down_flip_X = np.copy(X)
@@ -588,17 +713,18 @@ def augmentData(X, y):
     rot270_y[4] = y[1]
 
     return np.array([X,
-                    up_down_flip_X, 
-                    left_right_flip_X,
-                    diag_filp1_X,
-                    diag_filp2_X,
-                    rot90_X,
-                    rot180_X,
-                    rot270_X]), np.array([y,
-                    up_down_flip_y,
-                    left_right_flip_y,
-                    diag_filp1_y,
-                    diag_filp2_y,
-                    rot90_y,
-                    rot180_y,
-                    rot270_y])
+                     up_down_flip_X,
+                     left_right_flip_X,
+                     diag_filp1_X,
+                     diag_filp2_X,
+                     rot90_X,
+                     rot180_X,
+                     rot270_X]), \
+           np.array([y,
+                     up_down_flip_y,
+                     left_right_flip_y,
+                     diag_filp1_y,
+                     diag_filp2_y,
+                     rot90_y,
+                     rot180_y,
+                     rot270_y])
