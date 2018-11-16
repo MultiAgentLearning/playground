@@ -542,20 +542,20 @@ def augmentData(X, y):
     for i in range(X.shape[-1]):
         diag_filp1_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]))
     diag_filp1_y = np.copy(y)
-    diag_filp1_y[1] = y[4]
-    diag_filp1_y[4] = y[1]
-    diag_filp1_y[2] = y[3]
-    diag_filp1_y[3] = y[2]
+    diag_filp1_y[1] = y[3]
+    diag_filp1_y[3] = y[1]
+    diag_filp1_y[2] = y[4]
+    diag_filp1_y[4] = y[2]
 
     # up right to left down diagonal flip
     diag_filp2_X = np.copy(X)
     for i in range(X.shape[-1]):
         diag_filp2_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]),-1)
     diag_filp2_y = np.copy(y)
-    diag_filp2_y[1] = y[3]
-    diag_filp2_y[3] = y[1]
-    diag_filp2_y[2] = y[4]
-    diag_filp2_y[4] = y[2]
+    diag_filp2_y[1] = y[4]
+    diag_filp2_y[4] = y[1]
+    diag_filp2_y[2] = y[3]
+    diag_filp2_y[3] = y[2]
 
     # anti-clock rotate 90
     rot90_X = np.copy(X)
