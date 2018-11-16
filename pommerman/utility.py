@@ -11,7 +11,7 @@ from jsonmerge import Merger
 from gym import spaces
 import numpy as np
 
-from . import constants
+import constants
 
 
 class PommermanJSONEncoder(json.JSONEncoder):

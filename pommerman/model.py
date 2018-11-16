@@ -7,8 +7,10 @@ from keras.models import Model as KerasModel
 from keras.layers import Input, Conv2D, Flatten, Dense, BatchNormalization, LeakyReLU, Activation, add
 
 from loss import softmax_cross_entropy_with_logits
-from constants import *
+import constants
+import utility
 import numpy as np
+
 
 
 class Model:
@@ -19,7 +21,7 @@ class Model:
 
     def predict(self, input_board):
         logits = self.model.predict(np.expand_dims(input_board, axis=0).astype('float64'))
-        p = utils.softmax(logits)           # Apply softmax on the logits after prediction
+        p = utility.softmax(logits)           # Apply softmax on the logits after prediction
         return p.squeeze()                  # Remove the extra batch dimension
 
     def save(self, save_dir, model_prefix, version):
@@ -33,7 +35,7 @@ class Model:
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         self.model.save_weights('{}/{}{:0>4}-weights.h5'.format(save_dir, prefix, version))
-        utils.stress_message('Saved model weights "{}{:0>4}-weights" to "{}"'.format(prefix, version, save_dir), True)
+        print('Saved model weights "{}{:0>4}-weights" to "{}"'.format(prefix, version, save_dir))
 
     def load(self, filepath):
         self.model = load_model(
@@ -49,14 +51,14 @@ class Model:
 
 
 class ResidualCNN(Model):
-    def __init__(self, input_dim=INPUT_DIM, filters=NUM_FILTERS):
+    def __init__(self, input_dim=constants.INPUT_DIM, filters=constants.NUM_FILTERS):
         Model.__init__(self, input_dim, filters)
         self.model = self.build_model()
 
 
     def build_model(self):
         main_input = Input(shape=self.input_dim)
-        regularizer = regularizers.l2(REG_CONST)
+        regularizer = regularizers.l2(constants.REG_CONST)
 
         x = Conv2D(filters=64, kernel_size=3, kernel_regularizer=regularizer, padding='valid')(main_input)
         x = BatchNormalization()(x)
@@ -78,8 +80,7 @@ class ResidualCNN(Model):
 
         model = KerasModel(inputs=[main_input], outputs=[policy])
         model.compile(loss={'policy_head':softmax_cross_entropy_with_logits}
-                    , optimizer=SGD(lr=LEARNING_RATE, momentum=0.9, nesterov=True) # NOTE: keep here for reuse
-                    # , optimizer=Adam(lr=LEARNING_RATE)
+                    , optimizer=SGD(lr=constants.LEARNING_RATE, momentum=0.9, nesterov=True) # NOTE: keep here for reuse
                     )
 
         return model
@@ -90,7 +91,7 @@ class ResidualCNN(Model):
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
         x = Flatten()(x)
-        x = Dense(NUM_ACTIONS,
+        x = Dense(constants.NUM_ACTIONS,
                 use_bias=True,
                 activation='linear',
                 kernel_regularizer=regularizer,
@@ -131,3 +132,4 @@ if __name__ == '__main__':
     test_X = np.zeros([32,11,11,15])
     test_y = np.zeros([32,6])
     model.model.fit(x = test_X, y = test_y, batch_size = 32, epochs = 1, shuffle=True)
+    model.save(constants.SAVE_MODELS_DIR, constants.MODEL_PREFIX, 3124)
