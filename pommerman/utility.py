@@ -518,3 +518,87 @@ def bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_
             if (bomb_new_x, bomb_new_y) in bomb_set:
                 old_bomb_strength = bomb_set[(bomb_new_x, bomb_new_y)][0]
                 bomb_expand(bomb_input, (bomb_new_x, bomb_new_y), old_bomb_strength, life, bomb_set, board_obs)
+
+def augmentData(X, y):
+
+    # Up Down Flip
+    up_down_flip_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        up_down_flip_X[:,:,i] = np.flipud(X[:,:,i])
+    up_down_flip_y = np.copy(y)
+    up_down_flip_y[1] = y[2]
+    up_down_flip_y[2] = y[1]
+
+    # Left Right Flip
+    left_right_flip_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        left_right_flip_X[:,:,i] = np.fliplr(X[:,:,i])
+    left_right_flip_y = np.copy(y)
+    left_right_flip_y[3] = y[4]
+    left_right_flip_y[4] = y[3]
+
+    # up left to right down diagonal flip
+    diag_filp1_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        diag_filp1_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]))
+    diag_filp1_y = np.copy(y)
+    diag_filp1_y[1] = y[3]
+    diag_filp1_y[3] = y[1]
+    diag_filp1_y[2] = y[4]
+    diag_filp1_y[4] = y[2]
+
+    # up right to left down diagonal flip
+    diag_filp2_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        diag_filp2_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]),-1)
+    diag_filp2_y = np.copy(y)
+    diag_filp2_y[1] = y[4]
+    diag_filp2_y[4] = y[1]
+    diag_filp2_y[2] = y[3]
+    diag_filp2_y[3] = y[2]
+
+    # anti-clock rotate 90
+    rot90_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        rot90_X[:,:,i] = np.rot90(X[:,:,i])
+    rot90_y = np.copy(y)
+    rot90_y[1] = y[4]
+    rot90_y[2] = y[3]
+    rot90_y[3] = y[1]
+    rot90_y[4] = y[2]
+
+    # anti-clock rotate 180
+    rot180_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        rot180_X[:,:,i] = np.rot90(rot90_X[:,:,i])
+    rot180_y = np.copy(y)
+    rot180_y[1] = y[2]
+    rot180_y[2] = y[1]
+    rot180_y[3] = y[4]
+    rot180_y[4] = y[3]
+
+    # anti-clock rotate 270
+    rot270_X = np.copy(X)
+    for i in range(X.shape[-1]):
+        rot270_X[:,:,i] = np.rot90(rot180_X[:,:,i])
+    rot270_y = np.copy(y)
+    rot270_y[1] = y[3]
+    rot270_y[2] = y[4]
+    rot270_y[3] = y[2]
+    rot270_y[4] = y[1]
+
+    return np.array([X,
+                    up_down_flip_X, 
+                    left_right_flip_X,
+                    diag_filp1_X,
+                    diag_filp2_X,
+                    rot90_X,
+                    rot180_X,
+                    rot270_X]), np.array([y,
+                    up_down_flip_y,
+                    left_right_flip_y,
+                    diag_filp1_y,
+                    diag_filp2_y,
+                    rot90_y,
+                    rot180_y,
+                    rot270_y])
