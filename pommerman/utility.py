@@ -643,7 +643,8 @@ def bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_
                 old_bomb_strength = bomb_set[(bomb_new_x, bomb_new_y)][0]
                 bomb_expand(bomb_input, (bomb_new_x, bomb_new_y), old_bomb_strength, life, bomb_set, board_obs)
 
-def augmentData(X, y):
+
+def augment_data(X, y):
 
     # Up Down Flip
     up_down_flip_X = np.copy(X)
@@ -712,17 +713,18 @@ def augmentData(X, y):
     rot270_y[4] = y[1]
 
     return np.array([X,
-                    up_down_flip_X, 
-                    left_right_flip_X,
-                    diag_filp1_X,
-                    diag_filp2_X,
-                    rot90_X,
-                    rot180_X,
-                    rot270_X]), np.array([y,
-                    up_down_flip_y,
-                    left_right_flip_y,
-                    diag_filp1_y,
-                    diag_filp2_y,
-                    rot90_y,
-                    rot180_y,
-                    rot270_y])
+                     up_down_flip_X,
+                     left_right_flip_X,
+                     diag_filp1_X,
+                     diag_filp2_X,
+                     rot90_X,
+                     rot180_X,
+                     rot270_X]), \
+           np.array([y,
+                     up_down_flip_y,
+                     left_right_flip_y,
+                     diag_filp1_y,
+                     diag_filp2_y,
+                     rot90_y,
+                     rot180_y,
+                     rot270_y])

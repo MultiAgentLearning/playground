@@ -163,7 +163,7 @@ BATCH_SIZE = 32
 REG_CONST = 6e-5                            # Weight decay constant (l1/l2 regularizer)
 LEARNING_RATE = 0.001                       # Traning learning rate
 REGULARIZER = regularizers.l2(REG_CONST)    # Default kernal regularizer
-EPOCHS = 100                                 # Training Epochs
+EPOCHS = 20                                 # Training Epochs
 
 # Agent Memory Values
 MEMORY_VALS = [

@@ -150,7 +150,6 @@ class SparringAgent(BaseAgent):
             agents_actions = self.modelled_env.act(agents_obs)
             agents_actions[self.agent_id] = sampled_action
 
-            # TODO: use Meng's obs -> model to make training example
             X = utility.combine_agent_obs_and_memory(self.memory, agents_obs[self.agent_id])
             y = action_prior
 

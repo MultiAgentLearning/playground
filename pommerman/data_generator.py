@@ -40,7 +40,22 @@ class DataGenerator:
                     training_data_y.append(y)
 
             process_pool.join()
-            return np.array(training_data_X), np.array(training_data_y)
+
+            training_data_X = np.array(training_data_X)
+            training_data_y = np.array(training_data_y)
+
+            # Augment training data
+            X_augment = []
+            y_augment = []
+            for i in range(len(training_data_X)):
+                X, y = utility.augment_data(training_data_X[i], training_data_y[i])
+                X_augment.append(X)
+                y_augment.append(y)
+
+            X_augment = np.concatenate(X_augment)
+            y_augment = np.concatenate(y_augment)
+
+            return X_augment, y_augment
 
         except KeyboardInterrupt:
             print('SIGINT caught, exiting')
