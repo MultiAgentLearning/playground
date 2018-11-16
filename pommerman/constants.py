@@ -66,19 +66,6 @@ TILE_COLOR = (248, 221, 82, 255)
 TEXT_COLOR = (170, 170, 170, 255)
 
 
-# MCTS
-NUM_SIMULATIONS = 300
-UCT_C = 1
-ROLLOUT_DEPTH = 10
-
-# Rollout immediate rewards
-REWARD_DECAY      = -1
-REWARD_WOOD       = 5
-REWARD_POWERUP    = 25
-REWARD_ENEMY_DIED = 250
-REWARD_DIED       = -300
-
-
 class Item(Enum):
     """The Items in the game.
 
@@ -141,3 +128,33 @@ class Result(Enum):
 class InvalidAction(Exception):
     '''Invalid Actions Exception'''
     pass
+
+
+# MCTS
+NUM_SIMULATIONS = 300
+UCT_C = 1
+ROLLOUT_DEPTH = 10
+
+# Rollout immediate rewards
+REWARD_DECAY      = -1
+REWARD_WOOD       = 5
+REWARD_POWERUP    = 25
+REWARD_ENEMY_DIED = 250
+REWARD_DIED       = -300
+
+# Training
+SIMPLE_SPARRER = 'simple_sparer'
+MODEL_SPARRER = 'model_sparrer'
+RANDOM_SPARRER = 'random_sparrer'
+MAX_PLAYERS = 4
+
+# Agent Memory Values
+MEMORY_VALS = [
+    Item.Passage.value,
+    Item.Rigid.value,
+    Item.Wood.value,
+    Item.ExtraBomb.value,
+    Item.IncrRange.value,
+    Item.Kick.value,
+    Item.Fog.value
+]

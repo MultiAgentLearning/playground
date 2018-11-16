@@ -1,23 +1,19 @@
 import copy
 import math
+import numpy as np
 
 from . import utility
 from . import constants
 
 
 class MCTNode:
-    def __init__(self, game_env, agent_id, training=True):
-        if training:
-            self.game_env = game_env
-            self.agent_id = agent_id    # The playing agent
-            self.parent_edge = None
-            self.child_edges = []
-            self.is_training = training
+    def __init__(self, game_env, agent_id, agent_memory):
+        self.game_env = game_env
+        self.agent_id = agent_id    # The playing agent
+        self.agent_memory = agent_memory
+        self.parent_edge = None
+        self.child_edges = []
 
-        else:
-            # FIXME: During testing of agent, it is hard to keep agent's own little environment
-            # FIXME: consistent with the actual ongoing game env. So leave empty for now.
-            pass
 
     def is_leaf(self):
         return len(self.child_edges) == 0
@@ -166,7 +162,9 @@ def rollout_policy(node):
     :return: The actions of all 4 agents for transitioning to next state
     """
     # NOTE: Use Simple Agent for now
-    actions = node.game_env.act(node.game_env.get_observations())
+    agents_obs = node.game_env.get_observations()
+    agents_obs[node.agent_id] = utility.combine_agent_obs_and_memory(node.agent_memory, agents_obs[node.agent_id])
+    actions = node.game_env.act(agents_obs)
     return actions
 
 
@@ -187,7 +185,11 @@ def rollout(leaf, depth):
     for i in range(depth):
         cur_state = copy.deepcopy(prev_state)
         agent_actions = rollout_policy(cur_state)
-        _, _, done, _ = cur_state.game_env.step(agent_actions)
+        agents_obs, _, done, _ = cur_state.game_env.step(agent_actions)
+
+        # After making a move, update the memory kept on this node
+        cur_state.agent_memory = utility.update_agent_memory(cur_state.agent_memory,
+                                                             agents_obs[cur_state.agent_id])
 
         reward = decide_reward(prev_state, cur_state)
         total_reward += reward
@@ -211,29 +213,41 @@ def expand(node):
         return
 
     # build children
+    is_done = []
     for action in constants.Action:
         child_node = copy.deepcopy(node)
-        # NOTE: For now, simulate all other agents' moves using Simple Agent
-        agents_actions = node.game_env.act(node.game_env.get_observations())
-        # Replace the current agent's action with the action we are searching
-        agents_actions[node.agent_id] = action.value
-        # Apply actions to environment
-        child_node.game_env.step(agents_actions)
+        agents_obs = node.game_env.get_observations()
 
+        # Combine current observation with the agent's memory of the game
+        agents_obs[node.agent_id] = utility.combine_agent_obs_and_memory(node.agent_memory, agents_obs[node.agent_id])
+
+        # Replace the current agent's action with the action we are searching
+        agents_actions = node.game_env.act(agents_obs)
+        agents_actions[node.agent_id] = action.value
+
+        # Apply actions to environment, while checking if reaching a terminal state
+        new_agents_obs, _, done, _ = child_node.game_env.step(agents_actions)
+        is_done.append(done)
+
+        # Update agent's memory after stepping
+        child_node.agent_memory = utility.update_agent_memory(child_node.agent_memory,new_agents_obs[child_node.agent_id])
+
+        # Build Tree
         new_edge = MCTEdge(node, child_node)
         child_node.parent_edge = new_edge
         node.child_edges.append(new_edge)
 
     # rollout for each children, and then send reward all the way back to root, including this current leaf
-    # TODO: parallelism possible
 
-    for edge in node.child_edges:
+    for done, edge in zip(is_done, node.child_edges):
         child_node = edge.child
-        rollout_reward = rollout(child_node, constants.ROLLOUT_DEPTH)
-
+        if done:
+            reward = decide_reward(prev_node=node, cur_node=child_node)
+        else:
+            reward = rollout(child_node, constants.ROLLOUT_DEPTH)
         edge.visit_count = 1
-        edge.total_reward = rollout_reward
-        edge.avg_reward = rollout_reward
+        edge.total_reward = reward
+        edge.avg_reward = reward
 
         # Backup the value to root
         backup(edge)
@@ -259,8 +273,9 @@ def backup(from_edge):
         cur_edge = cur_edge.parent.parent_edge
 
 
-def perform_MCTS(game_env, agent_id):
-    root = MCTNode(game_env, agent_id)
+def perform_MCTS(game_env, agent_id, agent_memory):
+    # Copy the game env so the original is not affected
+    root = MCTNode(copy.deepcopy(game_env), agent_id, agent_memory)
 
     for i in range(constants.NUM_SIMULATIONS):
         leaf = select(root)
