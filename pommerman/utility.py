@@ -400,3 +400,121 @@ def softmax(x):
     x -= np.max(x, axis=-1, keepdims=True)  # For numerical stability
     exps = np.exp(x)
     return exps / np.sum(exps, axis=-1, keepdims=True)
+    
+
+def convert_to_model_input(agent_id, history):
+    # History Observation
+    board_obs = history['board']
+    bomb_blast_strength_obs = history['bomb_blast_strength']
+    bomb_life_obs = history['bomb_life']
+
+    # Model Input
+    passage_input = np.zeros([11,11])
+    wall_input = np.zeros([11,11])
+    wood_input = np.zeros([11,11])
+    self_input = np.zeros([11,11])
+    friend_input = np.zeros([11,11])
+    enemy_input = np.zeros([11,11])
+    flame_input = np.zeros([11,11])
+    extra_bomb_input = np.zeros([11,11])
+    increase_range_input = np.zeros([11,11])
+    kick_input = np.zeros([11,11])
+    fog_input = np.zeros([11,11])
+    can_kick_input = np.zeros([11,11])
+    self_ammo_input = np.zeros([11,11])
+
+    passage_input[board_obs==0] = 1
+    wall_input[board_obs==1] = 1
+    wood_input[board_obs==2] = 1
+    self_input[board_obs==agent_id+10] = 1
+    friend_input[board_obs == (agent_id+2)%4 + 10] = 1
+    enemy_input[board_obs == (agent_id+1)%4 + 10] = 1
+    enemy_input[board_obs == (agent_id+3)%4 + 10] = 1
+    flame_input[board_obs==4] = 1
+    extra_bomb_input[board_obs==6] = 1
+    increase_range_input[board_obs==7] = 1
+    kick_input[board_obs==8] = 1
+    fog_input[board_obs==5] = 1
+
+    if history['can_kick']:
+        can_kick_input = np.ones([11,11])
+
+    self_blast_strength_input = np.full((11,11), history['blast_strength'])
+    self_ammo_input = np.full((11,11), history['ammo'])
+
+    bomb_input = get_bomb_input(bomb_blast_strength_obs, bomb_life_obs, board_obs)
+
+    # Stack Inputs
+    model_input = []
+    model_input.append(passage_input)
+    model_input.append(wall_input)
+    model_input.append(wood_input)
+    model_input.append(bomb_input)
+    model_input.append(flame_input)
+    model_input.append(fog_input)
+    model_input.append(extra_bomb_input)
+    model_input.append(increase_range_input)
+    model_input.append(kick_input)
+    model_input.append(can_kick_input)
+    model_input.append(self_blast_strength_input)
+    model_input.append(self_ammo_input)
+    model_input.append(self_input)
+    model_input.append(friend_input)
+    model_input.append(enemy_input)
+
+    return np.array(model_input)
+
+
+def get_bomb_input(bomb_blast_strength_obs, bomb_life_obs, board_obs):
+    bomb_input = np.zeros([11,11])
+    bomb_set = {}
+    for i in range(10,0,-1):
+        bomb_x_list, bomb_y_list = np.where(bomb_life_obs==i)
+        for j in range(len(bomb_x_list)):
+            bomb_x = bomb_x_list[j]
+            bomb_y = bomb_y_list[j]
+            strength = bomb_blast_strength_obs[bomb_x, bomb_y]
+            life = bomb_life_obs[bomb_x, bomb_y]
+            bomb_set[(bomb_x,bomb_y)] = (strength, life)
+            bomb_expand(bomb_input, (bomb_x,bomb_y), strength, life, bomb_set, board_obs)
+    return bomb_input
+
+
+def bomb_expand(bomb_input, bomb_pos, strength, life, bomb_set, board_obs):
+    bomb_x, bomb_y = bomb_pos
+    bomb_input[bomb_x, bomb_y] = life
+
+    # Up Expand
+    bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_obs, (-1, 0))
+
+    # Down Expand
+    bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_obs, (1, 0))
+
+    # Left Expand
+    bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_obs, (0, -1))
+
+    # Right Expand
+    bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_obs, (0, 1))
+
+
+def bomb_expand_direction(bomb_input, bomb_pos, strength, life, bomb_set, board_obs, direction):
+    bomb_x, bomb_y = bomb_pos
+    for i in range(1, int(strength)):
+        bomb_new_x = bomb_x + i * direction[0]
+        bomb_new_y = bomb_y + i * direction[1]
+
+        if bomb_new_x < 0 or bomb_new_x >= bomb_input.shape[0]:
+            break
+        if bomb_new_y < 0 or bomb_new_y >= bomb_input.shape[1]:
+            break
+
+        if board_obs[bomb_new_x, bomb_new_y] == 1:
+            break
+        elif board_obs[bomb_new_x, bomb_new_y] == 2:
+            bomb_input[bomb_new_x, bomb_new_y] = life
+            break
+        elif bomb_input[bomb_new_x, bomb_new_y] > life or bomb_input[bomb_new_x, bomb_new_y] == 0:
+            bomb_input[bomb_new_x, bomb_new_y] = life
+            if (bomb_new_x, bomb_new_y) in bomb_set:
+                old_bomb_strength = bomb_set[(bomb_new_x, bomb_new_y)][0]
+                bomb_expand(bomb_input, (bomb_new_x, bomb_new_y), old_bomb_strength, life, bomb_set, board_obs)
