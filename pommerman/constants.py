@@ -134,7 +134,7 @@ class InvalidAction(Exception):
 # MCTS
 NUM_SIMULATIONS = 300
 UCT_C = 1
-ROLLOUT_DEPTH = 10
+ROLLOUT_DEPTH = 15
 
 # Rollout immediate rewards
 REWARD_DECAY      = -1
