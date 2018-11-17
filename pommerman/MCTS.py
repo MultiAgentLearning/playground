@@ -14,7 +14,6 @@ class MCTNode:
         self.parent_edge = None
         self.child_edges = []
 
-
     def is_leaf(self):
         return len(self.child_edges) == 0
 
@@ -29,6 +28,12 @@ class MCTNode:
 
     def get_alive_agents(self):
         return [agent.agent_id for agent in self.game_env._agents if agent.is_alive]
+
+    def copy(self):
+        copied_env = copy.deepcopy(self.game_env)
+        copied_memory = copy.deepcopy(self.agent_memory)
+        new_node = MCTNode(copied_env, self.agent_id, copied_memory)
+        return new_node
 
 
 class MCTEdge:
@@ -188,7 +193,7 @@ def rollout(leaf, depth):
     prev_state = leaf
 
     for i in range(depth):
-        cur_state = copy.deepcopy(prev_state)
+        cur_state = prev_state.copy()
         agent_actions = rollout_policy(cur_state)
         agents_obs, _, done, _ = cur_state.game_env.step(agent_actions)
 
@@ -198,6 +203,8 @@ def rollout(leaf, depth):
 
         reward = decide_reward(prev_state, cur_state)
         total_reward += reward
+
+        prev_state = cur_state
 
         if done:
             break
@@ -220,7 +227,7 @@ def expand(node):
     # build children
     is_done = []
     for action in constants.Action:
-        child_node = copy.deepcopy(node)
+        child_node = node.copy()
         agents_obs = node.game_env.get_observations()
 
         # Combine current observation with the agent's memory of the game
