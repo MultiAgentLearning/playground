@@ -53,16 +53,18 @@ def selection_policy(node, c_uct):
 
     max_child = None
     max_val = float('-inf')
-    total_visit = 0
+    total_visit = 1
 
     for edge in node.child_edges:
         total_visit += edge.visit_count
 
     # Determine best child to move to according to UCT
     for edge in node.child_edges:
-        if edge.visit_count > 0:
+        if edge.visit_count == 0:
+            edge_val = 0
+        else:
             edge_val = edge.total_reward / edge.visit_count
-            edge_val += c_uct * math.sqrt(2 * math.log(total_visit) / edge.visit_count)
+        edge_val += c_uct * math.sqrt(2 * math.log(total_visit) / (1 + edge.visit_count))
 
         if edge_val > max_val:
             max_val = edge_val
@@ -240,37 +242,33 @@ def expand(node):
         child_node.parent_edge = new_edge
         node.child_edges.append(new_edge)
 
-    # rollout for each children, and then send reward all the way back to root, including this current leaf
+    # rollout for each children, and then send the average reward back to root via the current leaf
+    leaf_avg_reward = 0
 
     for done, edge in zip(is_done, node.child_edges):
         child_node = edge.child
         if done:
-            reward = decide_reward(prev_node=node, cur_node=child_node)
+            leaf_avg_reward += decide_reward(prev_node=node, cur_node=child_node)
         else:
-            reward = rollout(child_node, constants.ROLLOUT_DEPTH)
-        edge.visit_count = 1
-        edge.total_reward = reward
-        edge.avg_reward = reward
+            leaf_avg_reward += rollout(child_node, constants.ROLLOUT_DEPTH)
 
-        # Backup the value to root
-        backup(edge)
+    leaf_avg_reward /= len(node.child_edges)
+
+    # Backup the value to root
+    backup(node.parent_edge, leaf_avg_reward)
 
 
-def backup(from_edge):
+def backup(from_edge, reward):
     """
     Given the lowest edge in the search tree, backup its
     value along all edges to the root
     :param from_edge: the edge
     :return: None
     """
-    if from_edge is None or from_edge.parent is None:
-        return
-
-    backup_reward = from_edge.total_reward
-    cur_edge = from_edge.parent.parent_edge
+    cur_edge = from_edge
 
     while cur_edge is not None and cur_edge.parent is not None:
-        cur_edge.total_reward += backup_reward
+        cur_edge.total_reward += reward
         cur_edge.visit_count += 1
         cur_edge.avg_reward = cur_edge.total_reward / cur_edge.visit_count
         cur_edge = cur_edge.parent.parent_edge
