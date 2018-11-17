@@ -60,8 +60,9 @@ def selection_policy(node, c_uct):
 
     # Determine best child to move to according to UCT
     for edge in node.child_edges:
-        edge_val = edge.total_reward / edge.visit_count
-        edge_val += c_uct * math.sqrt(2 * math.log(total_visit) / edge.visit_count)
+        if edge.visit_count > 0:
+            edge_val = edge.total_reward / edge.visit_count
+            edge_val += c_uct * math.sqrt(2 * math.log(total_visit) / edge.visit_count)
 
         if edge_val > max_val:
             max_val = edge_val
@@ -78,7 +79,7 @@ def select(root):
     """
     cur = root
     while not cur.is_leaf():
-        cur = selection_policy(cur)
+        cur = selection_policy(cur, constants.UCT_C)
     return cur
 
 
@@ -105,6 +106,8 @@ def decide_reward(prev_node, cur_node):
 
     # Check if any enemies died (regardless of dying from whom)
     for enemy in this_agent.enemies:
+        if enemy.name == 'AgentDummy':
+            continue
         enemy_agent_id = int(enemy.name[-1])
         if enemy_agent_id in missing_agent_ids:
             reward += constants.REWARD_ENEMY_DIED
