@@ -6,27 +6,29 @@ from . import constants
 from .agents import SparringAgent
 
 class DataGenerator:
-    def __init__(self, num_workers):
+    def __init__(self, num_workers=constants.NUM_WORKERS):
         self.num_workers = num_workers
 
 
-    def agent_simulation(self, worker_id, sparrer_type):
+    def agent_simulation(self, worker_id, num_games, sparrer_type):
         # NOTE: may need more imports for network agents
         np.random.seed()
 
         agent = SparringAgent(sparrer_type=sparrer_type)
         agent.set_agent_id(worker_id % constants.MAX_PLAYERS)
 
-        raw_training_examples = agent.simulate()
+        raw_training_examples = []
+        for _ in range(num_games):
+            raw_training_examples += agent.simulate()
         return raw_training_examples
 
 
-    def generate_agent_data(self, sparrer_type):
+    def generate_agent_data(self, num_games, sparrer_type):
         process_pool = mp.Pool(processes=self.num_workers)
         workers_results = []
 
         for i in range(self.num_workers):
-            data_async = process_pool.apply_async(self.agent_simulation, args=(i, sparrer_type))
+            data_async = process_pool.apply_async(self.agent_simulation, args=(i, num_games, sparrer_type))
             workers_results.append(data_async)
 
         try:
@@ -64,8 +66,11 @@ class DataGenerator:
             exit()
 
 
-    def generate_simple_agent_data(self):
-        return self.generate_agent_data(sparrer_type=constants.SIMPLE_SPARRER)
+    def generate_simple_agent_data(self, num_games):
+        return self.generate_agent_data(num_games, sparrer_type=constants.SIMPLE_SPARRER)
 
 
+if __name__ == '__main__':
+    generator = DataGenerator(num_workers=constants.NUM_WORKERS)
+    training_data_X, training_data_y = generator.generate_simple_agent_data(1)
 

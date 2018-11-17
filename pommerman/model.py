@@ -129,6 +129,7 @@ class ResidualCNN(Model):
 
 if __name__ == '__main__':
     model = ResidualCNN()
+    model.model.summary()
     test_X = np.zeros([32,11,11,15])
     test_y = np.zeros([32,6])
     model.model.fit(x = test_X, y = test_y, batch_size = 32, epochs = 1, shuffle=True)
