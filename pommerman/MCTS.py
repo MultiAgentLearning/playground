@@ -108,6 +108,8 @@ def decide_reward(prev_node, cur_node):
 
     # Check if any enemies died (regardless of dying from whom)
     for enemy in this_agent.enemies:
+        if enemy.name == 'AgentDummy':
+            continue
         enemy_agent_id = int(enemy.name[-1])
         if enemy_agent_id in missing_agent_ids:
             reward += constants.REWARD_ENEMY_DIED

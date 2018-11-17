@@ -10,6 +10,8 @@ class BaseAgent:
         self._character = character
 
     def __getattr__(self, attr):
+        if attr.startswith('__'):
+            raise AttributeError(attr)
         return getattr(self._character, attr)
 
     def act(self, obs, action_space):
