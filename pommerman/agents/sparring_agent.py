@@ -1,6 +1,7 @@
 import copy
 import numpy as np
-from pommerman import *
+import pommerman
+from pommerman import agents
 from . import BaseAgent
 from .. import MCTS
 from .. import constants
@@ -9,11 +10,11 @@ from .. import utility
 
 class SparringAgent(BaseAgent):
 
-    def __init__(self, sparrer_type, model=None):
+    def __init__(self, sparrer_type, agent_id, model=None):
         super().__init__()
 
         if sparrer_type == constants.SIMPLE_SPARRER:
-            self.modelled_env = make('PommeTeamCompetition-v0', agent_list=[agents.SimpleAgent() for _ in range(4)])
+            self.modelled_env = pommerman.make('PommeTeamCompetition-v0', agent_list=[agents.SimpleAgent() for _ in range(4)])
         elif sparrer_type == constants.MODEL_SPARRER:
             # FIXME: may require changes
             self.modelled_env = make('PommeTeamCompetition-v0', agent_list=[agents.SmartAgent(model) for _ in range(4)])
@@ -25,6 +26,8 @@ class SparringAgent(BaseAgent):
 
         self.training_examples = []
         self.memory = None
+        self.modelled_env.reset()
+        self.agent_id = agent_id
 
 
     # def update_memory(self, agent_obs):
@@ -134,6 +137,7 @@ class SparringAgent(BaseAgent):
         Agent simulates a game to generate training data
         :return: The training data of a game (i.e 1 episode)
         """
+
         done = False
         while not done:
             # All agents' observations
