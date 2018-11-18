@@ -13,7 +13,6 @@ import numpy as np
 
 from . import constants
 
-
 class PommermanJSONEncoder(json.JSONEncoder):
     '''A helper class to encode state data into a json object'''
     def default(self, obj):

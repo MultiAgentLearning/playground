@@ -17,10 +17,10 @@ class SparringAgent(BaseAgent):
             self.modelled_env = pommerman.make('PommeTeamCompetition-v0', agent_list=[agents.SimpleAgent() for _ in range(4)])
         elif sparrer_type == constants.MODEL_SPARRER:
             # FIXME: may require changes
-            self.modelled_env = make('PommeTeamCompetition-v0', agent_list=[agents.SmartAgent(model) for _ in range(4)])
+            self.modelled_env = pommerman.make('PommeTeamCompetition-v0', agent_list=[agents.SmartAgent(model) for _ in range(4)])
         elif sparrer_type == constants.RANDOM_SPARRER:
             # FIXME: may require changes
-            self.modelled_env = make('PommeTeamCompetition-v0', agent_list=[agents.RandomAgent() for _ in range(4)])
+            self.modelled_env = pommerman.make('PommeTeamCompetition-v0', agent_list=[agents.RandomAgent() for _ in range(4)])
         else:
             raise ValueError('Invalid sparrer type')
 
