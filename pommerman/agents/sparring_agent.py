@@ -158,6 +158,6 @@ class SparringAgent(BaseAgent):
             y = action_prior
 
             self.training_examples.append((X, y, self.agent_id))
-            _, _, done, _ = self.modelled_env.step(action=agents_actions)
+            _, _, done, _ = self.modelled_env.step(agents_actions)
 
         return self.training_examples

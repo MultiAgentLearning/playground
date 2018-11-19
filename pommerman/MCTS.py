@@ -137,7 +137,9 @@ def decide_reward(prev_node, cur_node):
             pos = (bomb.position[0] + off * direction[0], bomb.position[1] + off * direction[1])
             exit = False
             # If the explosion is blocked, exit early
-            if not utility.position_on_board(prev_board, pos) or utility.position_is_wall(prev_board, pos):
+            if not utility.position_on_board(prev_board, pos) or :
+                break
+            if utility.position_is_wall(prev_board, pos):
                 exit = True
             # If a wood box is to be flamed in previous state and
             # is actually flamed in current state, then give reward

@@ -14,12 +14,12 @@ class DataGenerator:
         # NOTE: may need more imports for network agents
         np.random.seed()
 
-        agent = SparringAgent(sparrer_type=sparrer_type)
-        agent.set_agent_id(worker_id % constants.MAX_PLAYERS)
-
         raw_training_examples = []
         for _ in range(num_games):
+            agent = SparringAgent(sparrer_type=sparrer_type, agent_id = worker_id % constants.MAX_PLAYERS)
             raw_training_examples += agent.simulate()
+
+        print('Worker {} Generated {} examples'.format(worker_id, len(raw_training_examples)))
         return raw_training_examples
 
 
@@ -41,23 +41,24 @@ class DataGenerator:
                     training_data_X.append(X)
                     training_data_y.append(y)
 
+            process_pool.close()
             process_pool.join()
 
-            training_data_X = np.array(training_data_X)
-            training_data_y = np.array(training_data_y)
+            # training_data_X = np.array(training_data_X)
+            # training_data_y = np.array(training_data_y)
 
-            # Augment training data
-            X_augment = []
-            y_augment = []
-            for i in range(len(training_data_X)):
-                X, y = utility.augment_data(training_data_X[i], training_data_y[i])
-                X_augment.append(X)
-                y_augment.append(y)
+            # # Augment training data
+            # X_augment = []
+            # y_augment = []
+            # for i in range(len(training_data_X)):
+            #     X, y = utility.augment_data(training_data_X[i], training_data_y[i])
+            #     X_augment.append(X)
+            #     y_augment.append(y)
 
-            X_augment = np.concatenate(X_augment)
-            y_augment = np.concatenate(y_augment)
+            # X_augment = np.concatenate(X_augment)
+            # y_augment = np.concatenate(y_augment)
 
-            return X_augment, y_augment
+            return training_data_X, training_data_y
 
         except KeyboardInterrupt:
             print('SIGINT caught, exiting')

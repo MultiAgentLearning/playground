@@ -647,24 +647,24 @@ def augment_data(X, y):
 
     # Up Down Flip
     up_down_flip_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        up_down_flip_X[:,:,i] = np.flipud(X[:,:,i])
+    for i in range(X.shape[0]):
+        up_down_flip_X[i,:,:] = np.flipud(X[i,:,:])
     up_down_flip_y = np.copy(y)
     up_down_flip_y[1] = y[2]
     up_down_flip_y[2] = y[1]
 
     # Left Right Flip
     left_right_flip_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        left_right_flip_X[:,:,i] = np.fliplr(X[:,:,i])
+    for i in range(X.shape[0]):
+        left_right_flip_X[i,:,:] = np.fliplr(X[i,:,:])
     left_right_flip_y = np.copy(y)
     left_right_flip_y[3] = y[4]
     left_right_flip_y[4] = y[3]
 
     # up left to right down diagonal flip
     diag_filp1_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        diag_filp1_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]))
+    for i in range(X.shape[0]):
+        diag_filp1_X[i,:,:] = np.rot90(np.fliplr(X[i,:,:]))
     diag_filp1_y = np.copy(y)
     diag_filp1_y[1] = y[3]
     diag_filp1_y[3] = y[1]
@@ -673,8 +673,8 @@ def augment_data(X, y):
 
     # up right to left down diagonal flip
     diag_filp2_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        diag_filp2_X[:,:,i] = np.rot90(np.fliplr(X[:,:,i]),-1)
+    for i in range(X.shape[0]):
+        diag_filp2_X[i,:,:] = np.rot90(np.fliplr(X[i,:,:]),-1)
     diag_filp2_y = np.copy(y)
     diag_filp2_y[1] = y[4]
     diag_filp2_y[4] = y[1]
@@ -683,8 +683,8 @@ def augment_data(X, y):
 
     # anti-clock rotate 90
     rot90_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        rot90_X[:,:,i] = np.rot90(X[:,:,i])
+    for i in range(X.shape[0]):
+        rot90_X[i,:,:] = np.rot90(X[i,:,:])
     rot90_y = np.copy(y)
     rot90_y[1] = y[4]
     rot90_y[2] = y[3]
@@ -693,8 +693,8 @@ def augment_data(X, y):
 
     # anti-clock rotate 180
     rot180_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        rot180_X[:,:,i] = np.rot90(rot90_X[:,:,i])
+    for i in range(X.shape[0]):
+        rot180_X[i,:,:] = np.rot90(rot90_X[i,:,:])
     rot180_y = np.copy(y)
     rot180_y[1] = y[2]
     rot180_y[2] = y[1]
@@ -703,8 +703,8 @@ def augment_data(X, y):
 
     # anti-clock rotate 270
     rot270_X = np.copy(X)
-    for i in range(X.shape[-1]):
-        rot270_X[:,:,i] = np.rot90(rot180_X[:,:,i])
+    for i in range(X.shape[0]):
+        rot270_X[i,:,:] = np.rot90(rot180_X[i,:,:])
     rot270_y = np.copy(y)
     rot270_y[1] = y[3]
     rot270_y[2] = y[4]
