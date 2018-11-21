@@ -19,8 +19,8 @@ from tensorforce.execution import Runner
 from tensorforce.contrib.openai_gym import OpenAIGym
 import gym
 
-from .. import helpers, make
-from ..agents import TensorForceAgent
+from pommerman import helpers, make
+from pommerman.agents import TensorForceAgent
 
 
 CLIENT = docker.from_env()
@@ -32,15 +32,18 @@ def clean_up_agents(agents):
 
 
 class WrappedEnv(OpenAIGym):
-    '''An Env Wrapper used to make it easier to work 
+    '''An Env Wrapper used to make it easier to work
     with multiple agents'''
+
     def __init__(self, gym, visualize=False):
         self.gym = gym
         self.visualize = visualize
 
-    def execute(self, actions):
+    def execute(self, action):
         if self.visualize:
             self.gym.render()
+
+        actions = self.unflatten_action(action=action)
 
         obs = self.gym.get_observations()
         all_actions = self.gym.act(obs)
