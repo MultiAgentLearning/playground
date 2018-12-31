@@ -45,3 +45,28 @@ We welcome contributions through pull request. See [CONTRIBUTING](../master/CONT
 # Code of Conduct
 
 We strive for an open community. Please read over our [CODE OF CONDUCT](../master/CODE_OF_CONDUCT.md)
+
+# Citation
+
+If you use the Pommerman environment in your research, please use the following bibtex citation:
+
+@article{DBLP:journals/corr/abs-1809-07124,
+  author    = {Cinjon Resnick and
+  Wes Eldridge and
+  David Ha and
+  Denny Britz and
+  Jakob Foerster and
+  Julian Togelius and
+  Kyunghyun Cho and
+  Joan Bruna},
+  title     = {Pommerman: {A} Multi-Agent Playground},
+  journal   = {CoRR},
+  volume    = {abs/1809.07124},
+  year      = {2018},
+  url       = {http://arxiv.org/abs/1809.07124},
+  archivePrefix = {arXiv},
+  eprint    = {1809.07124},
+  timestamp = {Fri, 05 Oct 2018 11:34:52 +0200},
+  biburl    = {https://dblp.org/rec/bib/journals/corr/abs-1809-07124},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
