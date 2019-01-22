@@ -25,10 +25,10 @@ Agent classes that are included in Pommerman. This is the `agent_list` parameter
 
 It has the following format:
 
-* Board: The 11x11 board is a numpy array where each value corresponds to one of the representations below. 
+* Board: The 11x11 board is a numpy array where each value corresponds to one of the representations below. The first element in this 2D array corresponds to the configuration of topmost row of the board and so on.
     * Passage = 0
-    * Rigid Wall = 1
-    * Wooden Wall = 2
+    * Wooden Wall = 1
+    * Rigid Wall = 2
     * Bomb = 3
     * Flames = 4
     * Fog = 5: This is only applicable in the partially observed (2v2 Team Radio) setting.
