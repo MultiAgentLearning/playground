@@ -82,16 +82,21 @@ class Pomme(v0.Pomme):
         return observations
 
     def step(self, actions):
-        personal_actions = [action[0] for action in actions]
-        radio_actions = [action[1:] for action in actions]
-
-        for radio_action, agent in zip(radio_actions, self._agents):
-            if not agent.is_alive:
-                radio_action = (0, 0)
+        personal_actions = []
+        radio_actions = []
+        for agent_actions, agent in zip(actions, self._agents):
+            if type(agent_actions) == int or not agent.is_alive:
+                personal_actions.append(agent_actions)
+                radio_actions.append((0, 0))
+            elif type(agent_actions) in [tuple, list]:
+                personal_actions.append(agent_actions[0])
+                radio_actions.append(
+                    tuple(agent_actions[1:(1+self._radio_num_words)]))
             else:
-                radio_action = np.clip(radio_action, 1, 8).astype(np.uint8)
+                raise
+
             self._radio_from_agent[getattr(
-                constants.Item, 'Agent%d' % agent.agent_id)] = radio_action
+                constants.Item, 'Agent%d' % agent.agent_id)] = radio_actions[-1]
 
         return super().step(personal_actions)
 
