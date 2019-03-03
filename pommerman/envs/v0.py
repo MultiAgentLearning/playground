@@ -179,7 +179,6 @@ class Pomme(gym.Env):
         return self.get_observations()
 
     def seed(self, seed=None):
-        gym.spaces.prng.seed(seed)
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
