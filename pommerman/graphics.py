@@ -372,9 +372,20 @@ class PommeViewer(Viewer):
         dead.width = image_size
         dead.height = image_size
         sprites = []
+        
+        if self._game_type is constants.GameType.FFA:
+            agents = self._agents
+        else:
+            agents = [self._agents[i] for i in [0,2,1,3]]
 
-        for agent in self._agents:
-            x = self.board_right(x_offset=-3) - (4 - agent.agent_id) * (
+        for index, agent in enumerate(agents):
+            # weird math to make sure the alignment
+            # is correct. 'image_size + spacing' is an offset
+            # that includes padding (spacing) for each image. 
+            # '4 - index' is used to space each agent out based
+            # on where they are in the array based off of their
+            # index. 
+            x = self.board_right() - (4 - index) * (
                 image_size + spacing)
             y = board_top
             agent_image = self._resource_manager.agent_image(agent.agent_id)
@@ -399,7 +410,7 @@ class PommeViewer(Viewer):
         return constants.BORDER_SIZE + (
             self._board_size * self._tile_size) + y_offset
 
-    def board_right(self, x_offset):
+    def board_right(self, x_offset=0):
         return constants.BORDER_SIZE + (
             self._board_size * self._tile_size) + x_offset
 
@@ -469,6 +480,9 @@ class ResourceManager(object):
         return self.images[value]['image']
 
     def agent_image(self, agent_id):
+        if self._is_team:
+            return self.images[agent_id + 24]['image']
+
         return self.images[agent_id + 15]['image']
 
     def dead_marker(self):
