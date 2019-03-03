@@ -38,10 +38,10 @@ def make(config_id, agent_list, game_state_file=None, render_mode='human'):
         "Possible values: {}".format(config_id, REGISTRY)
     env = gym.make(config_id)
 
-    for id, agent in enumerate(agent_list):
+    for id_, agent in enumerate(agent_list):
         assert isinstance(agent, agents.BaseAgent)
         # NOTE: This is IMPORTANT so that the agent character is initialized
-        agent.init_agent(id, env.spec._kwargs['game_type'])
+        agent.init_agent(id_, env.spec._kwargs['game_type'])
 
     env.set_agents(agent_list)
     env.set_init_game_state(game_state_file)
