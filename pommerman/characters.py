@@ -40,7 +40,7 @@ class Bomber(object):
     def maybe_lay_bomb(self):
         if self.ammo > 0:
             self.ammo -= 1
-            return Bomb(self, self.position, constants.DEFAULT_BOMB_LIFE,
+            return Bomb(self, self.position, constants.DEFAULT_BOMB_LIFE + 1,
                         self.blast_strength)
         return None
 
