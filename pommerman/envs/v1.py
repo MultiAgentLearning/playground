@@ -67,6 +67,8 @@ class Pomme(v0.Pomme):
                     else:
                         new_bombs.append(b)
                 self._bombs = new_bombs
+            if utility.position_is_flames(board, (r, c)):
+                self._flames = [f for f in self._flames if f.position != (r,c)]
             if (r, c) in self._items:
                 # Item. Remove the item.
                 del self._items[(r, c)]
