@@ -4,8 +4,6 @@ The communication works by allowing each agent to send a vector of
 radio_num_words (default = 2) from a vocabulary of size radio_vocab_size
 (default = 8) to its teammate each turn. These vectors are passed into the
 observation stream for each agent.
-
-NOTE: This is here for posterity but is not used in the competition.
 """
 from gym import spaces
 import numpy as np
