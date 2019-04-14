@@ -12,7 +12,7 @@ NUM_ITEMS = 20
 AGENT_VIEW_SIZE = 4
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 2
-DEFAULT_BOMB_LIFE = 10
+DEFAULT_BOMB_LIFE = 9
 # color for each of the 4 agents
 AGENT_COLORS = [[231, 76, 60], [46, 139, 87], [65, 105, 225], [238, 130, 238]]
 # color for each of the items.
