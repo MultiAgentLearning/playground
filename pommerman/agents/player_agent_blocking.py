@@ -1,3 +1,7 @@
+"""
+This variant is blocking, that is the game pauses for keyboard input.
+"""
+
 from time import time
 import click
 
@@ -5,6 +9,12 @@ from . import BaseAgent
 from .. import characters
 from .. import constants
 
+# keypad control codes
+K_PREFIX='\x1b'
+K_RT='[C'
+K_LF='[D'
+K_UP='[A'
+K_DN='[B'
 
 class PlayerAgentBlocking(BaseAgent):
     """Block for keyboard input."""
@@ -16,13 +26,11 @@ class PlayerAgentBlocking(BaseAgent):
 
     def act(self, obs, action_space):
         key = click.getchar()
-        #key = click.pause()
-        #print(key,repr(key))
         if self.agent_control=='arrows':
-            if key=='\x1b[C': return constants.Action.Right.value
-            if key=='\x1b[D': return constants.Action.Left.value
-            if key=='\x1b[A': return constants.Action.Up.value
-            if key=='\x1b[B': return constants.Action.Down.value
+            if key==K_PREFIX+K_RT: return constants.Action.Right.value
+            if key==K_PREFIX+K_LF: return constants.Action.Left.value
+            if key==K_PREFIX+K_UP: return constants.Action.Up.value
+            if key==K_PREFIX+K_DN: return constants.Action.Down.value
             if key==' ': return constants.Action.Bomb.value
             return constants.Action.Stop.value
 
