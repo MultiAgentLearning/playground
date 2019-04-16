@@ -21,7 +21,6 @@ class PlayerAgentBlocking(BaseAgent):
 
     def __init__(self, character=characters.Bomber, agent_control='arrows'):
         super(PlayerAgentBlocking, self).__init__(character)
-        self._character.agent_image = 'agent-player'
         self.agent_control=agent_control
 
     def act(self, obs, action_space):
