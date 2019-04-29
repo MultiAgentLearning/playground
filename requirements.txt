@@ -13,3 +13,4 @@ websockets~=6.0
 websocket-client~=0.53.0
 python-cli-ui~=0.7.1
 python-rapidjson~=0.6.3
+Click==7.0
