@@ -103,10 +103,12 @@ class GameType(Enum):
       and together take on two other similarly matched agents.
     TeamRadio: 2v2. Submit two agents; they are matched up against two other
       agents. Each team passes discrete communications to each other.
+    OneOnOne: 1v1. A research environment for dueling between two agents
     """
     FFA = 1
     Team = 2
     TeamRadio = 3
+    OneOnOne = 4
 
 
 class Action(Enum):
