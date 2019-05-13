@@ -20,7 +20,7 @@ pom_battle --agents=player::arrows,docker::pommerman/test-agent,random::null,ran
 To get a list of active options you can run `pom_battle --help`. The current list of parameters is:  
 * `--game`: Allows you to change the game your agent plays. The default is `pommerman`. Currently only supports `pommerman`  
 
-* `--config`: Changes the type of game the agents will play. The default is `PommeFFACompetition-v0`. Other options are `PommeFFACompetition-v0`, `PommeFFAFast-v0`, `PommeFFA-v1`, `PommeRadio-v2`, `PommeTeam-v0`, and `PommeTeamFast-v0`.  
+* `--config`: Changes the type of game the agents will play. The default is `PommeFFACompetition-v0`. Other options are `PommeFFACompetition-v0`, `PommeFFAFast-v0`, `PommeFFA-v1`, `PommeRadio-v2`, `PommeTeam-v0`, `PommeTeamFast-v0` and `OneVsOne-v0`.  
 
 * `--agents`: Defines the agents participating in the game. The default is 4 simple agents. To changes the agents in the game use a comma delineated list of agent.  
 
