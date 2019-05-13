@@ -6,6 +6,7 @@ Configurations that are included in Pommerman. This is the `config_id` parameter
 
 * `PommeFFACompetition-v0` - In this all agents are against each other  
 * `PommeTeamCompetition-v0` - In this teams of two agents each are set against each other. The teams are [Agent0, Agent2] and [Agent1, Agent3]  
+* `OneVsOne-v0` - In this two agents are against each other  
 * `PommeFFA-v1` - In this all agents are against each other while the board collapses uniformly by replacing the outermost square with walls  
 * `PommeTeamCompetition-v1` - This is similar to PommeFFA-v1 but with Teams instead of being Free-For-All  
 * `PommeRadio-v2` - This is similar to `PommeTeamCompetition-v0` but the agents can send a list of two integers in the range [1, 8] to their teammates on every turn.
