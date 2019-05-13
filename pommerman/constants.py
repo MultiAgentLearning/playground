@@ -9,6 +9,10 @@ BOARD_SIZE = 11
 NUM_RIGID = 36
 NUM_WOOD = 36
 NUM_ITEMS = 20
+BOARD_SIZE_DUELING = 8
+NUM_RIGID_DUELING = 16
+NUM_WOOD_DUELING = 16
+NUM_ITEMS_DUELING = 10
 AGENT_VIEW_SIZE = 4
 HUMAN_FACTOR = 32
 DEFAULT_BLAST_STRENGTH = 2
@@ -103,7 +107,7 @@ class GameType(Enum):
       and together take on two other similarly matched agents.
     TeamRadio: 2v2. Submit two agents; they are matched up against two other
       agents. Each team passes discrete communications to each other.
-    OneOnOne: 1v1. A research environment for dueling between two agents
+    OneVsOne: 1v1. A research environment for dueling between two agents
     """
     FFA = 1
     Team = 2
