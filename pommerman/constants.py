@@ -108,7 +108,7 @@ class GameType(Enum):
     FFA = 1
     Team = 2
     TeamRadio = 3
-    OneOnOne = 4
+    OneVsOne = 4
 
 
 class Action(Enum):

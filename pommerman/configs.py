@@ -19,7 +19,7 @@ from . import characters
 
 def one_on_one_env():
     env = envs.v0.Pomme
-    game_type = constants.GameType.OneOnOne
+    game_type = constants.GameType.OneVsOne
     env_entry_point = 'pommerman.envs.v0:Pomme'
     env_id = 'OneOnOne-v0'
     env_kwargs = {
