@@ -8,6 +8,13 @@
 
 # Installation
 
+* Clone the repository
+```
+$ git clone https://github.com/MultiAgentLearning/playground ~/playground
+```
+
+## Pip
+
 * **OPTIONAL**: Setup an isolated virtual Python environment by running the following commands
 ```
 $ virtualenv ~/venv
@@ -18,16 +25,25 @@ in this virtual environment folder only.
 source ~/venv/bin/activate
 ```
 
-* Clone the repository
-```
-$ git clone https://github.com/MultiAgentLearning/playground ~/playground
-```
-
 * Install the `pommerman` package. This needs to be done every time the code is updated to get the
 latest modules
 ```
 $ cd ~/playground
 $ pip install -U .
+```
+
+## Conda
+
+* Install the `pommerman` environment.
+```
+$ cd ~/playground
+$ conda env create -f env.yml
+$ conda activate pommerman
+```
+
+* To update the environment
+```
+$ conda env update -f env.yml --prune
 ```
 
 # Examples
