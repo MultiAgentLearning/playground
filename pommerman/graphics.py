@@ -373,7 +373,7 @@ class PommeViewer(Viewer):
         dead.height = image_size
         sprites = []
         
-        if self._game_type is constants.GameType.FFA or self._game_type is constants.GameType.OneOnOne:
+        if self._game_type is constants.GameType.FFA or self._game_type is constants.GameType.OneVsOne:
             agents = self._agents
         else:
             agents = [self._agents[i] for i in [0,2,1,3]]
@@ -431,7 +431,7 @@ class ResourceManager(object):
         self._fog_value = self._get_fog_index_value()
         self._is_team = True
 
-        if game_type == constants.GameType.FFA or game_type == constants.GameType.OneOnOne:
+        if game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             self._is_team = False
 
     @staticmethod

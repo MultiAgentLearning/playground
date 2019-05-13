@@ -556,7 +556,7 @@ class ForwardModel(object):
         alive_ids = sorted([agent.agent_id for agent in alive])
         if step_count >= max_steps:
             return True
-        elif game_type == constants.GameType.FFA or game_type == constants.GameType.OneOnOne:
+        elif game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             if training_agent is not None and training_agent not in alive_ids:
                 return True
             return len(alive) <= 1
@@ -570,7 +570,7 @@ class ForwardModel(object):
 
     @staticmethod
     def get_info(done, rewards, game_type, agents):
-        if game_type == constants.GameType.FFA or game_type == constants.GameType.FFA:
+        if game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             alive = [agent for agent in agents if agent.is_alive]
             if done:
                 if len(alive) != 1:
@@ -625,7 +625,7 @@ class ForwardModel(object):
             else:
                 # Game running: 0 for alive, -1 for dead.
                 return [int(agent.is_alive) - 1 for agent in agents]
-        elif game_type == constants.GameType.OneOnOne:
+        elif game_type == constants.GameType.OneVsOne:
             if len(alive_agents) == 1:
                 # An agent won. Give them +1, the other -1.
                 return [2 * int(agent.is_alive) - 1 for agent in agents]

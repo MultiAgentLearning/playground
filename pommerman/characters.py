@@ -27,7 +27,7 @@ class Bomber(object):
                 for id_ in range(4)
                 if id_ != agent_id
             ]
-        elif self._game_type == constants.GameType.OneOnOne:
+        elif self._game_type == constants.GameType.OneVsOne:
             self.teammate = constants.Item.AgentDummy
             self.enemies = [
                 getattr(constants.Item, 'Agent%d' % id_)
