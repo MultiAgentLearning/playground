@@ -89,22 +89,16 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
         assert (num_agents % 2 == 0)
 
         if num_agents == 2:
-            agent_positions = {
-                (1, 1): constants.Item.Agent0.value,
-                (size - 2, size - 2): constants.Item.Agent1.value,
-            }
+            board[1, 1] = constants.Item.Agent0.value
+            board[size - 2, size - 2] = constants.Item.Agent1.value
+            agents = [(1, 1), (size - 2, size - 2)]
         else:
-            agent_positions = {
-                (1, 1): constants.Item.Agent0.value,
-                (size - 2, 1): constants.Item.Agent1.value,
-                (size - 2, size - 2): constants.Item.Agent2.value,
-                (1, size - 2): constants.Item.Agent3.value
-            }
+            board[1, 1] = constants.Item.Agent0.value
+            board[size - 2, 1] = constants.Item.Agent1.value
+            board[size - 2, size - 2] = constants.Item.Agent2.value
+            board[1, size - 2] = constants.Item.Agent3.value
+            agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
 
-        for pos, value in agent_positions.items():
-            board[pos[0]][pos[1]] = value
-
-        agents = [key for key, _ in agent_positions.items()]
         for position in agents:
             if position in coordinates:
                 coordinates.remove(position)
@@ -113,25 +107,28 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
         for i in range(2, 4):
             coordinates.remove((1, i))
             coordinates.remove((i, 1))
-            coordinates.remove((1, size - i - 1))
-            coordinates.remove((size - i - 1, 1))
             coordinates.remove((size - 2, size - i - 1))
             coordinates.remove((size - i - 1, size - 2))
-            coordinates.remove((i, size - 2))
-            coordinates.remove((size - 2, i))
+
+            if num_agents == 4:
+                coordinates.remove((1, size - i - 1))
+                coordinates.remove((size - i - 1, 1))
+                coordinates.remove((i, size - 2))
+                coordinates.remove((size - 2, i))
 
         # Lay down wooden walls providing guaranteed passage to other agents.
         wood = constants.Item.Wood.value
-        for i in range(4, size - 4):
-            board[1, i] = wood
-            board[size - i - 1, 1] = wood
-            board[size - 2, size - i - 1] = wood
-            board[size - i - 1, size - 2] = wood
-            coordinates.remove((1, i))
-            coordinates.remove((size - i - 1, 1))
-            coordinates.remove((size - 2, size - i - 1))
-            coordinates.remove((size - i - 1, size - 2))
-            num_wood -= 4
+        if num_agents == 4:
+            for i in range(4, size - 4):
+                board[1, i] = wood
+                board[size - i - 1, 1] = wood
+                board[size - 2, size - i - 1] = wood
+                board[size - i - 1, size - 2] = wood
+                coordinates.remove((1, i))
+                coordinates.remove((size - i - 1, 1))
+                coordinates.remove((size - 2, size - i - 1))
+                coordinates.remove((size - i - 1, size - 2))
+                num_wood -= 4
 
         # Lay down the rigid walls.
         while num_rigid > 0:
