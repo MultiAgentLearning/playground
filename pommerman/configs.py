@@ -25,10 +25,10 @@ def one_vs_one_env():
     env_id = 'OneVsOne-v0'
     env_kwargs = {
         'game_type': game_type,
-        'board_size': constants.BOARD_SIZE_DUELING,
-        'num_rigid': constants.NUM_RIGID_DUELING,
-        'num_wood': constants.NUM_WOOD_DUELING,
-        'num_items': constants.NUM_ITEMS_DUELING,
+        'board_size': constants.BOARD_SIZE_ONE_VS_ONE,
+        'num_rigid': constants.NUM_RIGID_ONE_VS_ONE,
+        'num_wood': constants.NUM_WOOD_ONE_VS_ONE,
+        'num_items': constants.NUM_ITEMS_ONE_VS_ONE,
         'max_steps': constants.MAX_STEPS,
         'render_fps': constants.RENDER_FPS,
         'env': env_entry_point,
