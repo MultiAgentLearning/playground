@@ -162,8 +162,8 @@ class PixelViewer(Viewer):
             interp='nearest')
         other_imgs = [
             resize(
-                frame, (int(board_size * human_factor / 4),
-                        int(board_size * human_factor / 4)),
+                frame, (int(board_size * human_factor / len(self._agents)),
+                        int(board_size * human_factor / len(self._agents))),
                 interp='nearest') for frame in rgb_array[1:]
         ]
 
@@ -183,7 +183,7 @@ class PixelViewer(Viewer):
             for col in range(board_size):
                 value = board[row][col]
                 if utility.position_is_agent(board, (row, col)):
-                    num_agent = value - num_items
+                    num_agent = value - num_items + 4
                     if agents[num_agent].is_alive:
                         all_frame[row][col] = constants.AGENT_COLORS[num_agent]
                 else:
@@ -385,7 +385,7 @@ class PommeViewer(Viewer):
             # '4 - index' is used to space each agent out based
             # on where they are in the array based off of their
             # index. 
-            x = self.board_right() - (4 - index) * (
+            x = self.board_right() - (len(agents) - index) * (
                 image_size + spacing)
             y = board_top
             agent_image = self._resource_manager.agent_image(agent.agent_id)
