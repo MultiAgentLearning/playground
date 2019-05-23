@@ -11,7 +11,7 @@ from time import strftime
 
 from gym.utils import reraise
 import numpy as np
-from scipy.misc import imresize as resize
+import PIL
 
 try:
     import pyglet
@@ -156,15 +156,13 @@ class PixelViewer(Viewer):
                                    self._is_partially_observable,
                                    self._agent_view_size)
 
-        all_img = resize(
-            rgb_array[0],
-            (board_size * human_factor, board_size * human_factor),
-            interp='nearest')
+        all_img = np.array(PIL.Image.fromarray(rgb_array[0].astype(np.uint8)).resize(
+            (board_size * human_factor, board_size * human_factor), resample=PIL.Image.NEAREST))
         other_imgs = [
-            resize(
-                frame, (int(board_size * human_factor / 4),
-                        int(board_size * human_factor / 4)),
-                interp='nearest') for frame in rgb_array[1:]
+            np.array(PIL.Image.fromarray(frame.astype(np.uint8)).resize(
+                (int(board_size * human_factor / 4),
+                 int(board_size * human_factor / 4)),
+                resample=PIL.Image.NEAREST)) for frame in rgb_array[1:]
         ]
 
         other_imgs = np.concatenate(other_imgs, 0)
