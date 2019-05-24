@@ -160,8 +160,8 @@ class PixelViewer(Viewer):
             (board_size * human_factor, board_size * human_factor), resample=PIL.Image.NEAREST))
         other_imgs = [
             np.array(PIL.Image.fromarray(frame.astype(np.uint8)).resize(
-                (int(board_size * human_factor / 4),
-                 int(board_size * human_factor / 4)),
+                (int(board_size * human_factor / len(self._agents),
+                 int(board_size * human_factor / len(self._agents)),
                 resample=PIL.Image.NEAREST)) for frame in rgb_array[1:]
         ]
 
@@ -181,7 +181,7 @@ class PixelViewer(Viewer):
             for col in range(board_size):
                 value = board[row][col]
                 if utility.position_is_agent(board, (row, col)):
-                    num_agent = value - num_items
+                    num_agent = value - num_items + 4
                     if agents[num_agent].is_alive:
                         all_frame[row][col] = constants.AGENT_COLORS[num_agent]
                 else:
@@ -371,7 +371,7 @@ class PommeViewer(Viewer):
         dead.height = image_size
         sprites = []
         
-        if self._game_type is constants.GameType.FFA:
+        if self._game_type is constants.GameType.FFA or self._game_type is constants.GameType.OneVsOne:
             agents = self._agents
         else:
             agents = [self._agents[i] for i in [0,2,1,3]]
@@ -383,7 +383,7 @@ class PommeViewer(Viewer):
             # '4 - index' is used to space each agent out based
             # on where they are in the array based off of their
             # index. 
-            x = self.board_right() - (4 - index) * (
+            x = self.board_right() - (len(agents) - index) * (
                 image_size + spacing)
             y = board_top
             agent_image = self._resource_manager.agent_image(agent.agent_id)
@@ -429,7 +429,7 @@ class ResourceManager(object):
         self._fog_value = self._get_fog_index_value()
         self._is_team = True
 
-        if game_type == constants.GameType.FFA:
+        if game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             self._is_team = False
 
     @staticmethod

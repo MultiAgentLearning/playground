@@ -15,6 +15,7 @@ from . import constants
 
 class PommermanJSONEncoder(json.JSONEncoder):
     '''A helper class to encode state data into a json object'''
+
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -35,7 +36,7 @@ class PommermanJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def make_board(size, num_rigid=0, num_wood=0):
+def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
     """Make the random but symmetric board.
 
     The numbers refer to the Item enum in constants. This is:
@@ -70,7 +71,7 @@ def make_board(size, num_rigid=0, num_wood=0):
         num_left -= 2
         return num_left
 
-    def make(size, num_rigid, num_wood):
+    def make(size, num_rigid, num_wood, num_agents):
         '''Constructs a game/board'''
         # Initialize everything as a passage.
         board = np.ones((size,
@@ -85,11 +86,19 @@ def make_board(size, num_rigid=0, num_wood=0):
         # Set the players down. Exclude them from coordinates.
         # Agent0 is in top left. Agent1 is in bottom left.
         # Agent2 is in bottom right. Agent 3 is in top right.
-        board[1, 1] = constants.Item.Agent0.value
-        board[size - 2, 1] = constants.Item.Agent1.value
-        board[size - 2, size - 2] = constants.Item.Agent2.value
-        board[1, size - 2] = constants.Item.Agent3.value
-        agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+        assert (num_agents % 2 == 0)
+
+        if num_agents == 2:
+            board[1, 1] = constants.Item.Agent0.value
+            board[size - 2, size - 2] = constants.Item.Agent1.value
+            agents = [(1, 1), (size - 2, size - 2)]
+        else:
+            board[1, 1] = constants.Item.Agent0.value
+            board[size - 2, 1] = constants.Item.Agent1.value
+            board[size - 2, size - 2] = constants.Item.Agent2.value
+            board[1, size - 2] = constants.Item.Agent3.value
+            agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+
         for position in agents:
             if position in coordinates:
                 coordinates.remove(position)
@@ -98,25 +107,28 @@ def make_board(size, num_rigid=0, num_wood=0):
         for i in range(2, 4):
             coordinates.remove((1, i))
             coordinates.remove((i, 1))
-            coordinates.remove((1, size - i - 1))
-            coordinates.remove((size - i - 1, 1))
             coordinates.remove((size - 2, size - i - 1))
             coordinates.remove((size - i - 1, size - 2))
-            coordinates.remove((i, size - 2))
-            coordinates.remove((size - 2, i))
+
+            if num_agents == 4:
+                coordinates.remove((1, size - i - 1))
+                coordinates.remove((size - i - 1, 1))
+                coordinates.remove((i, size - 2))
+                coordinates.remove((size - 2, i))
 
         # Lay down wooden walls providing guaranteed passage to other agents.
         wood = constants.Item.Wood.value
-        for i in range(4, size - 4):
-            board[1, i] = wood
-            board[size - i - 1, 1] = wood
-            board[size - 2, size - i - 1] = wood
-            board[size - i - 1, size - 2] = wood
-            coordinates.remove((1, i))
-            coordinates.remove((size - i - 1, 1))
-            coordinates.remove((size - 2, size - i - 1))
-            coordinates.remove((size - i - 1, size - 2))
-            num_wood -= 4
+        if num_agents == 4:
+            for i in range(4, size - 4):
+                board[1, i] = wood
+                board[size - i - 1, 1] = wood
+                board[size - 2, size - i - 1] = wood
+                board[size - i - 1, size - 2] = wood
+                coordinates.remove((1, i))
+                coordinates.remove((size - i - 1, 1))
+                coordinates.remove((size - 2, size - i - 1))
+                coordinates.remove((size - i - 1, size - 2))
+                num_wood -= 4
 
         # Lay down the rigid walls.
         while num_rigid > 0:
@@ -132,11 +144,11 @@ def make_board(size, num_rigid=0, num_wood=0):
 
     assert (num_rigid % 2 == 0)
     assert (num_wood % 2 == 0)
-    board, agents = make(size, num_rigid, num_wood)
+    board, agents = make(size, num_rigid, num_wood, num_agents)
 
     # Make sure it's possible to reach most of the passages.
     while len(inaccessible_passages(board, agents)) > 4:
-        board, agents = make(size, num_rigid, num_wood)
+        board, agents = make(size, num_rigid, num_wood, num_agents)
 
     return board
 
@@ -211,7 +223,7 @@ def is_valid_direction(board, position, direction, invalid_values=None):
 
     if constants.Action(direction) == constants.Action.Right:
         return col + 1 < len(board[0]) and \
-            board[row][col+1] not in invalid_values
+               board[row][col + 1] not in invalid_values
 
     raise constants.InvalidAction("We did not receive a valid direction: ",
                                   direction)
@@ -251,7 +263,7 @@ def position_is_powerup(board, position):
 def position_is_wall(board, position):
     '''Determins if a position is a wall tile'''
     return position_is_rigid(board, position) or \
-        position_is_wood(board, position)
+           position_is_wood(board, position)
 
 
 def position_is_passage(board, position):
@@ -360,7 +372,7 @@ def make_np_float(feature):
 def join_json_state(record_json_dir, agents, finished_at, config, info):
     '''Combines all of the json state files into one'''
     json_schema = {"properties": {"state": {"mergeStrategy": "append"}}}
-    
+
     json_template = {
         "agents": agents,
         "finished_at": finished_at,

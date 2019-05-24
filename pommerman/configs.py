@@ -17,6 +17,26 @@ from . import envs
 from . import characters
 
 
+def one_vs_one_env():
+    """Start up an OneVsOne config with the default settings."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.OneVsOne
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'OneVsOne-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': constants.BOARD_SIZE_ONE_VS_ONE,
+        'num_rigid': constants.NUM_RIGID_ONE_VS_ONE,
+        'num_wood': constants.NUM_WOOD_ONE_VS_ONE,
+        'num_items': constants.NUM_ITEMS_ONE_VS_ONE,
+        'max_steps': constants.MAX_STEPS,
+        'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
+    }
+    agent = characters.Bomber
+    return locals()
+
+
 def ffa_competition_env():
     """Start up a FFA config with the competition settings."""
     env = envs.v0.Pomme

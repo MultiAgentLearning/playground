@@ -486,7 +486,7 @@ class ForwardModel(object):
         return curr_board, curr_agents, curr_bombs, curr_items, curr_flames
 
     def get_observations(self, curr_board, agents, bombs,
-                         is_partially_observable, agent_view_size, 
+                         is_partially_observable, agent_view_size,
                          game_type, game_env):
         """Gets the observations as an np.array of the visible squares.
 
@@ -556,7 +556,7 @@ class ForwardModel(object):
         alive_ids = sorted([agent.agent_id for agent in alive])
         if step_count >= max_steps:
             return True
-        elif game_type == constants.GameType.FFA:
+        elif game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             if training_agent is not None and training_agent not in alive_ids:
                 return True
             return len(alive) <= 1
@@ -570,7 +570,7 @@ class ForwardModel(object):
 
     @staticmethod
     def get_info(done, rewards, game_type, agents):
-        if game_type == constants.GameType.FFA:
+        if game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             alive = [agent for agent in agents if agent.is_alive]
             if done:
                 if len(alive) != 1:
@@ -625,6 +625,16 @@ class ForwardModel(object):
             else:
                 # Game running: 0 for alive, -1 for dead.
                 return [int(agent.is_alive) - 1 for agent in agents]
+        elif game_type == constants.GameType.OneVsOne:
+            if len(alive_agents) == 1:
+                # An agent won. Give them +1, the other -1.
+                return [2 * int(agent.is_alive) - 1 for agent in agents]
+            elif step_count >= max_steps:
+                # Game is over from time. Everyone gets -1.
+                return [-1] * 2
+            else:
+                # Game running
+                return [0, 0]
         else:
             # We are playing a team game.
             if any_lst_equal(alive_agents, [[0, 2], [0], [2]]):
