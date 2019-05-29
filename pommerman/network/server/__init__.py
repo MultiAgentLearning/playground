@@ -87,7 +87,7 @@ isn't set"""
     if ui_en:
         ui.info(ui.yellow, constants.Strings.server_ready.value, ui.white,
                 ui.Symbol("✔", ":)"))
-    while (True):
+    while True:
         netpipe.send([constants.SubprocessCommands.get_players.value])
         concurrent_list, num_players, num_matches = netpipe.recv()
         if int(num_matches) < max_matches:
