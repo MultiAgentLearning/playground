@@ -41,27 +41,34 @@ def init():
             ui.fatal(constants.Exceptions.invalid_ip.value)
     else:
         domain = "play.pommerman.com:5050"
-    ui.info(constants.Strings.server_connecting_p1.value, ui.yellow,
-            constants.Strings.server_connecting_p2.value, ui.reset,
-            constants.Strings.server_connecting_p3.value)
+    ui.info(
+        constants.Strings.server_connecting_p1.value,
+        ui.yellow,
+        constants.Strings.server_connecting_p2.value,
+        ui.reset,
+        constants.Strings.server_connecting_p3.value,
+    )
     network = Network(domain)
     try:
         status = network.server_status()
     except Exception as e:
         ui.fatal(e)
     signal.signal(signal.SIGINT, _exit_handler)
-    ui.info(constants.Strings.server_connected.value, ui.yellow,
-            constants.Strings.server_players.value,
-            str(status[0]) + ",", constants.Strings.server_matches.value,
-            status[1])
+    ui.info(
+        constants.Strings.server_connected.value,
+        ui.yellow,
+        constants.Strings.server_players.value,
+        str(status[0]) + ",",
+        constants.Strings.server_matches.value,
+        status[1],
+    )
     intent(network)
 
 
 def _agent_prompt():
     """Description: Prompt the user to import their agent"""
     sys.path.append(os.getcwd())
-    agent = importlib.import_module(
-        ui.ask_string(constants.Strings.match_import.value))
+    agent = importlib.import_module(ui.ask_string(constants.Strings.match_import.value))
     agent_class = ui.ask_string(constants.Strings.match_class_name.value)
     if agent_class not in agent.__dir__():
         ui.fatal(constants.Strings.error_invalid_class.value)
@@ -80,12 +87,15 @@ def intent(network):
     Arguments:   
     * network: An `network`(pommerman.network.ion_client.network) object  
     """
-    i = ui.ask_choice(constants.Strings.intent.value, [
-        constants.Strings.intent_match.value,
-        constants.Strings.intent_room.value,
-        constants.Strings.intent_replay.value,
-        constants.Strings.intent_exit.value
-    ])
+    i = ui.ask_choice(
+        constants.Strings.intent.value,
+        [
+            constants.Strings.intent_match.value,
+            constants.Strings.intent_room.value,
+            constants.Strings.intent_replay.value,
+            constants.Strings.intent_exit.value,
+        ],
+    )
     if i == constants.Strings.intent_match.value:
         agent = _agent_prompt()
         match(network, agent=agent, ui_en=True)
@@ -129,7 +139,12 @@ are raised or not)
         raise e
     if ui_en:
         ui.info(constants.Strings.match_run.value, "#" + network.match_id)
-    while (True):
+    for mode in pommerman.constants.GameType:
+        if mode.name in network.mode:
+            agent.init_agent(
+                id=0, game_type=mode
+            )  # We always use ID as 0 as the server doesn't return it
+    while True:
         try:
             match_obj = network.match_get()
         except Exception as e:
@@ -146,14 +161,17 @@ are raised or not)
                     ui.fatal(e)
                 raise e
         elif match_obj[0] is 2:
-            agent.episode_end(match_obj[1])
+            agent.episode_end(reward=match_obj[1])
             if ui_en:
                 if match_obj[1] == 1:
                     ui.info(constants.Strings.match_won.value)
                 if match_obj[1] == -1:
                     ui.info(constants.Strings.match_loss_draw.value)
-                ui.info(constants.Strings.match_agent.value, ui.yellow,
-                        pommerman.constants.Item(match_obj[2]).name)
+                ui.info(
+                    constants.Strings.match_agent.value,
+                    ui.yellow,
+                    pommerman.constants.Item(match_obj[2]).name,
+                )
             else:
                 return [match_obj[1], network.match_id]
             break
@@ -179,8 +197,13 @@ raised or not)"""
         id = str(id)
     if id[0] == "#":
         id = id[1:]
-    ui.info(constants.Strings.server_replay_p1.value, ui.yellow, "#" + str(id),
-            ui.reset, constants.Strings.server_replay_p2.value)
+    ui.info(
+        constants.Strings.server_replay_p1.value,
+        ui.yellow,
+        "#" + str(id),
+        ui.reset,
+        constants.Strings.server_replay_p2.value,
+    )
     try:
         replay_obj = network.get_replay(id)
     except Exception as e:
@@ -189,12 +212,15 @@ raised or not)"""
         raise e
     if ui_en:
         ui.info(constants.Strings.replay_start.value, ui.yellow, "#" + str(id))
-    env = pommerman.make(replay_obj["mode"], [
-        pommerman.agents.BaseAgent(),
-        pommerman.agents.BaseAgent(),
-        pommerman.agents.BaseAgent(),
-        pommerman.agents.BaseAgent()
-    ])
+    env = pommerman.make(
+        replay_obj["mode"],
+        [
+            pommerman.agents.BaseAgent(),
+            pommerman.agents.BaseAgent(),
+            pommerman.agents.BaseAgent(),
+            pommerman.agents.BaseAgent(),
+        ],
+    )
     env.reset()
     env._board = numpy.array(replay_obj["board"])
     # Note: Render FPS is set to 30 as it'll be smoother
@@ -204,7 +230,7 @@ raised or not)"""
         reward, done = env.step(i)[1:3]
         if done:
             break
-    if (reward != replay_obj["reward"]):
+    if reward != replay_obj["reward"]:
         if ui_en:
             ui.info(ui.yellow, constants.Exceptions.replay_no_reward.value)
         else:
