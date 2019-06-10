@@ -138,7 +138,7 @@ class Pomme(gym.Env):
 
     def get_observations(self):
         self.observations = self.model.get_observations(
-            self._board, self._agents, self._bombs,
+            self._board, self._agents, self._bombs, self._flames,
             self._is_partially_observable, self._agent_view_size,
             self._game_type, self._env)
         for obs in self.observations:
