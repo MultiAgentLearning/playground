@@ -166,13 +166,13 @@ class Flame(object):
 
     def __init__(self, position, life=2):
         self.position = position
-        self._life = life
+        self.life = life
 
     def tick(self):
-        self._life -= 1
+        self.life -= 1
 
     def is_dead(self):
-        return self._life == 0
+        return self.life == 0
 
     def to_json(self):
-        return {"position": self.position, "life": self._life}
+        return {"position": self.position, "life": self.life}
