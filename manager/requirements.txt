@@ -26,7 +26,7 @@ ruamel.yaml==0.15.37
 scipy==1.1.0
 six==1.11.0
 smmap2==2.0.3
-urllib3==1.22
+urllib3==1.24.2
 vine==1.1.4
 websocket-client==0.48.0
 Werkzeug==0.15.3
