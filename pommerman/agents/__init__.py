@@ -8,3 +8,8 @@ from .random_agent import RandomAgent
 from .random_agent import SmartRandomAgent
 from .simple_agent import SimpleAgent
 from .tensorforce_agent import TensorForceAgent
+from .model import CNN_LSTM
+
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
