@@ -11,14 +11,99 @@ from . import BaseAgent
 from .. import constants
 from .. import utility
 
+def position_is_in_corridor(board, position, perpendicular_dirs):
+    d1=perpendicular_dirs[0]
+    d2=perpendicular_dirs[1]
+    p1=utility.get_next_position(position, d1)
+    p2=utility.get_next_position(position, d2)
 
-class SimpleAgent(BaseAgent):
+    con1 = ( (not utility.position_on_board(board, p1)) or utility.position_is_wall(board, p1) )
+    con2 = ( (not utility.position_on_board(board, p2)) or utility.position_is_wall(board, p2) )
+    return con1 and con2
+
+def perpendicular_directions(direction):
+    dirs=[constants.Action.Left, constants.Action.Right]
+    if direction in dirs:
+        dirs=[constants.Action.Up, constants.Action.Down]
+    return dirs
+
+def me_to_enemy_all_corridor(board, pos1, pos2):
+    assert(pos1[0]==pos2[0] or pos1[1]==pos2[1])
+    if pos1[0]==pos2[0]:
+        if pos1[1]<pos2[1]:
+            direction=constants.Action.Right
+        else:
+            direction=constants.Action.Left
+    else:
+        if pos1[0]<pos2[0]:
+            direction=constants.Action.Down
+        else:
+            direction=constants.Action.Up
+    p_dirs=perpendicular_directions(direction)
+    pos2_next=utility.get_next_position(pos2, direction)
+    next_is_impasse=(not utility.position_on_board(board, pos2_next)) or utility.position_is_wall(board, pos2_next)
+    if utility.position_on_board(board, pos2_next) and utility.position_is_fog(board, pos2_next):
+        next_is_impasse=False
+    if not (position_is_in_corridor(board, pos2, p_dirs) and next_is_impasse):
+        # pos2:enempy must be in impasse
+        return False
+    all_corridor_flag=True
+    pos=utility.get_next_position(pos1, direction)
+    while pos!=pos2:
+        if not (utility.position_is_passage(board, pos)):
+            all_corridor_flag=False
+            break
+        if not position_is_in_corridor(board, pos, p_dirs):
+            all_corridor_flag=False
+            break
+        pos=utility.get_next_position(pos, direction)
+    return all_corridor_flag    
+
+def must_place_bomb_test(obs):
+    board=obs['board']
+    enemies=obs['enemies']
+    ammo=obs['ammo']
+    my_position=obs['position']
+    st=obs['blast_strength']
+    st=int(st)-1
+    if ammo<0:
+        return False
+    if obs['bomb_life'][my_position]>0:
+        #already on bomb
+        return False
+    if obs['teammate'].value not in obs['alive']:
+        e1,e2=enemies[0].value,enemies[1].value
+        if e1 in obs['alive'] and e2 in obs['alive']:
+            #two enemies alive, only me alive, not do this test..
+            return False
+    for e in enemies:
+        e=e.value
+        if e not in obs['alive']:
+            continue
+        pos=list(zip(*np.where(board==e)))
+        if len(pos)==0:
+            continue
+        pos=pos[0]
+        if my_position[0]!=pos[0] and my_position[1]!=pos[1]:
+            continue
+        if abs(my_position[0]-pos[0])+abs(my_position[1]-pos[1])>st:
+            continue
+        if me_to_enemy_all_corridor(board, my_position, pos):
+            return True
+    return False
+
+SKIP_RATE=0 #Force to use stop action for some timesteps
+
+class SimpleAgentNoBombs(BaseAgent):
     """This is a baseline agent. After you can beat it, submit your agent to
     compete.
     """
 
     def __init__(self, *args, **kwargs):
-        super(SimpleAgent, self).__init__(*args, **kwargs)
+        super(SimpleAgentNoBombs, self).__init__(*args, **kwargs)
+        self.counterSkip = 1
+#        self.currentSkipRate = random.randrange(0, MAX_SKIP_RATE, 2)
+        self.currentSkipRate= SKIP_RATE
 
         # Keep track of recently visited uninteresting positions so that we
         # don't keep visiting the same places.
@@ -39,6 +124,16 @@ class SimpleAgent(BaseAgent):
                 })
             return ret
 
+        #do a must_bomb_test, if it can kill the opponent with guarantee, place a bomb here
+        if must_place_bomb_test(obs):
+            return constants.Action.Bomb.value
+
+     #   if self.currentSkipRate != 0 and self.counterSkip % self.currentSkipRate != 0:
+     #       self.counterSkip = self.counterSkip + 1
+     #       return constants.Action.Stop.value
+     #   else:
+     #       self.counterSkip = 1
+
         my_position = tuple(obs['position'])
         board = np.array(obs['board'])
         bombs = convert_bombs(np.array(obs['bomb_blast_strength']))
@@ -47,6 +142,7 @@ class SimpleAgent(BaseAgent):
         blast_strength = int(obs['blast_strength'])
         items, dist, prev = self._djikstra(
             board, my_position, bombs, enemies, depth=10)
+
 
         # Move if we are in an unsafe place.
         unsafe_directions = self._directions_in_range_of_bomb(
@@ -57,16 +153,16 @@ class SimpleAgent(BaseAgent):
             return random.choice(directions).value
 
         # Lay pomme if we are adjacent to an enemy.
-        if self._is_adjacent_enemy(items, dist, enemies) and self._maybe_bomb(
-                ammo, blast_strength, items, dist, my_position):
-            return constants.Action.Bomb.value
+        #if self._is_adjacent_enemy(items, dist, enemies) and self._maybe_bomb(
+        #        ammo, blast_strength, items, dist, my_position):
+        #    return constants.Action.Bomb.value
 
         # Move towards an enemy if there is one in exactly three reachable spaces.
-        direction = self._near_enemy(my_position, items, dist, prev, enemies, 3)
-        if direction is not None and (self._prev_direction != direction or
-                                      random.random() < .5):
-            self._prev_direction = direction
-            return direction.value
+        #direction = self._near_enemy(my_position, items, dist, prev, enemies, 3)
+        #if direction is not None and (self._prev_direction != direction or
+        #                              random.random() < .5):
+        #    self._prev_direction = direction
+        #    return direction.value
 
         # Move towards a good item if there is one within two reachable spaces.
         direction = self._near_good_powerup(my_position, items, dist, prev, 2)
@@ -74,19 +170,19 @@ class SimpleAgent(BaseAgent):
             return direction.value
 
         # Maybe lay a bomb if we are within a space of a wooden wall.
-        if self._near_wood(my_position, items, dist, prev, 1):
-            if self._maybe_bomb(ammo, blast_strength, items, dist, my_position):
-                return constants.Action.Bomb.value
-            else:
-                return constants.Action.Stop.value
+        #if self._near_wood(my_position, items, dist, prev, 1):
+        #    if self._maybe_bomb(ammo, blast_strength, items, dist, my_position):
+        #        return constants.Action.Bomb.value
+        #    else:
+        #        return constants.Action.Stop.value
 
         # Move towards a wooden wall if there is one within two reachable spaces and you have a bomb.
-        direction = self._near_wood(my_position, items, dist, prev, 2)
-        if direction is not None:
-            directions = self._filter_unsafe_directions(board, my_position,
-                                                        [direction], bombs)
-            if directions:
-                return directions[0].value
+        #direction = self._near_wood(my_position, items, dist, prev, 2)
+        #if direction is not None:
+        #    directions = self._filter_unsafe_directions(board, my_position,
+        #                                                [direction], bombs)
+        #    if directions:
+        #        return directions[0].value
 
         # Choose a random but valid direction.
         directions = [
@@ -107,7 +203,7 @@ class SimpleAgent(BaseAgent):
         # Add this position to the recently visited uninteresting positions so we don't return immediately.
         self._recently_visited_positions.append(my_position)
         self._recently_visited_positions = self._recently_visited_positions[
-            -self._recently_visited_length:]
+                                           -self._recently_visited_length:]
 
         return random.choice(directions).value
 
@@ -136,21 +232,20 @@ class SimpleAgent(BaseAgent):
             for c in range(max(0, my_y - depth), min(len(board), my_y + depth)):
                 position = (r, c)
                 if any([
-                        out_of_range(my_position, position),
-                        utility.position_in_items(board, position, exclude),
+                    out_of_range(my_position, position),
+                    utility.position_in_items(board, position, exclude),
                 ]):
                     continue
 
                 prev[position] = None
                 item = constants.Item(board[position])
                 items[item].append(position)
-                
+
                 if position == my_position:
                     Q.put(position)
                     dist[position] = 0
                 else:
                     dist[position] = np.inf
-
 
         for bomb in bombs:
             if bomb['position'] == my_position:
@@ -173,8 +268,7 @@ class SimpleAgent(BaseAgent):
                         Q.put(new_position)
                     elif (val == dist[new_position] and random.random() < .5):
                         dist[new_position] = val
-                        prev[new_position] = position   
-
+                        prev[new_position] = position
 
         return items, dist, prev
 
@@ -195,10 +289,10 @@ class SimpleAgent(BaseAgent):
             if my_position == position:
                 # We are on a bomb. All directions are in range of bomb.
                 for direction in [
-                        constants.Action.Right,
-                        constants.Action.Left,
-                        constants.Action.Up,
-                        constants.Action.Down,
+                    constants.Action.Right,
+                    constants.Action.Left,
+                    constants.Action.Up,
+                    constants.Action.Down,
                 ]:
                     ret[direction] = max(ret[direction], bomb['blast_strength'])
             elif x == position[0]:
@@ -273,7 +367,7 @@ class SimpleAgent(BaseAgent):
                     my_position, direction)
                 next_x, next_y = next_position
                 if not utility.position_on_board(next_board, next_position) or \
-                   not utility.position_is_passable(next_board, next_position, enemies):
+                        not utility.position_is_passable(next_board, next_position, enemies):
                     continue
 
                 if not is_stuck_direction(next_position, bomb_range, next_board,
@@ -303,7 +397,7 @@ class SimpleAgent(BaseAgent):
 
             if utility.position_is_passable(board, position,
                                             enemies) or utility.position_is_fog(
-                                                board, position):
+                board, position):
                 safe.append(direction)
 
         if not safe:
@@ -331,7 +425,6 @@ class SimpleAgent(BaseAgent):
     @staticmethod
     def _maybe_bomb(ammo, blast_strength, items, dist, my_position):
         """Returns whether we can safely bomb right now.
-
         Decides this based on:
         1. Do we have ammo?
         2. If we laid a bomb right now, will we be stuck?
@@ -413,7 +506,7 @@ class SimpleAgent(BaseAgent):
             position = utility.get_next_position(my_position, direction)
             if utility.position_on_board(
                     board, position) and utility.position_is_passable(
-                        board, position, enemies):
+                board, position, enemies):
                 ret.append(direction)
         return ret
 
@@ -427,7 +520,7 @@ class SimpleAgent(BaseAgent):
                 bomb_x, bomb_y = bomb['position']
                 blast_strength = bomb['blast_strength']
                 if (x == bomb_x and abs(bomb_y - y) <= blast_strength) or \
-                   (y == bomb_y and abs(bomb_x - x) <= blast_strength):
+                        (y == bomb_y and abs(bomb_x - x) <= blast_strength):
                     is_bad = True
                     break
             if not is_bad:
