@@ -1,4 +1,5 @@
 n_workers:5
-max_loop_step:1
+start_iteration:956
+max_loop_step:2
 game_dir:output//GAMES
 nn_model_dir:output//NN_MODELS
