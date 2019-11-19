@@ -36,6 +36,25 @@ def one_vs_one_env():
     agent = characters.Bomber
     return locals()
 
+def simple_env():
+    """Start up a super simple OneVsOne config."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.OneVsOne
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'Simple-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': constants.BOARD_SIZE_SIMPLE,
+        'num_rigid': constants.NUM_RIGID_SIMPLE,
+        'num_wood': constants.NUM_WOOD_SIMPLE,
+        'num_items': constants.NUM_ITEMS_SIMPLE,
+        'max_steps': constants.MAX_STEPS_SIMPLE,
+        'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
+    }
+    agent = characters.Bomber
+    return locals()
+
 
 def ffa_competition_env():
     """Start up a FFA config with the competition settings."""
