@@ -14,7 +14,7 @@ def main():
     # Create a set of agents (exactly four)
     agent_list = [
         #agents.SimpleAgent(),
-        agents.PlayerAgent(),
+        agents.PlayerAgent(), #note player agent can act as a stand-in for a static agent
         agents.RandomAgent(),        
         #agents.DockerAgent("multiagentlearning/hakozakijunctions", port=12345),
         #agents.DockerAgent("multiagentlearning/eisenach", port=12345),

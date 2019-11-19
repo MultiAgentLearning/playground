@@ -1,0 +1,4 @@
+n_workers:5
+max_loop_step:1
+game_dir:output//GAMES
+nn_model_dir:output//NN_MODELS

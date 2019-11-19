@@ -1,4 +1,24 @@
 #!/bin/bash
+#
+#This script generates a number of games/playouts/rollouts using worker.py and then trains a neural network on those games using optimize_nn.py.
+#Playouts are stored in game_dir. Neural network checkpoints for each iteration/loop step are stored in nn_model_dir
+#
+#Example call of this script: source train.sh params log.txt
+#
+#Consumes params file and log file.
+#params are defined in pommerman/agents/nn_model/optimize_nn.py
+#params should contain:
+#n_workers
+#max_loop_step
+#game_dir
+#nn_model_dir
+#env_id
+
+#Note that 1v1 games are currently not supported by worker.py as the code makes assumptions about having a teammate.
+#if a key is missing, default will be attempted (will likely fail if directory paths don't exist)
+#if games fail to generate, you will get an assert(len(gameBuffer) == buffer_size) error
+
+
 
 if [ $# -lt 2 ] ; then
     echo "Usage: $0 param_config_file log_file "
@@ -15,6 +35,9 @@ echo ' ' > $log_file
 
 n_workers=0
 max_loop_step=0
+game_dir="GAMES"
+nn_model_dir="NN_MODELS"
+env_id="PommeTeamCompetition-v0"
 
 params=''
 while IFS=":" read key data
@@ -26,6 +49,15 @@ do
     if [[ ${key} == 'max_loop_step' ]]; then
         max_loop_step=${data}
     fi
+    if [[ ${key} == 'game_dir' ]]; then
+        game_dir=${data}
+    fi
+    if [[ ${key} == 'nn_model_dir' ]]; then
+        nn_model_dir=${data}
+    fi
+    if [[ ${key} == 'env_id' ]]; then
+        env_id=${data}
+    fi
     a="--${key}=${data} "
     params=$params$a 
 done < $param_config_file
@@ -33,6 +65,9 @@ done < $param_config_file
 echo "---all params: $params"
 echo "n_workers: $n_workers"
 echo "max_loop_step: $max_loop_step"
+echo "game_dir: $game_dir"
+echo "nn_model_dir: $nn_model_dir"
+echo "env_id: $env_id"
 
 visible_gpus="$CUDA_VISIBLE_DEVICES"
 IFS=',' read -r -a ARR <<< "$visible_gpus"
@@ -51,7 +86,7 @@ play_games() {
     do
         SEED=$(($RANDOM))
         k=$((i%cnt))
-        python pommerman/agents/worker.py ${params} --device_string="cuda:$k" 2>&1 >>$log_file  &
+        python pommerman/agents/worker.py ${params} --device_id="$k" 2>&1 >>$log_file  &
     done
     wait 
 }
