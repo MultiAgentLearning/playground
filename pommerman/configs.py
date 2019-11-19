@@ -1,5 +1,9 @@
 """Configs module: Add game configs here.
 
+Due to the way the game is setup:
+Team board size must be at least 8x8
+1v1 board size must be at least 6x6 
+
 Besides game configs, also includes helpers for handling configs, e.g. saving
 and loading them.
 
@@ -95,6 +99,25 @@ def ffa_competition_fast_env():
     agent = characters.Bomber
     return locals()
 
+
+def simple_team_env():
+    """Start up a super simple 2v2 config."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.Team
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'SimpleTeam-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': 11,
+        'num_rigid': 2,
+        'num_wood': 2,
+        'num_items': 2,
+        'max_steps': 200,
+        'render_fps': constants.RENDER_FPS,
+        'env': env_entry_point,
+    }
+    agent = characters.Bomber
+    return locals()
 
 def team_competition_env():
     """Start up a Team config with the competition settings."""

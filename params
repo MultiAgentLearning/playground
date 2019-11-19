@@ -1,5 +1,6 @@
 n_workers:5
-start_iteration:956
-max_loop_step:2
+start_iteration:0
+max_loop_step:100
 game_dir:output//GAMES
 nn_model_dir:output//NN_MODELS
+env_id:SimpleTeam-v0

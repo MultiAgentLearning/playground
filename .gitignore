@@ -171,6 +171,9 @@ concierge.xcodeproj
 tmpimg/
 local
 .eslintrc
+output/*
+log.txt
+loss.txt
 
 # Web specific #
 ####################

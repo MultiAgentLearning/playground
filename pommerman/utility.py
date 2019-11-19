@@ -105,7 +105,10 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         # Exclude breathing room on either side of the agents.
         for i in range(2, 4):
-            coordinates.remove((1, i))
+            try:
+                coordinates.remove((1, i))
+            except KeyError:
+                print("Unable to remove coordinate:" 1,i)
             coordinates.remove((i, 1))
             coordinates.remove((size - 2, size - i - 1))
             coordinates.remove((size - i - 1, size - 2))

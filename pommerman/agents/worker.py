@@ -91,6 +91,7 @@ def play_games(agent_list, env_id, num_games, training_agent_id, gae_n_step, gae
             assert(len(actions) == len(agent_list))
 
             copy_obs=copy.deepcopy(obs)
+            #env.render() #uncomment to see runs. May need to modify RENDER_FPS for your environment (in configs.py)
             obs_prime, rewards, done, info=env.step(actions)
             intermediate_rewards=input_util2.get_intermediate_rewards(copy_obs, obs_prime, position_queue)
             del copy_obs
