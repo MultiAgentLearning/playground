@@ -6,6 +6,8 @@ from .player_agent import PlayerAgent
 from .player_agent_blocking import PlayerAgentBlocking
 from .random_agent import RandomAgent
 from .random_agent import SmartRandomAgent
+from .random_agent import SmartRandomAgentNoBomb
+from .random_agent import SlowRandomAgentNoBomb
 from .simple_agent import SimpleAgent
 from .tensorforce_agent import TensorForceAgent
 from .model import CNN_LSTM

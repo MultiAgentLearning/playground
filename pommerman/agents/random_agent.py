@@ -10,6 +10,19 @@ class RandomAgent(BaseAgent):
     def act(self, obs, action_space):
         return action_space.sample()
 
+class SlowRandomAgentNoBomb(BaseAgent):
+    """The Random Agent that returns random actions given an action_space, but never places bombs and often just sits."""
+    def __init__(self):
+        self.act_count = 0
+        super(SlowRandomAgentNoBomb, self).__init__()
+
+    def act(self, obs, action_space):
+        action = action_space.sample()
+        self.act_count += 1
+        if Action.Bomb.value == action or self.act_count % 3 != 2:
+            action = Action.Stop.value
+        return action
+
 
 class StaticAgent(BaseAgent):
     """ Static agent"""

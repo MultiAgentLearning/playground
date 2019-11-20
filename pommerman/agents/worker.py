@@ -191,6 +191,8 @@ def setup_agents(nn_model, max_seq_len, opponent='static'):
         else: 
             if opponent == 'static':
                 agent_list[i] = random_agent.StaticAgent()
+            elif opponent == 'slow_random_no_bomb':
+                agent_list[i] = random_agent.SlowRandomAgentNoBomb()
             elif opponent == 'smart_random_no_bomb':
                 agent_list[i] = random_agent.SmartRandomAgentNoBomb()
             elif opponent == 'smart_random':
@@ -242,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_loop_step', type=int, default=10, help='maximum training steps')
     parser.add_argument('--game_dir', type=str, default="GAMES", help='log dir')
     parser.add_argument('--nn_model_dir', type=str, default="NN_MODELS", help='log dir')
-    parser.add_argument('--opponent', type=str, default='static', help='must be one of {static, random, smart_random, smart_random_no_bomb}')
+    parser.add_argument('--opponent', type=str, default='static', help='must be one of {static, random, slow_random_no_bomb, smart_random, smart_random_no_bomb}')
 
     parser.add_argument('--n_epochs', type=int, default=1, help='how many epochs to train given a set of games in game_memory')
     parser.add_argument('--optimizer', type=str, default='adam', help='which optimizer to use {momentum, adam}')

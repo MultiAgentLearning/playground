@@ -14,6 +14,7 @@
 #game_dir
 #nn_model_dir
 #env_id
+#opponent
 
 #Note that 1v1 games are currently not supported by worker.py as the code makes assumptions about having a teammate.
 #if a key is missing, default will be attempted (will likely fail if directory paths don't exist)
@@ -40,6 +41,7 @@ game_dir="GAMES"
 nn_model_dir="NN_MODELS"
 env_id="PommeTeamCompetition-v0"
 start_iteration=0
+opponent="static"
 
 save_param=true
 
@@ -67,6 +69,9 @@ do
     if [[ ${key} == 'env_id' ]]; then
         env_id=${data}
     fi
+    if [[ ${key} == 'opponent' ]]; then
+        opponent=${data}
+    fi
 
     if [ "$save_param" = true ] ; then
         a="--${key}=${data} "
@@ -82,6 +87,7 @@ echo "max_loop_step: $max_loop_step"
 echo "game_dir: $game_dir"
 echo "nn_model_dir: $nn_model_dir"
 echo "env_id: $env_id"
+echo "opponent: $opponent"
 
 visible_gpus="$CUDA_VISIBLE_DEVICES"
 IFS=',' read -r -a ARR <<< "$visible_gpus"

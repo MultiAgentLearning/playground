@@ -109,9 +109,9 @@ def simple_team_env():
     env_kwargs = {
         'game_type': game_type,
         'board_size': 11,
-        'num_rigid': 2,
-        'num_wood': 2,
-        'num_items': 2,
+        'num_rigid': 4,
+        'num_wood': 4,
+        'num_items': 4,
         'max_steps': 200,
         'render_fps': constants.RENDER_FPS,
         'env': env_entry_point,

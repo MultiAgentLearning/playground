@@ -139,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('--max_loop_step', type=int, default=10, help='maximum training steps')
     parser.add_argument('--game_dir', type=str, default="GAMES", help='log dir')
     parser.add_argument('--nn_model_dir', type=str, default="NN_MODELS", help='log dir')
-    parser.add_argument('--opponent', type=str, default='static', help='must be one of {static, random, smart_random, smart_random_no_bomb}')
+    parser.add_argument('--opponent', type=str, default='static', help='must be one of {static, random, slow_random_no_bomb, smart_random, smart_random_no_bomb}')
 
     parser.add_argument('--chunk_size', type=int, default=12, help='chunk size when split a long seq into chunks')
 
