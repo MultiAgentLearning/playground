@@ -4,36 +4,70 @@ For this project, we are attempting to create our own reinforcement learning age
 
 ## Agent Design
 
-Much of code is pulled from the Skynet955 agent that placed 5th in NeurIPS in 2018.
+Much of the code is based on the Skynet955 agent that placed 5th in NeurIPS in 2018.
 https://hub.docker.com/r/multiagentlearning/skynet955
+
 https://www.borealisai.com/en/blog/pommerman-team-competition-or-how-we-learned-stop-worrying-and-love-battle/
+
 https://github.com/BorealisAI/pommerman-baseline
 
 ## Getting started
 
 ### Installation
 
+1. Install CUDA and Nvidia Drivers (if you have an NVIDIA GPU)
+1. Clone the repo
 1. Create a virtual or conda environment
-2. Source your environment
-3. pip3 install -r requirements.txt
-4. pip3 install -r requirements_extra.txt
-5. Install everything:
-6. python3 setup.py build
-7. python3 setup.py install
-8. python3 setup.py install_lib
-9. Test it
-10. python3 examples/simple_ffa_run.py
+1. Source your environment. this will vary depending on your environment; for virtualenv in linux: 
+
+   ```bash 
+   source venv/bin/activate 
+   ```
+   
+1. Install dependencies
+
+   ```bash
+   pip3 install -r requirements.txt
+   pip3 install -r requirements_extra.txt
+   ```
+   
+1. Install code (must be done everytime pommerman libraries are changed):
+   
+   ```bash
+   python3 setup.py build
+   python3 setup.py install
+   python3 setup.py install_lib
+   ```
+
+1. Test it: 
+
+   ```bash 
+   python3 examples/simple_ffa_run.py 
+   ```
 
 ### Training
 
 If you want to train the skynet model, follow these directions
 
-1. Modify params file for your setup.
-2. If you do not have CUDA, remove the --device_id argument from train.sh script.
-3. source train.sh params log.txt
-4. Training will run for a while and be stored in nn_model_dir
-5. Modify  examples/simple_team_run_CNNskynet.py to view your trained agent as of last stored checkpoint
-6. python3 examples/simple_team_run_CNNskynet.py
+1. Modify params file for your setup (be sure to set start_iteration to 0 if starting with an untrained network).
+1. Add CUDA devices to your environment variables if you have any (comma separated):
+
+   ```bash
+   echo export CUDA_VISIBLE_DEVICES=0 >> ~/.bashrc
+   ```
+1. If you do not have CUDA, remove the --device_id argument from train.sh script.
+1. Run training with set params: 
+   
+   ```bash 
+   source train.sh params log.txt 
+   ```
+   
+1. Training will run for a while and be stored in nn_model_dir
+1. Modify  examples/simple_team_run_CNNskynet.py to view your trained agent as of last stored checkpoint and then test it: 
+
+   ```bash 
+   python3 examples/simple_team_run_CNNskynet.py 
+   ```
 
 
 ## Playground Info
