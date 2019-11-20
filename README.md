@@ -1,4 +1,42 @@
-# Playground
+# Deep Learning Pommerman Project
+
+For this project, we are attempting to create our own reinforcement learning agents that will be able to apply teamwork in a novel way.
+
+## Agent Design
+
+Much of code is pulled from the Skynet955 agent that placed 5th in NeurIPS in 2018.
+https://hub.docker.com/r/multiagentlearning/skynet955
+https://www.borealisai.com/en/blog/pommerman-team-competition-or-how-we-learned-stop-worrying-and-love-battle/
+https://github.com/BorealisAI/pommerman-baseline
+
+## Getting started
+
+### Installation
+
+1. Create a virtual or conda environment
+2. Source your environment
+3. pip3 install -r requirements.txt
+4. pip3 install -r requirements_extra.txt
+5. Install everything:
+6. python3 setup.py build
+7. python3 setup.py install
+8. python3 setup.py install_lib
+9. Test it
+10. python3 examples/simple_ffa_run.py
+
+### Training
+
+If you want to train the skynet model, follow these directions
+
+1. Modify params file for your setup.
+2. If you do not have CUDA, remove the --device_id argument from train.sh script.
+3. source train.sh params log.txt
+4. Training will run for a while and be stored in nn_model_dir
+5. Modify  examples/simple_team_run_CNNskynet.py to view your trained agent as of last stored checkpoint
+6. python3 examples/simple_team_run_CNNskynet.py
+
+
+## Playground Info
 
 > First time? check out our [website](https://www.pommerman.com) for more information,
 > our [Discord](https://discordapp.com/invite/wjVJEDc) to join the community,
@@ -12,14 +50,6 @@ There are three variants for which you can enter your agents to compete:
 * Team (The NIPS '18 Competition environment): 2v2 where two teams of agents enter and one team wins. It tests planning, and tactics, and cooperation. The board is partially observable.
 * Team Radio: Like team in that a it's a 2v2 game. Differences are that the agents each have a radio that they can use to convey 2 words from a dictionary of size 8 each step.
 
-#### Why should I participate?
-
-* You are a machine learning researcher and similarly recognize the lack of approachable benchmarks for this subfield. Help us rectify this and prove that your algorithm is better than others.
-* You want to contribute to multi agent or communication research. This is first and foremost a platform for doing research and everything that we do here will eventually get published with generous (or primary) support from us.
-* You really like(d) Bomberman and are fascinated by AI. This is a great opportunity to learn how to build intelligent agents.
-* You want the glory of winning an AI competition. We are going to publicize the results widely.
-* You think AI is dumb and can make a deterministic system that beats any learned agent.
-
 #### How do I train agents?
 
 Most open-source research tools in this domain have been designed with single agents in mind. We will be developing resources towards standardizing multi-agent learning. In the meantime, we have provided an example training script in train_with_tensorforce.py. It demonstrates how to wrap the Pommerman environments such that they can be trained with popular libraries like TensorForce.
@@ -28,24 +58,10 @@ Most open-source research tools in this domain have been designed with single ag
 
 The setup for submitting agents will be live shortly. It involves making a [Docker](https://docs.docker.com/get-started/) container that runs your agent. We then read and upload your docker file via Github Deploy Keys. You retain the ownership and license of the agents. We will only look at your code to ensure that it is safe to run, doesn't execute anything malicious, and does not cheat. We are just going to run your agent in competitions on our servers. We have an example agent that already works and further instructions are in the games/a/docker directory.
 
-#### Who is running this?
 
-[Cinjon Resnick](http://twitter.com/cinjoncin), [Denny Britz](https://twitter.com/dennybritz), [David Ha](https://twitter.com/hardmaru), [Jakob Foerster](https://www.linkedin.com/in/jakobfoerster/), and [Wes Eldridge](https://twitter.com/weseldridge) are the folks behind this. We are generously supported by a host of other people, including [Kyunghyun Cho](https://twitter.com/kchonyc), [Joan Bruna](https://twitter.com/joanbruna), [Julian Togelius](http://julian.togelius.com/) and [Jason Weston](https://research.fb.com/people/weston-jason/). You can find us in the [Discord](https://discordapp.com/invite/wjVJEDc).
+#### Original codebase
 
-Pommerman is immensely appreciate of the generous assistance it has received from Jane Street Capital, NVidia, Facebook AI Research, and Google Cloud.
-
-#### How can I help?
-
-To see the ways you can get invovled with the project head over to our [Contributing Guide](https://github.com/MultiAgentLearning/playground/blob/master/CONTRIBUTING.md) and checkout our current [issues](https://github.com/MultiAgentLearning/playground/issues).
-
-# Contributing
-
-We welcome contributions through pull request. See [CONTRIBUTING](../master/CONTRIBUTING.md) for more details.
-
-# Code of Conduct
-
-We strive for an open community. Please read over our [CODE OF CONDUCT](../master/CODE_OF_CONDUCT.md)
+Find the orignal codebase we forked from [here](https://github.com/MultiAgentLearning/playground/).
 
 # Citation
-
-If you use the Pommerman environment in your research, please cite us using the [bibtex file](../master/docs/pommerman.bib) in docs.
+Since we are using Pommerman environment in our research, we cite it using this [bibtex file](../master/docs/pommerman.bib) in docs.
