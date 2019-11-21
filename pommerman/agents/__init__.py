@@ -8,6 +8,7 @@ from .random_agent import RandomAgent
 from .random_agent import SmartRandomAgent
 from .random_agent import SmartRandomAgentNoBomb
 from .random_agent import SlowRandomAgentNoBomb
+from .random_agent import TimedRandomAgentNoBomb
 from .simple_agent import SimpleAgent
 from .tensorforce_agent import TensorForceAgent
 from .model import CNN_LSTM

@@ -193,6 +193,8 @@ def setup_agents(nn_model, max_seq_len, opponent='static'):
                 agent_list[i] = random_agent.StaticAgent()
             elif opponent == 'slow_random_no_bomb':
                 agent_list[i] = random_agent.SlowRandomAgentNoBomb()
+            elif opponent == 'timed_random_no_bomb':
+                agent_list[i] = random_agent.TimedRandomAgentNoBomb()
             elif opponent == 'smart_random_no_bomb':
                 agent_list[i] = random_agent.SmartRandomAgentNoBomb()
             elif opponent == 'smart_random':

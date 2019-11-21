@@ -36,6 +36,7 @@ class Pomme(gym.Env):
                  max_steps=1000,
                  is_partially_observable=False,
                  env=None,
+                 rand_agent_pos=False,
                  **kwargs):
         self._render_fps = render_fps
         self._intended_actions = []
@@ -49,6 +50,7 @@ class Pomme(gym.Env):
         self._max_steps = max_steps
         self._viewer = None
         self._is_partially_observable = is_partially_observable
+        self._rand_agent_pos = rand_agent_pos
         self._env = env
 
         self.training_agent = None
@@ -126,7 +128,7 @@ class Pomme(gym.Env):
 
     def make_board(self):
         self._board = utility.make_board(self._board_size, self._num_rigid,
-                                         self._num_wood, len(self._agents))
+                                         self._num_wood, len(self._agents), self._rand_agent_pos)
 
     def make_items(self):
         self._items = utility.make_items(self._board, self._num_items)

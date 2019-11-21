@@ -119,6 +119,26 @@ def simple_team_env():
     agent = characters.Bomber
     return locals()
 
+def simple_rand_team_env():
+    """Start up a super simple 2v2 config with random agent start positions."""
+    env = envs.v0.Pomme
+    game_type = constants.GameType.Team
+    env_entry_point = 'pommerman.envs.v0:Pomme'
+    env_id = 'SimpleRandomTeam-v0'
+    env_kwargs = {
+        'game_type': game_type,
+        'board_size': 11,
+        'num_rigid': 0,
+        'num_wood': 0,
+        'num_items': 0,
+        'max_steps': 200,
+        'render_fps': constants.RENDER_FPS,
+        'rand_agent_pos': True,
+        'env': env_entry_point,
+    }
+    agent = characters.Bomber
+    return locals()
+
 def team_competition_env():
     """Start up a Team config with the competition settings."""
     env = envs.v0.Pomme

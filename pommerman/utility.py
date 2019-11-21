@@ -36,7 +36,7 @@ class PommermanJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
+def make_board(size, num_rigid=0, num_wood=0, num_agents=4, rand_agent_pos=False):
     """Make the random but symmetric board.
 
     The numbers refer to the Item enum in constants. This is:
@@ -93,11 +93,25 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
             board[size - 2, size - 2] = constants.Item.Agent1.value
             agents = [(1, 1), (size - 2, size - 2)]
         else:
-            board[1, 1] = constants.Item.Agent0.value
-            board[size - 2, 1] = constants.Item.Agent1.value
-            board[size - 2, size - 2] = constants.Item.Agent2.value
-            board[1, size - 2] = constants.Item.Agent3.value
-            agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+            if rand_agent_pos == True:
+                shuffledAgents = [constants.Item.Agent0.value, constants.Item.Agent1.value, constants.Item.Agent2.value, constants.Item.Agent3.value]
+                shuffledSpots = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+                shuffledOrder = [0,1,2,3]
+                random.shuffle(shuffledOrder)
+                shuffledAgents = [shuffledAgents[i] for i in shuffledOrder]
+                shuffledSpots = [shuffledSpots[i] for i in shuffledOrder]
+
+                board[1, 1] = shuffledAgents[0]
+                board[size - 2, 1] = shuffledAgents[1]
+                board[size - 2, size - 2] = shuffledAgents[2]
+                board[1, size - 2] = shuffledAgents[3]
+                agents = shuffledSpots
+            else:
+                board[1, 1] = constants.Item.Agent0.value
+                board[size - 2, 1] = constants.Item.Agent1.value
+                board[size - 2, size - 2] = constants.Item.Agent2.value
+                board[1, size - 2] = constants.Item.Agent3.value
+                agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
 
         for position in agents:
             if position in coordinates:
@@ -105,10 +119,7 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         # Exclude breathing room on either side of the agents.
         for i in range(2, 4):
-            try:
-                coordinates.remove((1, i))
-            except KeyError:
-                print("Unable to remove coordinate:" 1,i)
+            coordinates.remove((1, i))
             coordinates.remove((i, 1))
             coordinates.remove((size - 2, size - i - 1))
             coordinates.remove((size - i - 1, size - 2))

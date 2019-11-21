@@ -42,6 +42,10 @@ nn_model_dir="NN_MODELS"
 env_id="PommeTeamCompetition-v0"
 start_iteration=0
 opponent="static"
+n_games_per_worker=10
+buffer_size=100
+n_epochs=1
+
 
 save_param=true
 
@@ -72,6 +76,16 @@ do
     if [[ ${key} == 'opponent' ]]; then
         opponent=${data}
     fi
+    if [[ ${key} == 'n_games_per_worker' ]]; then
+        n_games_per_worker=${data}
+    fi
+    if [[ ${key} == 'buffer_size' ]]; then
+        buffer_size=${data}
+    fi
+    if [[ ${key} == 'n_epochs' ]]; then
+        n_epochs=${data}
+    fi
+
 
     if [ "$save_param" = true ] ; then
         a="--${key}=${data} "
@@ -88,6 +102,9 @@ echo "game_dir: $game_dir"
 echo "nn_model_dir: $nn_model_dir"
 echo "env_id: $env_id"
 echo "opponent: $opponent"
+echo "n_games_per_worker: $n_games_per_worker"
+echo "buffer_size: $buffer_size"
+echo "n_epochs: $n_epochs"
 
 visible_gpus="$CUDA_VISIBLE_DEVICES"
 IFS=',' read -r -a ARR <<< "$visible_gpus"

@@ -19,8 +19,24 @@ class SlowRandomAgentNoBomb(BaseAgent):
     def act(self, obs, action_space):
         action = action_space.sample()
         self.act_count += 1
-        if Action.Bomb.value == action or self.act_count % 3 != 2:
+        if Action.Bomb.value == action or self.act_count % 4 != 3:
             action = Action.Stop.value
+        return action
+
+class TimedRandomAgentNoBomb(BaseAgent):
+    """Random Agent that returns random actions given an action_space, but never places bombs and stops doing anything after a number of moves."""
+    def __init__(self):
+        self.act_count = 0
+        super(TimedRandomAgentNoBomb, self).__init__()
+
+    def act(self, obs, action_space):
+        MAX_MOVES = 30
+        action = Action.Stop.value
+        if self.act_count < MAX_MOVES:
+            possible_action = action_space.sample()
+            if Action.Bomb.value != possible_action:
+                self.act_count += 1
+                action = possible_action
         return action
 
 
