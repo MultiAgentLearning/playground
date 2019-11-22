@@ -5,6 +5,8 @@ from .http_agent import HttpAgent
 from .player_agent import PlayerAgent
 from .player_agent_blocking import PlayerAgentBlocking
 from .random_agent import RandomAgent
+from .random_agent import RandomAgentNoBomb
+from .random_agent import StaticAgent
 from .random_agent import SmartRandomAgent
 from .random_agent import SmartRandomAgentNoBomb
 from .random_agent import SlowRandomAgentNoBomb

@@ -10,6 +10,15 @@ class RandomAgent(BaseAgent):
     def act(self, obs, action_space):
         return action_space.sample()
 
+class RandomAgentNoBomb(BaseAgent):
+    """The Random Agent that returns random actions given an action_space but never sets bombs."""
+
+    def act(self, obs, action_space):
+        action = action_space.sample()
+        if Action.Bomb.value == action:
+            action = Action.Stop.value
+        return action
+
 class SlowRandomAgentNoBomb(BaseAgent):
     """The Random Agent that returns random actions given an action_space, but never places bombs and often just sits."""
     def __init__(self):
