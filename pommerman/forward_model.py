@@ -546,9 +546,8 @@ class ForwardModel(object):
         observations = []
         for agent in agents:
             agent_obs = {'alive': alive_agents}
-            board = curr_board
+            board = curr_board.copy()
             if is_partially_observable:
-                board = board.copy()
                 for row in range(board_size):
                     for col in range(board_size):
                         if not in_view_range(agent.position, row, col):
