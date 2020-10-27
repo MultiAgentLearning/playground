@@ -9,7 +9,6 @@ def main():
        Use this as an example to set up your training env.
     '''
     # Print all possible environments in the Pommerman registry
-    # TODO: once Search-v0 env is created, update registry
     print(pommerman.REGISTRY)
 
     # Create a set of agents (minimum two agents, maximum four agents)
