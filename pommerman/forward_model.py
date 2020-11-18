@@ -266,7 +266,7 @@ class ForwardModel(object):
                 # one bomb is going to this position. In both scenarios, revert
                 # to the original position.
                 if desired_position != curr_position and \
-                      (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] > 1):
+                        (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] > 1):
                     desired_agent_positions[num_agent] = curr_position
                     agent_occupancy[curr_position] += 1
                     change = True
@@ -275,7 +275,7 @@ class ForwardModel(object):
                 desired_position = desired_bomb_positions[num_bomb]
                 curr_position = bomb.position
                 if desired_position != curr_position and \
-                      (bomb_occupancy[desired_position] > 1 or agent_occupancy[desired_position] > 1):
+                        (bomb_occupancy[desired_position] > 1 or agent_occupancy[desired_position] > 1):
                     desired_bomb_positions[num_bomb] = curr_position
                     bomb_occupancy[curr_position] += 1
                     change = True
@@ -296,7 +296,7 @@ class ForwardModel(object):
                 continue
 
             agent_list = [
-                (num_agent, agent) for (num_agent, agent) in enumerate(alive_agents) \
+                (num_agent, agent) for (num_agent, agent) in enumerate(alive_agents)
                 if desired_position == desired_agent_positions[num_agent]]
             if not agent_list:
                 # Agents moved from collision.
@@ -329,10 +329,10 @@ class ForwardModel(object):
             target_position = utility.get_next_position(desired_position,
                                                         direction)
             if utility.position_on_board(curr_board, target_position) and \
-                       agent_occupancy[target_position] == 0 and \
-                       bomb_occupancy[target_position] == 0 and \
-                       not utility.position_is_powerup(curr_board, target_position) and \
-                       not utility.position_is_wall(curr_board, target_position):
+                    agent_occupancy[target_position] == 0 and \
+                    bomb_occupancy[target_position] == 0 and \
+                    not utility.position_is_powerup(curr_board, target_position) and \
+                    not utility.position_is_wall(curr_board, target_position):
                 # Ok to update bomb desired location as we won't iterate over it again here
                 # but we can not update bomb_occupancy on target position and need to check it again
                 # However we need to set the bomb count on the current position to zero so
@@ -365,7 +365,7 @@ class ForwardModel(object):
                 # Agents and bombs can only share a square if they are both in their
                 # original position (Agent dropped bomb and has not moved)
                 if desired_position != curr_position and \
-                      (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] != 0):
+                        (agent_occupancy[desired_position] > 1 or bomb_occupancy[desired_position] != 0):
                     # Late collisions resulting from failed kicks force this agent to stay at the
                     # original position. Check if this agent successfully kicked a bomb above and undo
                     # the kick.
@@ -451,7 +451,7 @@ class ForwardModel(object):
                 for _, indices in bomb.explode().items():
                     for r, c in indices:
                         if not all(
-                            [r >= 0, c >= 0, r < board_size, c < board_size]):
+                                [r >= 0, c >= 0, r < board_size, c < board_size]):
                             break
                         if curr_board[r][c] == constants.Item.Rigid.value:
                             break
@@ -481,7 +481,8 @@ class ForwardModel(object):
             if curr_board[agent.position] == constants.Item.Flames.value:
                 agent.die()
             else:
-                curr_board[agent.position] = utility.agent_value(agent.agent_id)
+                curr_board[agent.position] = utility.agent_value(
+                    agent.agent_id)
 
         return curr_board, curr_agents, curr_bombs, curr_items, curr_flames
 
@@ -553,7 +554,8 @@ class ForwardModel(object):
                         if not in_view_range(agent.position, row, col):
                             board[row, col] = constants.Item.Fog.value
             agent_obs['board'] = board
-            bomb_blast_strengths, bomb_life, bomb_moving_direction = make_bomb_maps(agent.position)
+            bomb_blast_strengths, bomb_life, bomb_moving_direction = make_bomb_maps(
+                agent.position)
             agent_obs['bomb_blast_strength'] = bomb_blast_strengths
             agent_obs['bomb_life'] = bomb_life
             agent_obs['bomb_moving_direction'] = bomb_moving_direction
@@ -575,6 +577,11 @@ class ForwardModel(object):
         alive_ids = sorted([agent.agent_id for agent in alive])
         if step_count >= max_steps:
             return True
+        elif game_type == constants.GameType.Search:
+            agent = agents[0]
+
+            # if any attributes improved from default values, it means item was picked up
+            return agent.ammo == 2 or agent.blast_strength == 3 or agent.can_kick
         elif game_type == constants.GameType.FFA or game_type == constants.GameType.OneVsOne:
             if training_agent is not None and training_agent not in alive_ids:
                 return True
@@ -601,7 +608,7 @@ class ForwardModel(object):
                 else:
                     return {
                         'result': constants.Result.Win,
-                        'winners': [num for num, reward in enumerate(rewards) \
+                        'winners': [num for num, reward in enumerate(rewards)
                                     if reward == 1]
                     }
             else:
@@ -617,7 +624,7 @@ class ForwardModel(object):
             else:
                 return {
                     'result': constants.Result.Win,
-                    'winners': [num for num, reward in enumerate(rewards) \
+                    'winners': [num for num, reward in enumerate(rewards)
                                 if reward == 1],
                 }
         else:
@@ -632,7 +639,7 @@ class ForwardModel(object):
             '''Checks if list are equal'''
             return any([lst == v for v in values])
 
-        alive_agents = [num for num, agent in enumerate(agents) \
+        alive_agents = [num for num, agent in enumerate(agents)
                         if agent.is_alive]
         if game_type == constants.GameType.FFA:
             if len(alive_agents) == 1:
