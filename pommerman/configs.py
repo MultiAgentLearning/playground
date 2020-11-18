@@ -19,8 +19,9 @@ from . import characters
 
 def search_v0_env(setup_dict=None):
     """Start up a Search Environment config with input settings."""
-    NUM_ITEMS = 1  # only one item present in env, which is the goal item
-    NUM_BREAKABLE_WALLS = 0  # set to 0 as bombs are disabled in search environment
+    NUM_GOAL_ITEMS = 1  # only one item present in env, which is the goal item
+    # set to twice of NUM_ITEMS, where every wall has half probability of containing goal item
+    NUM_BREAKABLE_WALLS = NUM_GOAL_ITEMS * 2
     env = envs.v0.Pomme
     game_type = constants.GameType.Search
     env_entry_point = 'pommerman.envs.v0:Pomme'
@@ -30,7 +31,7 @@ def search_v0_env(setup_dict=None):
         'board_size': int(setup_dict['board_size']),
         'num_rigid': int(setup_dict['num_rigid_walls']),
         'num_wood': NUM_BREAKABLE_WALLS,
-        'num_items': NUM_ITEMS,
+        'num_items': NUM_GOAL_ITEMS,
         'max_steps': int(setup_dict['max_steps']),
         'render_fps': constants.RENDER_FPS,
         'env': env_entry_point,
