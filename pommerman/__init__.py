@@ -57,4 +57,5 @@ def make(config_id, agent_list, game_state_file=None, render_mode='human', env_s
     env.set_render_mode(render_mode)
     return env
     
+# DO NOT MOVE THIS LINE
 from . import cli
