@@ -79,16 +79,16 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         # Gather all the possible coordinates to use for walls.
         coordinates = set([
-            (x, y) for x, y in \
-            itertools.product(range(size), range(size)) \
+            (x, y) for x, y in
+            itertools.product(range(size), range(size))
             if x != y])
 
-        # Set the players down. Exclude them from coordinates.
-        # Agent0 is in top left. Agent1 is in bottom left.
-        # Agent2 is in bottom right. Agent 3 is in top right.
-        assert (num_agents % 2 == 0)
+        assert (num_agents % 2 == 0 or num_agents == 1)
 
-        if num_agents == 2:
+        if num_agents == 1:
+            board[1, 1] = constants.Item.Agent0.value
+            agents = [(1, 1)]
+        elif num_agents == 2:
             board[1, 1] = constants.Item.Agent0.value
             board[size - 2, size - 2] = constants.Item.Agent1.value
             agents = [(1, 1), (size - 2, size - 2)]
@@ -97,7 +97,8 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
             board[size - 2, 1] = constants.Item.Agent1.value
             board[size - 2, size - 2] = constants.Item.Agent2.value
             board[1, size - 2] = constants.Item.Agent3.value
-            agents = [(1, 1), (size - 2, 1), (1, size - 2), (size - 2, size - 2)]
+            agents = [(1, 1), (size - 2, 1),
+                      (1, size - 2), (size - 2, size - 2)]
 
         for position in agents:
             if position in coordinates:
@@ -205,7 +206,7 @@ def is_valid_direction(board, position, direction, invalid_values=None):
     '''Determins if a move is in a valid direction'''
     row, col = position
     if invalid_values is None:
-        invalid_values = [item.value for item in \
+        invalid_values = [item.value for item in
                           [constants.Item.Rigid, constants.Item.Wood]]
 
     if constants.Action(direction) == constants.Action.Stop:
@@ -223,7 +224,7 @@ def is_valid_direction(board, position, direction, invalid_values=None):
 
     if constants.Action(direction) == constants.Action.Right:
         return col + 1 < len(board[0]) and \
-               board[row][col + 1] not in invalid_values
+            board[row][col + 1] not in invalid_values
 
     raise constants.InvalidAction("We did not receive a valid direction: ",
                                   direction)
@@ -241,7 +242,7 @@ def position_is_flames(board, position):
 
 def position_is_bomb(bombs, position):
     """Check if a given position is a bomb.
-    
+
     We don't check the board because that is an unreliable source. An agent
     may be obscuring the bomb on the board.
     """
@@ -263,7 +264,7 @@ def position_is_powerup(board, position):
 def position_is_wall(board, position):
     '''Determins if a position is a wall tile'''
     return position_is_rigid(board, position) or \
-           position_is_wood(board, position)
+        position_is_wood(board, position)
 
 
 def position_is_passage(board, position):
