@@ -1,0 +1,5 @@
+{
+    "board_size": 6, 
+    "num_rigid_walls": 0,
+    "max_steps": 500
+}

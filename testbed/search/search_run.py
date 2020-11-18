@@ -1,29 +1,25 @@
 '''A script that runs a game where the simple agent searches optimal path to powerup'''
 import pommerman
 from pommerman import agents
+import json
 
 
-def main():
-    '''Simple function to bootstrap a game.
+def main(env_setup_dict):
+    '''Simple function to bootstrap a game.'''
 
-       Use this as an example to set up your training env.
-    '''
-    # Print all possible environments in the Pommerman registry
-    print(pommerman.REGISTRY)
-
-    # Create a set of agents (minimum two agents, maximum four agents)
+    # Create a Search Agent
     agent_list = [
-        # TODO: replace SimpleAgent with a custom agent called SearchAgent
-        agents.SimpleAgent(),
-        agents.PlayerAgent(),
+        agents.SearchAgent()
     ]
 
-    # Make the "One-versus-One" environment using the agent list
-    # TODO: replace this environment with a custom env called 'Search-v0'
-    env = pommerman.make('OneVsOne-v0', agent_list)
+    # Make the "Search" environment using the agent list and setup inputs
+    env = pommerman.make('Search-v0', agent_list, env_setup=env_setup_dict)
+
+    # The following print statement should include Search-v0
+    # print(pommerman.REGISTRY)
 
     # Run the episodes just like OpenAI Gym
-    num_episodes = 3  # change this to test how consistent the Search Agent in more episodes
+    num_episodes = 1  # change this to test how consistent the Search Agent in more episodes
     for i_episode in range(num_episodes):
         state = env.reset()
         done = False
@@ -32,8 +28,17 @@ def main():
             actions = env.act(state)
             state, reward, done, info = env.step(actions)
         print('Episode {} finished'.format(i_episode))
+        # print(state)
+        # print(reward)
+        # print(info)
     env.close()
 
 
 if __name__ == '__main__':
-    main()
+    with open('env_setup.json', 'r') as f:
+        env_setup_dict = json.load(f)
+
+    for attribute in env_setup_dict:
+        print(attribute, env_setup_dict[attribute])
+
+    main(env_setup_dict)
