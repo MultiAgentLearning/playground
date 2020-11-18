@@ -43,6 +43,7 @@ class Viewer(object):
         Used to share common functionality between the different
         rendering engines.
      '''
+
     def __init__(self):
         self.window = None
         self.display = None
@@ -89,6 +90,7 @@ class Viewer(object):
 
 class PixelViewer(Viewer):
     '''Renders the game as a set of square pixels'''
+
     def __init__(self,
                  display=None,
                  board_size=11,
@@ -134,7 +136,7 @@ class PixelViewer(Viewer):
                 self.isopen = True
 
         assert len(frames.shape
-                  ) == 3, "You passed in an image with the wrong number shape"
+                   ) == 3, "You passed in an image with the wrong number shape"
         image = pyglet.image.ImageData(
             frames.shape[1],
             frames.shape[0],
@@ -209,6 +211,7 @@ class PixelViewer(Viewer):
 
 class PommeViewer(Viewer):
     '''The primary render engine for pommerman.'''
+
     def __init__(self,
                  display=None,
                  board_size=11,
@@ -295,7 +298,8 @@ class PommeViewer(Viewer):
                     bomb_life = self.get_bomb_life(row, col)
                     tile = self._resource_manager.get_bomb_tile(bomb_life)
                 else:
-                    tile = self._resource_manager.tile_from_state_value(tile_state)
+                    tile = self._resource_manager.tile_from_state_value(
+                        tile_state)
                 tile.width = size
                 tile.height = size
                 sprite = pyglet.sprite.Sprite(
@@ -370,19 +374,21 @@ class PommeViewer(Viewer):
         dead.width = image_size
         dead.height = image_size
         sprites = []
-        
+
         if self._game_type is constants.GameType.FFA or self._game_type is constants.GameType.OneVsOne:
             agents = self._agents
+        elif self._game_type is constants.GameType.Search:
+            agents = self._agents
         else:
-            agents = [self._agents[i] for i in [0,2,1,3]]
+            agents = [self._agents[i] for i in [0, 2, 1, 3]]
 
         for index, agent in enumerate(agents):
             # weird math to make sure the alignment
             # is correct. 'image_size + spacing' is an offset
-            # that includes padding (spacing) for each image. 
+            # that includes padding (spacing) for each image.
             # '4 - index' is used to space each agent out based
             # on where they are in the array based off of their
-            # index. 
+            # index.
             x = self.board_right() - (len(agents) - index) * (
                 image_size + spacing)
             y = board_top
@@ -421,6 +427,7 @@ class PommeViewer(Viewer):
 
 class ResourceManager(object):
     '''Handles sprites and other resources for the PommeViewer'''
+
     def __init__(self, game_type):
         self._index_resources()
         self._load_fonts()
