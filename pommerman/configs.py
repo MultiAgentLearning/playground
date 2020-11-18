@@ -36,7 +36,7 @@ def search_v0_env(setup_dict=None):
         'render_fps': constants.RENDER_FPS,
         'env': env_entry_point,
     }
-    agent = characters.Searcher
+    agent = characters.Bomber
     return locals()
 
 
