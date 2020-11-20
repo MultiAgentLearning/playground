@@ -488,7 +488,7 @@ class ForwardModel(object):
 
     def get_observations(self, curr_board, agents, bombs, flames,
                          is_partially_observable, agent_view_size,
-                         game_type, game_env):
+                         game_type, game_env, items):
         """Gets the observations as an np.array of the visible squares.
 
         The agent gets to choose whether it wants to keep the fogged part in

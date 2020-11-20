@@ -21,7 +21,8 @@ def search_v0_env(setup_dict=None):
     """Start up a Search Environment config with input settings."""
     # only one item should be present in env, which is the goal item
     NUM_GOAL_ITEMS = 1
-    NUM_BREAKABLE_WALLS = NUM_GOAL_ITEMS
+    # Set to 0 for current iteration of testbed
+    NUM_BREAKABLE_WALLS = 0
     env = envs.v0.Pomme
     game_type = constants.GameType.Search
     env_entry_point = 'pommerman.envs.v0:Pomme'

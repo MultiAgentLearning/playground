@@ -128,7 +128,8 @@ class Pomme(gym.Env):
                                          self._num_wood, len(self._agents), self._game_type)
 
     def make_items(self):
-        self._items = utility.make_items(self._board, self._num_items)
+        self._items = utility.make_items(
+            self._board, self._num_items, self._game_type)
 
     def act(self, obs):
         agents = [agent for agent in self._agents
@@ -139,7 +140,7 @@ class Pomme(gym.Env):
         self.observations = self.model.get_observations(
             self._board, self._agents, self._bombs, self._flames,
             self._is_partially_observable, self._agent_view_size,
-            self._game_type, self._env)
+            self._game_type, self._env, self._items)
         for obs in self.observations:
             obs['step_count'] = self._step_count
         return self.observations
@@ -165,6 +166,12 @@ class Pomme(gym.Env):
             self._step_count = 0
             self.make_board()
             self.make_items()
+            if (self._game_type == constants.GameType.Search):
+                # need to preinstantiate board with goal item
+                goal_position = list(self._items.keys())[0]
+                item_value = self._items.get(goal_position)
+                self._board[goal_position] = item_value
+
             self._bombs = []
             self._flames = []
             self._powerups = []

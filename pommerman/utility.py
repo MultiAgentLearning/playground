@@ -162,10 +162,23 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
     return board
 
 
-def make_items(board, num_items):
+def make_items(board, num_items, game_type):
     '''Lays all of the items on the board'''
     item_positions = {}
+    num_attempts = 0
+
     while num_items > 0:
+        if (game_type == constants.GameType.Search):
+            random.seed((len(board) - num_attempts) // 2)
+            row = random.randint(0, len(board) - 1)
+            col = random.randint(0, len(board[0]) - 1)
+            num_attempts += 1
+
+            if board[row, col] == constants.Item.Passage.value:
+                item_positions[(row, col)] = constants.Item.Kick.value
+                num_items -= 1
+                continue
+
         row = random.randint(0, len(board) - 1)
         col = random.randint(0, len(board[0]) - 1)
         if board[row, col] != constants.Item.Wood.value:
