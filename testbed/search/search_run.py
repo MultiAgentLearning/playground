@@ -32,6 +32,8 @@ def main(env_setup_dict):
     start_time = time.time()
 
     # obtain list of actions to take from search algorithm
+    # search_algo_1 corresponds to A* Search
+    # search_algo_2 corresponds to BFS
     actions = search_algo_1.search(
         initial_state[0]['board'], initial_state[0]['position'])
 
