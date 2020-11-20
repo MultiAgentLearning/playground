@@ -1,5 +1,6 @@
 from time import sleep
 import heapq
+import queue
 
 """
 Constants that you will need to infer the state of the board.
@@ -18,6 +19,7 @@ LEFT = 3
 RIGHT = 4
 
 
+# driver function that will be called by runner script
 def search(board, agent_position):
     """
     Compute the sequence of actions required for agent to move to the cell containing a goal item.
@@ -41,13 +43,53 @@ def search(board, agent_position):
 
     goal_position = find_goal_position(board)
 
-    return perform_astar_search(board, agent_position, goal_position)
-
-    # return [1, 2, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    return breadth_first_search(board, agent_position, goal_position)
 
 
-def perform_astar_search(board, initial_position, goal_position):
-    # define every position to be a tuple with the following structure: (path cost + heuristic cost, (position, actions taken))
+# performs breadth first search
+def breadth_first_search(board, initial_position, goal_position):
+    if (is_goal(initial_position, goal_position)):
+        return []
+
+    # define every node to be a tuple with the following structure: (path cost, (position, actions taken))
+    frontier = queue.Queue()
+    frontier_coordinates = set()
+    expanded = set()
+
+    frontier.put((0, (initial_position, [])))
+    frontier_coordinates.add(initial_position)
+
+    while not frontier.empty():
+        node = frontier.get()
+        node_position = node[1][0]
+        frontier_coordinates.remove(node_position)
+        node_path = node[1][1]
+        node_path_cost = node[0]  # every action has uniform cost
+
+        expanded.add(node_position)
+
+        children = generate_valid_children_positions(node_position, board)
+
+        for action_to_get_child in list(children.keys()):
+            action = action_to_get_child
+            new_path = node_path.copy()
+            new_path.append(action)
+            child_position = children.get(action)
+            child_path_cost = node_path_cost + 1
+            child_node = (child_path_cost,
+                          (child_position, new_path))
+
+            if (is_goal(child_position, goal_position)):
+                return new_path
+
+            if (child_position not in frontier_coordinates and child_position not in expanded):
+                frontier_coordinates.add(child_position)
+                frontier.put(child_node)
+
+
+# performs A star search with manhattan distance heuristic
+def astar_search(board, initial_position, goal_position):
+    # define every node to be a tuple with the following structure: (path cost + heuristic cost, (position, actions taken))
     frontier = []
     frontier_coordinates = set()
     expanded = set()
@@ -58,7 +100,6 @@ def perform_astar_search(board, initial_position, goal_position):
 
     while len(frontier) != 0:
         node = heapq.heappop(frontier)
-        print(node)
         node_position = node[1][0]
         frontier_coordinates.remove(node_position)
         node_path = node[1][1]
@@ -95,6 +136,7 @@ def perform_astar_search(board, initial_position, goal_position):
                 heapq.heappush(frontier, child_node)
 
 
+# gets manhattan distance between current position and goal position
 def get_manhattan_distance(curr_position, goal_position):
     # Problem relaxation: Assumes goal can be reached if there were no walls
     # This makes heuristic admissible
@@ -107,6 +149,7 @@ def get_manhattan_distance(curr_position, goal_position):
         return (num_horizontal_moves + num_vertical_moves) * (1 + 1/100)
 
 
+# generates valid successor nodes of current position
 def generate_valid_children_positions(position, board):
     children_positions = dict()
     curr_row = position[0]
@@ -128,10 +171,12 @@ def generate_valid_children_positions(position, board):
     return children_positions
 
 
+# determines if a position is a goal position
 def is_goal(position, goal_position):
     return position == goal_position
 
 
+# finds goal position from board matrix
 def find_goal_position(board):
     for y in range(len(board)):
         for x in range(len(board[0])):
