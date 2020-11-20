@@ -19,9 +19,9 @@ from . import characters
 
 def search_v0_env(setup_dict=None):
     """Start up a Search Environment config with input settings."""
-    NUM_GOAL_ITEMS = 1  # only one item present in env, which is the goal item
-    # set to twice of NUM_ITEMS, where every wall has half probability of containing goal item
-    NUM_BREAKABLE_WALLS = NUM_GOAL_ITEMS * 2
+    # only one item should be present in env, which is the goal item
+    NUM_GOAL_ITEMS = 1
+    NUM_BREAKABLE_WALLS = NUM_GOAL_ITEMS
     env = envs.v0.Pomme
     game_type = constants.GameType.Search
     env_entry_point = 'pommerman.envs.v0:Pomme'

@@ -63,12 +63,12 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
     def lay_wall(value, num_left, coordinates, board):
         '''Lays all of the walls on a board'''
+        random.seed(size)  # random seed based on size of board
         x, y = random.sample(coordinates, 1)[0]
         coordinates.remove((x, y))
         coordinates.remove((y, x))
         board[x, y] = value
-        board[y, x] = value
-        num_left -= 2
+        num_left -= 1
         return num_left
 
     def make(size, num_rigid, num_wood, num_agents):
@@ -143,8 +143,6 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
         return board, agents
 
-    assert (num_rigid % 2 == 0)
-    assert (num_wood % 2 == 0)
     board, agents = make(size, num_rigid, num_wood, num_agents)
 
     # Make sure it's possible to reach most of the passages.
