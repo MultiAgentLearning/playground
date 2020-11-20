@@ -1,4 +1,4 @@
-'''The base search agent used for search environments.
+'''The Search agent used in Search environments.
 '''
 from collections import defaultdict
 import queue
@@ -15,10 +15,6 @@ class SearchAgent(BaseAgent):
     def __init__(self, *args, **kwargs):
         super(SearchAgent, self).__init__(*args, **kwargs)
 
-        # Keep track of recently visited uninteresting positions so that we
-        # don't keep visiting the same places.
-        self._recently_visited_positions = []
-        self._recently_visited_length = 6
         # Keep track of the previous direction to help with the enemy standoffs.
         self._prev_direction = None
 
@@ -40,6 +36,12 @@ class SearchAgent(BaseAgent):
         enemies = [constants.Item(e) for e in obs['enemies']]
         ammo = int(obs['ammo'])
         blast_strength = int(obs['blast_strength'])
+
+        # print("board:", board, end="\n\n")
+        # print("my_position:", my_position, end="\n\n")
+        # print("bombs:", bombs, end="\n\n")
+        # print("enemies:", enemies, end="\n\n")
+
         items, dist, prev = self._djikstra(
             board, my_position, bombs, enemies, depth=10)
 
@@ -50,19 +52,6 @@ class SearchAgent(BaseAgent):
             directions = self._find_safe_directions(
                 board, my_position, unsafe_directions, bombs, enemies)
             return random.choice(directions).value
-
-        # # Lay pomme if we are adjacent to an enemy.
-        # if self._is_adjacent_enemy(items, dist, enemies) and self._maybe_bomb(
-        #         ammo, blast_strength, items, dist, my_position):
-        #     return constants.Action.Bomb.value
-
-        # Move towards an enemy if there is one in exactly three reachable spaces.
-        direction = self._near_enemy(
-            my_position, items, dist, prev, enemies, 3)
-        if direction is not None and (self._prev_direction != direction or
-                                      random.random() < .5):
-            self._prev_direction = direction
-            return direction.value
 
         # Move towards a good item if there is one within two reachable spaces.
         direction = self._near_good_powerup(my_position, items, dist, prev, 2)
@@ -86,24 +75,19 @@ class SearchAgent(BaseAgent):
 
         # Choose a random but valid direction.
         directions = [
-            constants.Action.Stop, constants.Action.Left,
-            constants.Action.Right, constants.Action.Up, constants.Action.Down
+            constants.Action.Left, constants.Action.Right, constants.Action.Up, constants.Action.Down
         ]
+
         valid_directions = self._filter_invalid_directions(
             board, my_position, directions, enemies)
+
         directions = self._filter_unsafe_directions(board, my_position,
                                                     valid_directions, bombs)
-        directions = self._filter_recently_visited(
-            directions, my_position, self._recently_visited_positions)
+
         if len(directions) > 1:
             directions = [k for k in directions if k != constants.Action.Stop]
         if not len(directions):
             directions = [constants.Action.Stop]
-
-        # Add this position to the recently visited uninteresting positions so we don't return immediately.
-        self._recently_visited_positions.append(my_position)
-        self._recently_visited_positions = self._recently_visited_positions[
-            -self._recently_visited_length:]
 
         return random.choice(directions).value
 
@@ -117,7 +101,7 @@ class SearchAgent(BaseAgent):
             ]
 
         def out_of_range(p_1, p_2):
-            '''Determines if two points are out of rang of each other'''
+            '''Determines if two points are out of range of each other'''
             x_1, y_1 = p_1
             x_2, y_2 = p_2
             return abs(y_2 - y_1) + abs(x_2 - x_1) > depth
@@ -313,14 +297,6 @@ class SearchAgent(BaseAgent):
         return safe
 
     @staticmethod
-    def _is_adjacent_enemy(items, dist, enemies):
-        for enemy in enemies:
-            for position in items.get(enemy, []):
-                if dist[position] == 1:
-                    return True
-        return False
-
-    @staticmethod
     def _has_bomb(obs):
         return obs['ammo'] >= 1
 
@@ -378,14 +354,6 @@ class SearchAgent(BaseAgent):
 
         return utility.get_direction(my_position, next_position)
 
-    @classmethod
-    def _near_enemy(cls, my_position, items, dist, prev, enemies, radius):
-        nearest_enemy_position = cls._nearest_position(dist, enemies, items,
-                                                       radius)
-        return cls._get_direction_towards_position(my_position,
-                                                   nearest_enemy_position, prev)
-
-    @classmethod
     def _near_good_powerup(cls, my_position, items, dist, prev, radius):
         objs = [
             constants.Item.ExtraBomb, constants.Item.IncrRange,
@@ -430,17 +398,4 @@ class SearchAgent(BaseAgent):
                     break
             if not is_bad:
                 ret.append(direction)
-        return ret
-
-    @staticmethod
-    def _filter_recently_visited(directions, my_position,
-                                 recently_visited_positions):
-        ret = []
-        for direction in directions:
-            if not utility.get_next_position(
-                    my_position, direction) in recently_visited_positions:
-                ret.append(direction)
-
-        if not ret:
-            ret = directions
         return ret
