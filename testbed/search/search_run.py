@@ -2,7 +2,10 @@
 import pommerman
 from pommerman import agents
 import json
+import signal
+import multiprocessing
 import time
+from search_algo_file import search
 
 
 def main(env_setup_dict):
@@ -16,33 +19,34 @@ def main(env_setup_dict):
     # Make the "Search" environment using the agent list and setup parameters
     env = pommerman.make('Search-v0', agent_list, env_setup=env_setup_dict)
 
+    # import implemented search algorithm
+    search_function = None
+
     # Construct a clean slate environment
-    state = env.reset()
+    initial_state = env.reset()
     done = False
 
-    # Begin timing program
+    # Set time limit and start time
+    time_limit = env_setup_dict['max_duration_seconds']
     start_time = time.time()
 
-    # Increase time limit by 2 seconds to account for noticeable lag in rendering GUI
-    time_limit = env_setup_dict['max_duration_seconds'] + 2
+    # obtain list of actions to take from search algorithm
+    actions = search(initial_state[0]['board'], initial_state[0]['position'])
+
+    # Monitor time elapsed
+    current_time = time.time()
+    elapsed_time = current_time - start_time
+
+    # Terminate program if time limit exceeded
+    if elapsed_time > time_limit:
+        print("Your algorithm has exceeded the time limit.")
+        return ([], [], done, [])
 
     # Iterate through agent actions and environment observations
-    while not done:
-        # Monitor time elapsed
-        current_time = time.time()
-        elapsed_time = current_time - start_time
-
-        # Terminate program if time limit exceeded
-        if elapsed_time > time_limit:
-            print("Terminated the program because time limit exceeded.")
-            break
-
+    for i in range(len(actions)):
+        curr_action = [actions[i]]
         env.render()
-        actions = env.act(state)
-        state, reward, done, info = env.step(actions)
-        # print(state)
-        # print(reward)
-        # print(info)
+        state, reward, done, info = env.step(curr_action)
 
     return (state, reward, done, info)
 
@@ -53,14 +57,11 @@ if __name__ == '__main__':
     with open('env_setup.json', 'r') as f:
         env_setup_dict = json.load(f)
 
-    for attribute in env_setup_dict:
-        print(attribute, env_setup_dict[attribute])
-
     result = main(env_setup_dict)
     hasSucceeded = result[2]
 
     if hasSucceeded:
         info = result[3]
-        print(info)
+        print('The algorithm has succeeded!')
     else:
-        print('Failed')
+        print('The algorithm has failed.')

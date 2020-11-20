@@ -1,5 +1,6 @@
 {
-    "board_size": 6, 
-    "num_rigid_walls": 0,
-    "max_steps": 500
+    "board_size": 13, 
+    "num_rigid_walls": 26,
+    "max_steps": 500,
+    "max_duration_seconds": 15
 }
