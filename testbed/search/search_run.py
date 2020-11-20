@@ -2,10 +2,11 @@
 import pommerman
 from pommerman import agents
 import json
-import signal
+import csv
 import multiprocessing
 import time
-from search_algo_file import search
+import search_algo_1
+import search_algo_2
 
 
 def main(env_setup_dict):
@@ -31,7 +32,8 @@ def main(env_setup_dict):
     start_time = time.time()
 
     # obtain list of actions to take from search algorithm
-    actions = search(initial_state[0]['board'], initial_state[0]['position'])
+    actions = search_algo_1.search(
+        initial_state[0]['board'], initial_state[0]['position'])
 
     # Monitor time elapsed
     current_time = time.time()
@@ -40,7 +42,7 @@ def main(env_setup_dict):
     # Terminate program if time limit exceeded
     if elapsed_time > time_limit:
         print("Your algorithm has exceeded the time limit.")
-        return ([], [], done, [])
+        return (elapsed_time, '-', done)
 
     # Iterate through agent actions and environment observations
     for i in range(len(actions)):
@@ -48,20 +50,33 @@ def main(env_setup_dict):
         env.render()
         state, reward, done, info = env.step(curr_action)
 
-    return (state, reward, done, info)
+    return (elapsed_time, len(actions), done)
 
     env.close()
 
 
 if __name__ == '__main__':
+    # Load customisation parameters
     with open('env_setup.json', 'r') as f:
         env_setup_dict = json.load(f)
 
+    # Execute main runner script and collect results
     result = main(env_setup_dict)
+    time_taken = result[0]
+    num_steps = result[1]
     hasSucceeded = result[2]
 
+    # Output statistics into a CSV file
+    with open('output_file.csv', mode='w') as csv_file:
+        fieldnames = ['Success?', 'Timing (seconds)', 'Number of Steps']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow({'Success?': hasSucceeded,
+                         'Timing (seconds)': time_taken, 'Number of Steps': num_steps})
+
+    # Also print outcome on terminal
     if hasSucceeded:
-        info = result[3]
         print('The algorithm has succeeded!')
     else:
         print('The algorithm has failed.')

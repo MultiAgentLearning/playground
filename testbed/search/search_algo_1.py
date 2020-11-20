@@ -1,6 +1,4 @@
-from time import sleep
 import heapq
-import queue
 
 """
 Constants that you will need to infer the state of the board.
@@ -43,48 +41,7 @@ def search(board, agent_position):
 
     goal_position = find_goal_position(board)
 
-    return breadth_first_search(board, agent_position, goal_position)
-
-
-# performs breadth first search
-def breadth_first_search(board, initial_position, goal_position):
-    if (is_goal(initial_position, goal_position)):
-        return []
-
-    # define every node to be a tuple with the following structure: (path cost, (position, actions taken))
-    frontier = queue.Queue()
-    frontier_coordinates = set()
-    expanded = set()
-
-    frontier.put((0, (initial_position, [])))
-    frontier_coordinates.add(initial_position)
-
-    while not frontier.empty():
-        node = frontier.get()
-        node_position = node[1][0]
-        frontier_coordinates.remove(node_position)
-        node_path = node[1][1]
-        node_path_cost = node[0]  # every action has uniform cost
-
-        expanded.add(node_position)
-
-        children = generate_valid_children_positions(node_position, board)
-
-        for action_to_get_child in list(children.keys()):
-            action = action_to_get_child
-            new_path = node_path.copy()
-            new_path.append(action)
-            child_position = children.get(action)
-            child_path_cost = node_path_cost + 1
-            child_node = (child_path_cost,
-                          (child_position, new_path))
-
-            if (is_goal(child_position, goal_position)):
-                return new_path
-
-            if (child_position not in frontier_coordinates and child_position not in expanded):
-                frontier_coordinates.add(child_position)
-                frontier.put(child_node)
+    return astar_search(board, agent_position, goal_position)
 
 
 # performs A star search with manhattan distance heuristic
