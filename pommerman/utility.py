@@ -36,7 +36,7 @@ class PommermanJSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
+def make_board(size, num_rigid=0, num_wood=0, num_agents=4, game_type=None):
     """Make the random but symmetric board.
 
     The numbers refer to the Item enum in constants. This is:
@@ -63,12 +63,22 @@ def make_board(size, num_rigid=0, num_wood=0, num_agents=4):
 
     def lay_wall(value, num_left, coordinates, board):
         '''Lays all of the walls on a board'''
-        random.seed(size)  # random seed based on size of board
-        x, y = random.sample(coordinates, 1)[0]
-        coordinates.remove((x, y))
-        coordinates.remove((y, x))
-        board[x, y] = value
-        num_left -= 1
+        if (game_type == constants.GameType.Search):
+            random.seed(size)  # random seed based on size of board
+            x, y = random.sample(coordinates, 1)[0]
+            coordinates.remove((x, y))
+            coordinates.remove((y, x))
+            board[x, y] = value
+            num_left -= 1
+        else:
+            assert (num_rigid % 2 == 0)
+            assert (num_wood % 2 == 0)
+            x, y = random.sample(coordinates, 1)[0]
+            coordinates.remove((x, y))
+            coordinates.remove((y, x))
+            board[x, y] = value
+            board[y, x] = value
+            num_left -= 2
         return num_left
 
     def make(size, num_rigid, num_wood, num_agents):
