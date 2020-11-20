@@ -2,6 +2,7 @@
 import pommerman
 from pommerman import agents
 import json
+import time
 
 
 def main(env_setup_dict):
@@ -12,25 +13,39 @@ def main(env_setup_dict):
         agents.SearchAgent()
     ]
 
-    # Make the "Search" environment using the agent list and setup inputs
+    # Make the "Search" environment using the agent list and setup parameters
     env = pommerman.make('Search-v0', agent_list, env_setup=env_setup_dict)
 
-    # The following print statement should include Search-v0
-    # print(pommerman.REGISTRY)
+    # Construct a clean slate environment
+    state = env.reset()
+    done = False
 
-    # Run the episodes just like OpenAI Gym
-    num_episodes = 1  # change this to test how consistent the Search Agent in more episodes
-    for i_episode in range(num_episodes):
-        state = env.reset()
-        done = False
-        while not done:
-            env.render()
-            actions = env.act(state)
-            state, reward, done, info = env.step(actions)
-        print('Episode {} finished'.format(i_episode))
+    # Begin timing program
+    start_time = time.time()
+
+    # Increase time limit by 2 seconds to account for noticeable lag in rendering GUI
+    time_limit = env_setup_dict['max_duration_seconds'] + 2
+
+    # Iterate through agent actions and environment observations
+    while not done:
+        # Monitor time elapsed
+        current_time = time.time()
+        elapsed_time = current_time - start_time
+
+        # Terminate program if time limit exceeded
+        if elapsed_time > time_limit:
+            print("Terminated the program because time limit exceeded.")
+            break
+
+        env.render()
+        actions = env.act(state)
+        state, reward, done, info = env.step(actions)
         # print(state)
         # print(reward)
         # print(info)
+
+    return (state, reward, done, info)
+
     env.close()
 
 
@@ -41,4 +56,11 @@ if __name__ == '__main__':
     for attribute in env_setup_dict:
         print(attribute, env_setup_dict[attribute])
 
-    main(env_setup_dict)
+    result = main(env_setup_dict)
+    hasSucceeded = result[2]
+
+    if hasSucceeded:
+        info = result[3]
+        print(info)
+    else:
+        print('Failed')
