@@ -21,7 +21,7 @@ Pillow==8.3.2
 pommerman==0.2.0
 pyglet==1.4.0a1
 pytz==2018.4
-requests==2.18.4
+requests==2.20.0
 ruamel.yaml==0.15.37
 scipy==1.1.0
 six==1.11.0
