@@ -24,7 +24,7 @@ class TensorForceAgent(BaseAgent):
             if type(env.action_space) == spaces.Tuple:
                 actions = {
                     str(num): {
-                        'type': int,
+                        'type': 'int',
                         'num_actions': space.n
                     }
                     for num, space in enumerate(env.action_space.spaces)
