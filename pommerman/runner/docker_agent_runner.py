@@ -38,6 +38,7 @@ class DockerAgentRunner(metaclass=abc.ABCMeta):
             observation['board'] = np.array(observation['board'], dtype=np.uint8)
             observation['bomb_life'] = np.array(observation['bomb_life'], dtype=np.float64)
             observation['bomb_blast_strength'] = np.array(observation['bomb_blast_strength'], dtype=np.float64)
+            observation['bomb_moving_direction'] = np.array(observation['bomb_moving_direction'], dtype=np.float64)
 
             action_space = data.get("action_space")
             action_space = json.loads(action_space)
