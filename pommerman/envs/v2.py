@@ -7,6 +7,7 @@ observation stream for each agent.
 """
 from gym import spaces
 import numpy as np
+import json
 
 from .. import constants
 from .. import utility
