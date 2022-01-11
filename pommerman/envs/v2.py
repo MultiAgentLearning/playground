@@ -7,6 +7,7 @@ observation stream for each agent.
 """
 from gym import spaces
 import numpy as np
+import json
 
 from .. import constants
 from .. import utility
@@ -105,14 +106,20 @@ class Pomme(v0.Pomme):
         message = utility.make_np_float(message)
         return np.concatenate((ret, message))
 
-    def get_json_info(self):
+    def get_json_info(self, json_encoder=utility.PommermanJSONEncoder):
         ret = super().get_json_info()
         ret['radio_vocab_size'] = json.dumps(
             self._radio_vocab_size, cls=json_encoder)
         ret['radio_num_words'] = json.dumps(
             self._radio_num_words, cls=json_encoder)
-        ret['_radio_from_agent'] = json.dumps(
-            self._radio_from_agent, cls=json_encoder)
+
+        # enum to json dict
+        radio_from_agent = {}
+        for agent, radio in self._radio_from_agent.items():
+            radio_from_agent.update({agent.name: radio})
+        ret['radio_from_agent'] = json.dumps(
+            radio_from_agent, cls=json_encoder)
+
         return ret
 
     def set_json_info(self):
@@ -121,5 +128,8 @@ class Pomme(v0.Pomme):
             self._init_game_state['radio_vocab_size'])
         self.radio_num_words = json.loads(
             self._init_game_state['radio_num_words'])
-        self._radio_from_agent = json.loads(
-            self._init_game_state['_radio_from_agent'])
+
+        # json dict to enum
+        radio_from_agent = json.loads(self._init_game_state['radio_from_agent'])
+        for agent, radio in radio_from_agent.items():
+            self._radio_from_agent.update({constants.Item[agent]: radio})
