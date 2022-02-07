@@ -197,6 +197,8 @@ class Pomme(gym.Env):
         self._board, self._agents, self._bombs, self._items, self._flames = \
                                                                     result[:5]
 
+        self._step_count += 1
+
         done = self._get_done()
         obs = self.get_observations()
         reward = self._get_rewards()
@@ -207,7 +209,6 @@ class Pomme(gym.Env):
             for agent in self._agents:
                 agent.episode_end(reward[agent.agent_id])
 
-        self._step_count += 1
         return obs, reward, done, info
 
     def render(self,
