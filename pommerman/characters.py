@@ -23,22 +23,22 @@ class Bomber(object):
         if self._game_type == constants.GameType.FFA:
             self.teammate = constants.Item.AgentDummy
             self.enemies = [
-                getattr(constants.Item, 'Agent%d' % id_)
+                getattr(constants.Item, f'Agent{id_}')
                 for id_ in range(4)
                 if id_ != agent_id
             ]
         elif self._game_type == constants.GameType.OneVsOne:
             self.teammate = constants.Item.AgentDummy
             self.enemies = [
-                getattr(constants.Item, 'Agent%d' % id_)
+                getattr(constants.Item, f'Agent{id_}')
                 for id_ in range(2)
                 if id_ != agent_id
             ]
         else:
             teammate_id = (agent_id + 2) % 4
-            self.teammate = getattr(constants.Item, 'Agent%d' % teammate_id)
+            self.teammate = getattr(constants.Item, f'Agent{teammate_id}')
             self.enemies = [
-                getattr(constants.Item, 'Agent%d' % id_)
+                getattr(constants.Item, f'Agent{id_}')
                 for id_ in range(4)
                 if id_ != agent_id and id_ != teammate_id
             ]
